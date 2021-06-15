@@ -11,7 +11,7 @@ includeDir = {}
 includeDir["glfw"] = "Shade/vendors/glfw/include"
 
 
-include "Shade/vendors/glfw"
+include "Shade/vendors/glfw/"
 
 project "Shade"
 	location	"Shade"
