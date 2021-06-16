@@ -9,10 +9,13 @@ workspace "Shade"
 output_dir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 includeDir = {}
 includeDir["glfw"] = "Shade/vendors/glfw/include"
+includeDir["glad"] = "Shade/vendors/glad/include"
 
 
-include "Shade/vendors/glfw/"
+include "Shade/vendors/glfw"
+include "Shade/vendors/glad"
 
+group "Engine"
 project "Shade"
 	location	"Shade"
 	kind		"SharedLib"
@@ -32,11 +35,14 @@ project "Shade"
 	includedirs {
 		"%{prj.name}/include",
 		"%{prj.name}/vendors/spdlog/include",
-		"%{includeDir.glfw}"
+		"%{prj.name}/vendors",
+		"%{includeDir.glfw}",
+		"%{includeDir.glad}"
 	}
 	
 	links {
 		"glfw",
+		"glad",
 		"opengl32.lib"
 	}
 
@@ -46,7 +52,10 @@ project "Shade"
 		systemversion "latest"
 
 		defines {
-			"SHADE_BUILD_DLL"
+			"SHADE_BUILD_DLL",
+			"GLFW_INCLUDE_NONE",
+			"SHADE_WINDOWS_PLATFORM",
+			"ENTT_API_EXPORT"
 		}
 
 		postbuildcommands {
@@ -60,7 +69,7 @@ project "Shade"
 	filter "configurations:Release"
 		defines "SHADE_RELEASE"
 		optimize "On"
-
+group "Clients"	
 project "Editor"
 	location	"Editor"
 	kind		"ConsoleApp"
@@ -78,6 +87,7 @@ project "Editor"
 		"%{prj.name}/include",
 		"Shade/vendors/spdlog/include",
 		"Shade/include",
+		"Shade/vendors",
 	}
 
 	links {
@@ -89,7 +99,48 @@ project "Editor"
 		systemversion "latest"
 
 		defines {
-			"SHADE_WINDOWS_PLATFORM"
+			"SHADE_WINDOWS_PLATFORM",
+			"ENTT_API_IMPORT"
+		}
+
+	filter "configurations:Debug"
+		defines "SHADE_DEBUG"
+		symbols "On"
+
+	filter "configurations:Release"
+		defines "SHADE_RELAESE"
+		optimize "On"
+group "Clients/Scripts"			
+project "Scripts"
+	location	"Editor/Scripts"
+	kind		"SharedLib"
+	language	"C++"
+
+	targetdir ("bin/" .. output_dir .. "/%{prj.name}")
+	objdir    ("bin-int/" .. output_dir .. "/%{prj.name}")
+
+	files {
+		"Editor/%{prj.name}/include/**.h",
+		"Editor/%{prj.name}/include/**.cpp"
+	}
+
+	includedirs {
+		"%{prj.name}/include",
+		"Shade/vendors/spdlog/include",
+		"Shade/include",
+		"Shade/vendors",
+	}
+
+	links {
+		"Shade"
+	}
+	filter "system:windows"
+		cppdialect "C++17"
+		staticruntime "off"
+		systemversion "latest"
+
+		defines {
+			"ENTT_API_IMPORT"
 		}
 
 	filter "configurations:Debug"

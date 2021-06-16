@@ -1,6 +1,12 @@
 #pragma once
 #include "shade_pch.h"
 
+#define SHADE_EXPAND_MACRO(x) x
+#define SHADE_STRINGIFY_MACRO(x) #x
+
+#define BIT(x) (1 << x)
+#define SHADE_BIND_EVENT_FN(fn) [this](auto&&... args) -> decltype(auto) { return this->fn(std::forward<decltype(args)>(args)...); }
+
 namespace shade
 {
 	template<typename T>
@@ -15,7 +21,11 @@ namespace shade
 
 	template<typename T>
 	using Unique = std::unique_ptr<T>;
-
+	template<typename T, typename ... Args>
+	constexpr Unique<T> CreateUnique(Args&& ... args)
+	{
+		return std::make_unique<T>(std::forward<Args>(args)...);
+	}
 	using Tag = std::string;
 
 	//using Model3DComponent = ShadeShared<shade::Model3D>;
