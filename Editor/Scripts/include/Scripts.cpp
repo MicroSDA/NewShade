@@ -19,5 +19,5 @@ void Script::OnDestroy()
 void Script::OnUpdate(const shade::Timer& deltaTime)
 {
 	auto component = GetComponent<shade::TestComponent>();
-	std::cout << *component << std::endl;
+	std::cout << deltaTime << std::endl;
 }

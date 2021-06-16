@@ -22,7 +22,7 @@ namespace shade
 		virtual void	OnCreate() = 0;
 		void			OnEvent(shade::Event& e);
 		virtual void    OnUpdate(const shade::Timer& timer) = 0;
-		void            OnScriptsUpdate(const shade::Timer& timer);
+		void            NativeScriptsUpdate(const shade::Timer& timer);
 	private:
 		static Application* m_pInstance;
 		bool   m_IsQuitRequested = false;

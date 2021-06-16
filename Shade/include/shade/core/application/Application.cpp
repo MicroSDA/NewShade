@@ -22,14 +22,17 @@ shade::Application& shade::Application::Get()
 void shade::Application::Start()
 {
 	shade::Timer deltaTime;
+
 	while (!m_IsQuitRequested)
 	{
 		deltaTime.Update();
 		NativeScriptsUpdate(deltaTime);
-
+		//
 		glClearColor(1, 0, 1, 1);
 		glClear(GL_COLOR_BUFFER_BIT);
 		m_Window->OnUpdate();
+
+		std::this_thread::sleep_for(std::chrono::seconds(1));
 	}
 }
 

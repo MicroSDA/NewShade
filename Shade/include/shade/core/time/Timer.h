@@ -6,11 +6,11 @@ namespace shade
 	class SHADE_API Timer
 	{
 	public:
-		Timer() = default;
+		Timer();
 		~Timer() = default;
 		void Update();
-		operator double() const { return m_DeltaTime * 0.001; } // milliseconds
+		operator float() const { return m_DeltaTime * 1000.0f; } // milliseconds
 	private:
-		double m_TimeLast, m_TimeNow, m_DeltaTime;
+		float m_TimeLast, m_TimeNow, m_DeltaTime;
 	};
 }
