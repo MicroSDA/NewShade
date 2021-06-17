@@ -1,5 +1,6 @@
 #pragma once
-#include "shade_pch.h"
+#include <memory>
+#include <iostream>
 
 #define SHADE_EXPAND_MACRO(x) x
 #define SHADE_STRINGIFY_MACRO(x) #x

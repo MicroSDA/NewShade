@@ -18,6 +18,6 @@ void Script::OnDestroy()
 
 void Script::OnUpdate(const shade::Timer& deltaTime)
 {
-	auto component = GetComponent<shade::TestComponent>();
-	std::cout << deltaTime << std::endl;
+	auto component = GetComponent<shade::CameraComponent>();
+	std::cout << component->GetAspect() << std::endl;
 }

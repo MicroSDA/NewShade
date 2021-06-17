@@ -10,6 +10,7 @@ output_dir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 includeDir = {}
 includeDir["glfw"] = "Shade/vendors/glfw/include"
 includeDir["glad"] = "Shade/vendors/glad/include"
+includeDir["glm"]  = "Shade/vendors/glm"
 
 
 include "Shade/vendors/glfw"
@@ -37,7 +38,8 @@ project "Shade"
 		"%{prj.name}/vendors/spdlog/include",
 		"%{prj.name}/vendors",
 		"%{includeDir.glfw}",
-		"%{includeDir.glad}"
+		"%{includeDir.glad}",
+		"%{includeDir.glm}"
 	}
 	
 	links {
@@ -86,8 +88,9 @@ project "Editor"
 	includedirs {
 		"%{prj.name}/include",
 		"Shade/vendors/spdlog/include",
+		"Shade/vendors/glm/",
 		"Shade/include",
-		"Shade/vendors",
+		"Shade/vendors"
 	}
 
 	links {
@@ -127,8 +130,9 @@ project "Scripts"
 	includedirs {
 		"%{prj.name}/include",
 		"Shade/vendors/spdlog/include",
+		"Shade/vendors/glm/",
 		"Shade/include",
-		"Shade/vendors",
+		"Shade/vendors"
 	}
 
 	links {

@@ -5,19 +5,19 @@ void Editor::OnCreate()
 	m_Window = shade::Window::Create();
 	m_Window->SetEventCallback(SHADE_BIND_EVENT_FN(Editor::OnEvent));
 
-	
-	auto cube = this->CreateEntity("Test");
 
+	auto& scene  = this->CreateScene("Main");
 
-		
-	auto& script = cube.AddComponent<shade::NativeScriptComponent>();
+	auto camera = scene->CreateEntity("Camera");
+	camera.AddComponent<shade::CameraComponent>(shade::CreateShared<shade::Camera>());
 
 	HMODULE hModule = LoadLibrary(TEXT("../Scripts/Scripts.dll"));
-
-	auto s = shade::GetScript<shade::ScriptableEntity*>("Instantiate", hModule);
-
-	script.Bind(shade::GetScript<shade::ScriptableEntity*>("Instantiate", hModule));
-	cube.AddComponent<shade::TestComponent>(shade::CreateShared<std::string>(std::string("Hello")));
+	if (hModule)
+	{
+		auto script = shade::GetScript<shade::ScriptableEntity*>("Instantiate", hModule);
+		if(script)
+			camera.AddComponent<shade::NativeScriptComponent>().Bind(script);
+	}
 
 	//cube.AddComponent<std::string>("Hello");
 	//cube.AddComponent<std::string>("asd");

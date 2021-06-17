@@ -1,9 +1,10 @@
 #pragma once
 #include "shade/core/scripting/NativeScript.h"
+#include "shade/core/camera/Camera.h"
+#include "shade/core/Types.h"
 
 namespace shade
 {
-	typedef NativeScript NativeScriptComponent;
-
-	typedef Shared<std::string> TestComponent;
+	using NativeScriptComponent = NativeScript;
+	using CameraComponent		= Shared<Camera>;
 }
