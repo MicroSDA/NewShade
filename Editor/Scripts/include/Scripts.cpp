@@ -19,5 +19,5 @@ void Script::OnDestroy()
 void Script::OnUpdate(const shade::Timer& deltaTime)
 {
 	auto component = GetComponent<shade::CameraComponent>();
-	std::cout << component->GetAspect() << std::endl;
+	//SHADE_TRACE("Aspect {0}", component->GetAspect());
 }

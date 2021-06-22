@@ -9,7 +9,7 @@ namespace shade
 		uint32_t Width;
 		uint32_t Height;
 
-		WindowConfig(const std::string& title = "Hazel Engine",
+		WindowConfig(const std::string& title = "Shade",
 			uint32_t width = 1600,
 			uint32_t height = 900)
 			: Title(title), Width(width), Height(height)
@@ -37,6 +37,6 @@ namespace shade
 
 		virtual void* GetNativeWindow() const = 0;
 
-		static Unique<Window> Create(const WindowConfig& props = WindowConfig());
+		static Unique<Window> Create(const WindowConfig& config = WindowConfig());
 	};
 }

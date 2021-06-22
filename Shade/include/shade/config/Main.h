@@ -3,13 +3,13 @@
 
 #ifdef SHADE_WINDOWS_PLATFORM
 
-extern shade::Application* shade::CreateApplication();
+extern shade::Application* shade::CreateApplication(int argc, char* argv[]);
 
-int main()
+int main(int argc, char* argv[])
 {
 	shade::Application* pApp = nullptr;
 
-	pApp = shade::CreateApplication();
+	pApp = shade::CreateApplication(argc, argv);
 	pApp->OnCreate();
 	pApp->Start();
 

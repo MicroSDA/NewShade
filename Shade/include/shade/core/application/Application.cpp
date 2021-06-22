@@ -1,10 +1,11 @@
 #include "shade_pch.h"
 #include "Application.h"
+#include "shade/core/layer/Layer.h"
 #include <glad/glad.h>
 
 shade::Application* shade::Application::m_pInstance = nullptr;
 
-shade::Application::Application()
+shade::Application::Application(int argc, char* argv[])
 {
 	Log::Init();
 	
@@ -17,6 +18,17 @@ shade::Application::~Application()
 shade::Application& shade::Application::Get()
 {
 	return *m_pInstance;
+}
+
+shade::Unique<shade::Window>& shade::Application::CreateWindow(const WindowConfig& config)
+{
+	m_Window = Window::Create(config);
+	return m_Window;
+}
+
+shade::Unique<shade::Window>& shade::Application::GetWindow()
+{
+	return m_Window;
 }
 
 void shade::Application::Start()
@@ -118,4 +130,20 @@ shade::Shared<shade::Scene> shade::Application::CreateScene(const std::string& n
 void shade::Application::DeleteCurrentScene()
 {
 	m_CurrentScene.reset();
+}
+
+bool shade::Application::DeleteLayer(const std::string& name)
+{
+	for (auto& layer : m_Layers)
+	{
+		if (layer->GetName() == name)
+		{
+			delete layer;
+			return true;
+		}
+			
+	}
+
+	SHADE_CORE_WARNING("Layer '{0}' has not been found!", name);
+	return false;
 }

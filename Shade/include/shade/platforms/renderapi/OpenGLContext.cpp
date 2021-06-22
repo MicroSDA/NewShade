@@ -20,7 +20,7 @@ void shade::OpenGLContext::Init()
 		SHADE_CORE_ERROR("Failed to initialize Glad!");
 	}
 
-	SHADE_CORE_INFO("OpenGL Info:");
+	SHADE_CORE_INFO("  OpenGL Info:");
 	SHADE_CORE_INFO("  Vendor: {0}",   glGetString(GL_VENDOR));
 	SHADE_CORE_INFO("  Renderer: {0}", glGetString(GL_RENDERER));
 	SHADE_CORE_INFO("  Version: {0}",  glGetString(GL_VERSION));

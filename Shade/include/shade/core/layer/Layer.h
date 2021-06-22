@@ -2,16 +2,15 @@
 #include "shade/config/API.h"
 #include "shade/core/time/Timer.h"
 #include "shade/core/scene/Scene.h"
+#include "shade/core/application/Application.h"
 
 namespace shade
 {
-	class Layer
+	class SHADE_API Layer
 	{
 	public:
 		Layer(const std::string& name);
 		virtual ~Layer();
-		friend class Application;
-	private:
 		virtual void OnCreate()			= 0;
 		virtual void OnUpdate(const shade::Shared<Scene>& scene, const shade::Timer& deltaTime) = 0;
 		virtual void OnRenderBegin()	= 0;
@@ -33,6 +32,8 @@ namespace shade
 		bool m_IsActive = true;
 		bool m_IsRender = true;
 		bool m_IsUpdate = true;
+
+		friend class Application;
 	};
 
 }

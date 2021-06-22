@@ -7,26 +7,34 @@
 #include "shade/core/time/Timer.h"
 #include "shade/core/components/Components.h"
 #include "shade/core/scene/Scene.h"
-#include "shade/core/layer/Layer.h"
+
+
+#undef CreateWindow
+
+int main(int argc, char* argv[]);
 
 namespace shade
 {
+	class Layer;
+
 	class SHADE_API Application : public EntitiesDocker
 	{
 	public:
-		Application();
+		Application(int argc, char* argv[]);
 		virtual ~Application(); 
 		static  Application& Get();
-	public:
+		Unique<Window>& CreateWindow(const WindowConfig& config = WindowConfig());
+		Unique<Window>& GetWindow();
+	private:
 	//Need make private and specific friend for handle this
 		void Start();
 		void Quit();
+	protected:
 		virtual void	OnCreate() = 0;
 		void			OnEvent(shade::Event& e);
 		virtual void    OnUpdate(const shade::Timer& timer) = 0;
 		void            NativeScriptsUpdate(const shade::Timer& timer);
 	protected:
-		Unique<Window>				m_Window;
 		Shared<Scene>				m_CurrentScene;
 		Shared<Scene>				CreateScene(const std::string& name);
 		Layer*						GetLayer(const std::string& name);
@@ -35,13 +43,16 @@ namespace shade
 		T*			                CreateLayer(const std::string& name);
 		template<typename T>
 		auto						GetLayer(const std::string& name)->T*;
+		bool						DeleteLayer(const std::string& name);
 	private:
+		Unique<Window>				m_Window;
 		static Application*			m_pInstance;
 		bool						m_IsQuitRequested = false;
 		std::vector<Layer*>	        m_Layers;
+		friend int ::main(int argc, char* argv[]);
 	};
 
-	Application* CreateApplication();
+	Application* CreateApplication(int argc, char* argv[]);
 	template<typename T>
 	inline T* Application::CreateLayer(const std::string& name)
 	{

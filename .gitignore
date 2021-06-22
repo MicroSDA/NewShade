@@ -17,3 +17,4 @@ bin-int/
 Shade/vendors/spdlog
 Shade/vendors/glfw
 Shade/vendors/glm
+Shade/vendors/ImGui

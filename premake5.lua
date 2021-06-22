@@ -8,13 +8,15 @@ workspace "Shade"
 
 output_dir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 includeDir = {}
-includeDir["glfw"] = "Shade/vendors/glfw/include"
-includeDir["glad"] = "Shade/vendors/glad/include"
-includeDir["glm"]  = "Shade/vendors/glm"
+includeDir["glfw"]   = "Shade/vendors/glfw/include"
+includeDir["glad"]   = "Shade/vendors/glad/include"
+includeDir["glm"]  	 = "Shade/vendors/glm"
+includeDir["ImGui"]  = "Shade/vendors/ImGui"
 
 
 include "Shade/vendors/glfw"
 include "Shade/vendors/glad"
+include "Shade/vendors/ImGui"
 
 group "Engine"
 project "Shade"
@@ -39,13 +41,15 @@ project "Shade"
 		"%{prj.name}/vendors",
 		"%{includeDir.glfw}",
 		"%{includeDir.glad}",
-		"%{includeDir.glm}"
+		"%{includeDir.glm}",
+		"%{includeDir.ImGui}"
 	}
 	
 	links {
 		"glfw",
 		"glad",
-		"opengl32.lib"
+		"opengl32.lib",
+		"ImGui"
 	}
 
 	filter "system:windows"

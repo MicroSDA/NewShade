@@ -1,9 +1,16 @@
 #include "Editor.h"
 
+Editor::Editor(int argc, char* argv[]):
+ shade::Application(argc, argv)
+{
+}
+
 void Editor::OnCreate()
 {
-	m_Window = shade::Window::Create();
-	m_Window->SetEventCallback(SHADE_BIND_EVENT_FN(Editor::OnEvent));
+	auto& widnow = CreateWindow();
+	widnow->SetEventCallback(SHADE_BIND_EVENT_FN(Editor::OnEvent));
+	
+	auto layer = this->CreateLayer<EditorLayer>("EditorLayer");
 
 
 	auto& scene  = this->CreateScene("Main");
@@ -30,10 +37,10 @@ void Editor::OnUpdate(const shade::Timer& timer)
 
 void Editor::OnEvent(shade::Event& e)
 {
-	
+	SHADE_TRACE("Event :{0}", e.ToString());
 }
 
-shade::Application* shade::CreateApplication()
+shade::Application* shade::CreateApplication(int argc, char* argv[])
 {
-	return new Editor();
+	return new Editor(argc, argv);
 }
