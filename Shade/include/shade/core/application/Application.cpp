@@ -7,7 +7,15 @@ shade::Application* shade::Application::m_pInstance = nullptr;
 
 shade::Application::Application(int argc, char* argv[])
 {
-	Log::Init();
+	if (!m_pInstance)
+	{
+		Log::Init();
+		m_pInstance = this;
+	}
+	else
+	{
+		SHADE_CORE_ERROR("Application already exists!")
+	}
 	
 }
 
@@ -38,6 +46,10 @@ void shade::Application::Start()
 
 	while (!m_IsQuitRequested)
 	{
+		//
+		glClearColor(1, 0, 0, 1);
+		glClear(GL_COLOR_BUFFER_BIT);
+
 		deltaTime.Update();
 
 		NativeScriptsUpdate(deltaTime);
@@ -78,9 +90,7 @@ void shade::Application::Start()
 				}
 			}
 		}
-		//
-		glClearColor(1, 0, 0, 1);
-		glClear(GL_COLOR_BUFFER_BIT);
+		
 		m_Window->OnUpdate();
 	}
 }

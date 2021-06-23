@@ -37,8 +37,9 @@ project "Shade"
 
 	includedirs {
 		"%{prj.name}/include",
-		"%{prj.name}/vendors/spdlog/include",
 		"%{prj.name}/vendors",
+		"%{prj.name}/vendors/spdlog/include",
+		"%{prj.name}/vendors/entt",
 		"%{includeDir.glfw}",
 		"%{includeDir.glad}",
 		"%{includeDir.glm}",

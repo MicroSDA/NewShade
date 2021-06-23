@@ -1,3 +1,4 @@
+group "Engine/Vendors"
 project "glfw"
 	kind "StaticLib"
 	language "C"

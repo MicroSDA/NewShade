@@ -18,6 +18,8 @@ namespace shade
 
 		template<typename T>
 		T& GetComponent();
+		template<typename T, typename... Args>
+		T& AddComponent(Args&&... args);
 	protected:
 		virtual void OnCreate() {}
 		virtual void OnDestroy() {}
@@ -31,5 +33,10 @@ namespace shade
 	inline T& ScriptableEntity::GetComponent()
 	{
 		return m_Entity.GetComponent<T>();
+	}
+	template<typename T, typename ...Args>
+	inline T& ScriptableEntity::AddComponent(Args && ...args)
+	{
+		return m_Entity.AddComponent<T>(std::forward<Args>(args)...);
 	}
 }

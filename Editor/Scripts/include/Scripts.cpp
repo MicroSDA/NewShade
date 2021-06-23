@@ -10,6 +10,7 @@ extern "C"
 
 void Script::OnCreate()
 {
+	
 }
 
 void Script::OnDestroy()

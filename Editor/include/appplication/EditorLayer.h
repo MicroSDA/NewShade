@@ -13,5 +13,11 @@ public:
 	virtual void OnRender(const shade::Shared<shade::Scene>& scene) override;
 	//virtual void OnRenderEnd() override;
 	virtual void OnDelete() override;
+private:
+	shade::Entity m_SelectedEntity;
+	void Entities(shade::Scene* scene);
+	void Inspector(shade::Entity& entity);
+	void TagComponent(shade::Entity& entity);
+	void Transform3DComponent(shade::Entity& entity);
 };
 

@@ -1,7 +1,7 @@
 #include "shade_pch.h"
 #include "ImGuiLayer.h"
 
-#include <ImGui/imgui.h>
+
 #include <ImGui/imgui_internal.h>
 #include <ImGui/backends/imgui_impl_glfw.h>
 #include <ImGui/backends/imgui_impl_opengl3.h>
@@ -12,7 +12,8 @@
 shade::ImGuiLayer::ImGuiLayer(const std::string& name) : 
 	shade::Layer(name)
 {
-	ImGui::CreateContext();
+	auto context = ImGui::CreateContext();
+	ImGui::SetCurrentContext(context);
 	//SetupImGuiStyle(true, false);
 
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
@@ -66,15 +67,12 @@ void shade::ImGuiLayer::OnRenderBegin()
 	ImGui_ImplOpenGL3_NewFrame();
 	ImGui_ImplGlfw_NewFrame();
 	ImGui::NewFrame();
+
 	//ImGuizmo::BeginFrame();
 
 	ImGui::SetNextWindowPos(m_Viewport->WorkPos);
 	ImGui::SetNextWindowSize(m_Viewport->WorkSize);
 	ImGui::SetNextWindowViewport(m_Viewport->ID);
-}
-
-void shade::ImGuiLayer::OnRender(const shade::Shared<Scene>& scene)
-{
 }
 
 void shade::ImGuiLayer::OnRenderEnd()
