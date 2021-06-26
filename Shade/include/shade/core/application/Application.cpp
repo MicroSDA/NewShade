@@ -1,7 +1,6 @@
 #include "shade_pch.h"
 #include "Application.h"
 #include "shade/core/layer/Layer.h"
-#include <glad/glad.h>
 
 shade::Application* shade::Application::m_pInstance = nullptr;
 
@@ -11,6 +10,7 @@ shade::Application::Application(int argc, char* argv[])
 	{
 		Log::Init();
 		m_pInstance = this;
+
 	}
 	else
 	{
@@ -41,17 +41,21 @@ shade::Unique<shade::Window>& shade::Application::GetWindow()
 
 void shade::Application::Start()
 {
+	if(m_Window != nullptr)
+		m_Window->SetEventCallback(SHADE_BIND_EVENT_FN(Application::OnEvent));
+
 	Timer deltaTime;
 	Shared<Scene> dummyScene = CreateUnique<Scene>("Dummy");
 
+	Render::Init();
+	Render::SetViewPort(0, 0, m_Window->GetWidth(), m_Window->GetHeight());
+	Render::SetClearColor(0.5, 0.5, 0.5, 1);
+
 	while (!m_IsQuitRequested)
 	{
-		//
-		glClearColor(1, 0, 0, 1);
-		glClear(GL_COLOR_BUFFER_BIT);
-
 		deltaTime.Update();
 
+		shade::Render::Clear();
 		NativeScriptsUpdate(deltaTime);
 
 		if (m_CurrentScene != nullptr)
@@ -100,8 +104,16 @@ void shade::Application::Quit()
 	m_IsQuitRequested = true;
 }
 
-void shade::Application::OnEvent(shade::Event& e)
+void shade::Application::OnEvent(shade::Event& event)
 {
+	if (event.GetEventType() == EventType::WindowClose)
+		m_IsQuitRequested = true;
+
+	for (auto& layer : m_Layers)
+	{
+		if (layer->IsActive())
+			layer->OnEvent(event);
+	}
 
 }
 shade::Layer* shade::Application::GetLayer(const std::string& name) 

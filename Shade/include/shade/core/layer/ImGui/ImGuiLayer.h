@@ -18,7 +18,9 @@ namespace shade
 		virtual void OnRender(const shade::Shared<Scene>& scene) = 0;
 		virtual void OnRenderEnd() override;
 		virtual void OnDelete() = 0;
+		virtual void OnEvent(shade::Event& event) = 0;
 	protected:
+		void OnImGuiEvent(shade::Event& event);
 		int m_WindowFlags;
 		int m_DockSpaceFlags;
 		ImGuiViewport* m_Viewport;
@@ -31,6 +33,9 @@ namespace shade
 		void DrawComponent(const char* title, Entity& entity, Call callback, Args&& ...args);
 		template<typename Comp>
 		bool RemoveComponent(const char* title, Entity& entity);
+		template<typename Callback, typename ...Args>
+		bool InputText(const char* title, char* buffer, std::size_t buffer_size, Callback callback, Args&& ...args);
+		bool InputText(const char* title, char* buffer, std::size_t buffer_size);
 		/*template<typename T, typename ...Args, typename R = std::result_of<T(Args&&...)>::type>
 		auto ShowWindowBar(const char* title, T callback, Args&& ...args)
 		{
@@ -100,6 +105,20 @@ namespace shade
 		}
 
 		return false;
+	}
+	template<typename Callback, typename ...Args>
+	inline bool ImGuiLayer::InputText(const char* title, char* buffer, std::size_t buffer_size, Callback callback, Args && ...args)
+	{
+		ImGui::Text(title); 
+		ImGui::SameLine();
+		ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth());
+		std::stringstream _title;
+		_title << "##" << title;
+		bool isInput = ImGui::InputText(_title.str().c_str(), buffer, buffer_size);
+		if (isInput)
+			std::invoke(callback, std::forward<Args>(args)...);
+		ImGui::PopItemWidth();
+		return isInput;
 	}
 }
 

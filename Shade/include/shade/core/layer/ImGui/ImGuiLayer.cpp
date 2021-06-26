@@ -97,3 +97,20 @@ void shade::ImGuiLayer::OnRenderEnd()
 void shade::ImGuiLayer::OnDelete()
 {
 }
+
+void shade::ImGuiLayer::OnImGuiEvent(shade::Event& event)
+{
+
+}
+
+bool shade::ImGuiLayer::InputText(const char* title, char* buffer, std::size_t buffer_size)
+{
+	ImGui::Text(title);
+	ImGui::SameLine();
+	ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth());
+	std::stringstream _title;
+	_title << "##" << title;
+	bool isInput = ImGui::InputText(_title.str().c_str(), buffer, buffer_size);
+	ImGui::PopItemWidth();
+	return isInput;
+}

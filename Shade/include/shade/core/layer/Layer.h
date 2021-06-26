@@ -3,6 +3,7 @@
 #include "shade/core/time/Timer.h"
 #include "shade/core/scene/Scene.h"
 #include "shade/core/application/Application.h"
+#include "shade/core/render/Render.h"
 
 namespace shade
 {
@@ -17,7 +18,7 @@ namespace shade
 		virtual void OnRender(const shade::Shared<Scene>& scene) = 0;
 		virtual void OnRenderEnd()		= 0;
 		virtual void OnDelete()			= 0;
-
+		virtual void OnEvent(Event& event) = 0;
 		void SetActive(const bool& isActive);
 		void SetRender(const bool& isRender);
 		void SetUpdate(const bool& isUpdate);

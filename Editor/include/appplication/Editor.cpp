@@ -8,8 +8,6 @@ Editor::Editor(int argc, char* argv[]):
 void Editor::OnCreate()
 {
 	auto& widnow = CreateWindow();
-	widnow->SetEventCallback(SHADE_BIND_EVENT_FN(Editor::OnEvent));
-	
 	auto layer = this->CreateLayer<EditorLayer>("EditorLayer");
 
 
@@ -33,11 +31,6 @@ void Editor::OnCreate()
 void Editor::OnUpdate(const shade::Timer& timer)
 {
 	
-}
-
-void Editor::OnEvent(shade::Event& e)
-{
-	SHADE_TRACE("Event :{0}", e.ToString());
 }
 
 shade::Application* shade::CreateApplication(int argc, char* argv[])

@@ -30,10 +30,8 @@ namespace shade
 		void Start();
 		void Quit();
 	protected:
-		virtual void	OnCreate() = 0;
-		void			OnEvent(shade::Event& e);
-		virtual void    OnUpdate(const shade::Timer& timer) = 0;
-		void            NativeScriptsUpdate(const shade::Timer& timer);
+		virtual void				OnCreate() = 0;
+		virtual void				OnUpdate(const shade::Timer& timer) = 0;
 	protected:
 		Shared<Scene>				m_CurrentScene;
 		Shared<Scene>				CreateScene(const std::string& name);
@@ -45,6 +43,8 @@ namespace shade
 		auto						GetLayer(const std::string& name)->T*;
 		bool						DeleteLayer(const std::string& name);
 	private:
+		void						OnEvent(shade::Event& event);	
+		void						NativeScriptsUpdate(const shade::Timer& timer);
 		Unique<Window>				m_Window;
 		static Application*			m_pInstance;
 		bool						m_IsQuitRequested = false;
