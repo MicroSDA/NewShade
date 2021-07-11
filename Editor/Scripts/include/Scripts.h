@@ -11,4 +11,7 @@ public:
 	void OnCreate();
 	void OnDestroy();
 	void OnUpdate(const shade::Timer& deltaTime);
+private:
+	float m_RotationSpeed = 5.0f;
+	float m_MovementSpeed = 0.05f;
 };

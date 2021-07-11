@@ -8,12 +8,14 @@ Editor::Editor(int argc, char* argv[]):
 void Editor::OnCreate()
 {
 	auto& widnow = CreateWindow();
+	shade::AssetManager::LoadAssetDataListFromFile("resources/assets/Assets.xml");
+	auto& scene = this->CreateScene("Main");
+
+
 	auto layer = this->CreateLayer<EditorLayer>("EditorLayer");
+	auto camera = CreateEntity("Camera");
 
 
-	auto& scene  = this->CreateScene("Main");
-
-	auto camera = scene->CreateEntity("Camera");
 	camera.AddComponent<shade::CameraComponent>(shade::CreateShared<shade::Camera>());
 
 	HMODULE hModule = LoadLibrary(TEXT("../Scripts/Scripts.dll"));
@@ -24,8 +26,8 @@ void Editor::OnCreate()
 			camera.AddComponent<shade::NativeScriptComponent>().Bind(script);
 	}
 
-	//cube.AddComponent<std::string>("Hello");
-	//cube.AddComponent<std::string>("asd");
+	//auto directLight = scene->CreateEntity("DirectLight");
+	//directLight.AddComponent<shade::EnvironmentComponent>(shade::CreateShared<shade::DirectLight>());
 }
 
 void Editor::OnUpdate(const shade::Timer& timer)

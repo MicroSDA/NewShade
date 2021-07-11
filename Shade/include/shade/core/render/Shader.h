@@ -31,6 +31,7 @@ namespace shade
 		virtual void SendFlaot4(const std::string& name,	const float* value) = 0;
 		virtual void SendMat3(const std::string& name,		const bool& isTransponse, const float* value) = 0;
 		virtual void SendMat4(const std::string& name,		const bool& isTransponse, const float* value) = 0;
+		virtual int GetUniformLocation(const std::string& name) const = 0;
 		static Shared<Shader> Create(const std::string& filePath);
 	protected:
 		std::unordered_map<Type, std::string> m_SourceCode;

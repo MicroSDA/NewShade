@@ -52,6 +52,7 @@ bool shade::Shader::Parse(const std::string& source)
 		}
 	}
 
+	//std::cout << m_SourceCode[Type::Fragment] << std::endl;
 	return true;
 }
 

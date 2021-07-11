@@ -1,8 +1,16 @@
 #include "shade_pch.h"
 #include "Render.h"
+#include "shade/core/vertex/Vertex3D.h"
 
-shade::Unique<shade::RenderAPI> shade::Render::m_sRenderAPI = shade::RenderAPI::Create();
-bool shade::Render::m_sIsInit = false;
+namespace shade
+{
+	Unique<RenderAPI> Render::m_sRenderAPI = RenderAPI::Create();
+
+	bool Render::m_sIsInit = false;
+	std::unordered_map<const Drawable*, Render::InstancedRender> Render::m_sInstancedRender;
+	std::unordered_map<const Drawable*, Render::Submited> Render::m_sSubmitedRender;
+	Shared<UniformBuffer> Render::m_sCameraUniformBuffer;
+}
 
 void shade::Render::Init()
 {
@@ -10,6 +18,9 @@ void shade::Render::Init()
 	{
 		m_sRenderAPI->Init();
 		m_sIsInit = true;
+
+
+		m_sCameraUniformBuffer = UniformBuffer::Create(sizeof(Camera::Data), 0);
 	}
 	else
 		SHADE_CORE_WARNING("Render API has been already initialized!");
@@ -25,12 +36,186 @@ void shade::Render::Clear()
 	m_sRenderAPI->Clear();
 }
 
+void shade::Render::DepthTest(const bool& enable)
+{
+	m_sRenderAPI->DepthTest(enable);
+}
+
 void shade::Render::SetViewPort(std::uint32_t x, std::uint32_t y, std::uint32_t width, std::uint32_t height)
 {
 	m_sRenderAPI->SetViewPort(x, y, width, height);
 }
-
-void shade::Render::DrawIndexed(const Shared<VertexArray>& vao)
+void shade::Render::Begin(Shared<FrameBuffer> framebuffer)
 {
-	m_sRenderAPI->DrawIndexed(vao);
+	m_sRenderAPI->Begin(framebuffer);
+	auto& instancedPool = m_sInstancedRender.begin();
+	while (instancedPool != m_sInstancedRender.end())
+	{
+		if (instancedPool->second.IsExpired)
+			instancedPool = m_sInstancedRender.erase(instancedPool);
+		else
+		{
+			instancedPool++;
+		}
+	}
+
+	auto& submitedPool = m_sSubmitedRender.begin();
+	while (submitedPool != m_sSubmitedRender.end())
+	{
+		if (submitedPool->second.IsExpired)
+			submitedPool = m_sSubmitedRender.erase(submitedPool);
+		else
+		{
+			submitedPool++;
+		}
+	}
 }
+void shade::Render::End(Shared<FrameBuffer> framebuffer)
+{
+	m_sRenderAPI->End(framebuffer);
+
+	for (auto& instances : m_sInstancedRender)
+	{
+		instances.second.InstanceCount = 0;
+		instances.second.Transforms.clear();
+		instances.second.IsExpired = true;
+	}
+	for (auto& instance : m_sSubmitedRender)
+	{
+		instance.second.IsExpired = true;
+		instance.second.Transforms.clear();
+	}
+}
+void shade::Render::Submit(const Drawable* drawable, const glm::mat4& transform, const Material* material, const std::vector<Shared<Texture>>* textures)
+{
+	auto& instance = m_sSubmitedRender.find(drawable);
+	if (instance == m_sSubmitedRender.end())
+	{
+		Submited submited;
+		submited.DrawMode = drawable->GetDrawMode();
+		submited.Material = material;
+		submited.Transforms.push_back(transform);
+		submited.Textures = textures;
+		submited.IsExpired = false;
+
+		submited.VAO = VertexArray::Create();
+		auto VBO = VertexBuffer::Create(drawable->GetVertices().data(), sizeof(Vertex3D) * drawable->GetVertices().size(), VertexBuffer::BufferType::Dynamic);
+		VBO->SetLayout({ {shade::VertexBuffer::ElementType::Float3, "Position"},
+							{shade::VertexBuffer::ElementType::Float2, "UV_Coords"},
+							{shade::VertexBuffer::ElementType::Float3, "Normal"},
+							{shade::VertexBuffer::ElementType::Float3, "Tangent"} });
+		auto IBO = IndexBuffer::Create(drawable->GetIndices().data(), drawable->GetIndices().size());
+		submited.VAO->AddVertexBuffer(VBO);
+		submited.VAO->SetIndexBuffer(IBO);
+
+		m_sSubmitedRender[drawable] = submited;
+	}
+	else if (instance != m_sSubmitedRender.end())
+	{
+		instance->second.IsExpired = false;
+		instance->second.Transforms.push_back(transform);
+	}
+}
+
+void shade::Render::DrawSubmited(const Shared<Shader>& shader)
+{
+	for (auto& instance : m_sSubmitedRender)
+	{
+		if(instance.second.Material != nullptr)
+			instance.second.Material->Process(shader);
+		
+		if (instance.second.Textures != nullptr)
+		{
+			std::uint32_t textureUnit = 0;
+			for (auto& texture : *instance.second.Textures)
+			{
+				texture->Bind(shader, textureUnit++);
+			}
+		}
+		
+		for (auto& transform : instance.second.Transforms)
+		{
+			shader->SendMat4("Transform", false, glm::value_ptr(transform));
+			m_sRenderAPI->DrawIndexed(instance.second.DrawMode, instance.second.VAO, instance.second.VAO->GetIndexBuffer());
+		}
+		
+	}
+}
+
+void shade::Render::DrawInstanced(const Shared<Shader>& shader)
+{
+	for (auto& instance : m_sInstancedRender)
+	{
+		instance.second.Material->Process(shader);
+		std::uint32_t textureUnit = 0;
+		for (auto& texture : *instance.second.Textures)
+		{
+			texture->Bind(shader, textureUnit++);
+		}
+
+		instance.second.VAO->GetVertexBuffers()[1]->SetData(instance.second.Transforms.data(), sizeof(glm::mat4) * instance.second.InstanceCount, 0);
+		m_sRenderAPI->DrawInstanced(instance.second.DrawMode, instance.second.VAO, instance.second.VAO->GetIndexBuffer(), instance.second.InstanceCount);
+	}
+}
+
+void shade::Render::DrawNotIndexed(const Drawable::DrawMode& mode, const Shared<VertexArray>& VAO)
+{
+	m_sRenderAPI->DrawNotIndexed(mode, VAO);
+}
+
+void shade::Render::SubmitInstanced(const Drawable* drawable, const glm::mat4& transform, const Material& material, const std::vector<Shared<Texture>>& textures, const std::uint32_t& count)
+{
+	auto& instances = m_sInstancedRender.find(drawable);
+	if (instances == m_sInstancedRender.end())
+	{
+		InstancedRender newInstances;
+		newInstances.DrawMode = drawable->GetDrawMode();
+		newInstances.Material = &material;
+		newInstances.Textures = &textures;
+		newInstances.Transforms.reserve(count);
+		newInstances.IsExpired = false;
+
+		newInstances.VAO = VertexArray::Create();
+		auto VBO = VertexBuffer::Create(drawable->GetVertices().data(), sizeof(Vertex3D) * drawable->GetVertices().size(), VertexBuffer::BufferType::Dynamic);
+		VBO->SetLayout({	{shade::VertexBuffer::ElementType::Float3, "Position"},
+							{shade::VertexBuffer::ElementType::Float2, "UV_Coords"},
+							{shade::VertexBuffer::ElementType::Float3, "Normal"},
+							{shade::VertexBuffer::ElementType::Float3, "Tangent"} });
+		// Create empty ebo with 10 size and set data later
+		auto EBO = VertexBuffer::Create(sizeof(glm::mat4) * count, VertexBuffer::BufferType::Dynamic); // size is 10 !!!
+		EBO->SetLayout({ {shade::VertexBuffer::ElementType::Mat4,	"Transform"} });
+
+		auto IBO = IndexBuffer::Create(drawable->GetIndices().data(), drawable->GetIndices().size());
+		newInstances.VAO->AddVertexBuffer(VBO);
+		newInstances.VAO->AddVertexBuffer(EBO);
+		newInstances.VAO->SetIndexBuffer(IBO);
+
+		newInstances.Transforms.push_back(transform);
+		m_sInstancedRender[drawable] = newInstances;
+	}
+	else if(instances != m_sInstancedRender.end())
+	{
+		if (instances->second.Transforms.size() < count)
+		{
+			instances->second.VAO->GetVertexBuffers()[1]->Resize(sizeof(glm::mat4) * count);
+		}
+
+		instances->second.Transforms.push_back(transform);
+		instances->second.InstanceCount++;
+		instances->second.IsExpired = false;
+
+	}
+}
+
+void shade::Render::BeginScene(const Shared<Shader>& shader, const Shared<Camera>& camera, const Shared<Environment>* enviroments, const std::size_t& enviromentsCount)
+{
+	shader->Bind();
+	m_sCameraUniformBuffer->SetData(&camera->GetData(), sizeof(Camera::Data), 0);
+	m_sRenderAPI->BeginScene(shader, camera, enviroments, enviromentsCount);
+}
+
+void shade::Render::EndScene(const Shared<Shader>& shader)
+{
+	m_sRenderAPI->EndScene(shader);
+}
+

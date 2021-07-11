@@ -10,3 +10,6 @@
 [submodule "Shade/vendors/ImGui"]
 	path = Shade/vendors/ImGui
 	url = https://github.com/MicroSDA/imgui
+[submodule "Shade/vendors/ImGuizmo"]
+	path = Shade/vendors/ImGuizmo
+	url = https://github.com/MicroSDA/ImGuizmo

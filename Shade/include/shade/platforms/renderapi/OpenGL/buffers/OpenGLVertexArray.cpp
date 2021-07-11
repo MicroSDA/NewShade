@@ -35,12 +35,12 @@ shade::OpenGLVertexArray::~OpenGLVertexArray()
 	glDeleteVertexArrays(1, &m_RenderID);
 }
 
-void shade::OpenGLVertexArray::Bind()
+void shade::OpenGLVertexArray::Bind() const
 {
 	glBindVertexArray(m_RenderID);
 }
 
-void shade::OpenGLVertexArray::UnBind()
+void shade::OpenGLVertexArray::UnBind() const
 {
 	glBindVertexArray(0);
 }
@@ -124,6 +124,11 @@ void shade::OpenGLVertexArray::SetIndexBuffer(const Shared<IndexBuffer>& indexBu
 }
 
 const std::vector<shade::Shared<shade::VertexBuffer>>& shade::OpenGLVertexArray::GetVertexBuffers() const
+{
+	return m_VertexBuffers;
+}
+
+std::vector<shade::Shared<shade::VertexBuffer>>& shade::OpenGLVertexArray::GetVertexBuffers()
 {
 	return m_VertexBuffers;
 }

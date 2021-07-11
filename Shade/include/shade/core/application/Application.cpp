@@ -49,7 +49,7 @@ void shade::Application::Start()
 
 	Render::Init();
 	Render::SetViewPort(0, 0, m_Window->GetWidth(), m_Window->GetHeight());
-	Render::SetClearColor(0.5, 0.5, 0.5, 1);
+	Render::SetClearColor(0.2, 0.2, 0.2, 1);
 
 	while (!m_IsQuitRequested)
 	{
@@ -67,36 +67,22 @@ void shade::Application::Start()
 				if (layer->IsActive())
 				{
 					if (layer->IsUpdate())
-						layer->OnUpdate(m_CurrentScene, deltaTime);
+						layer->OnUpdate((!m_CurrentScene) ? dummyScene : m_CurrentScene, deltaTime);
 					if (layer->IsRender())
 					{
 						layer->OnRenderBegin();
-						layer->OnRender(m_CurrentScene);
+						layer->OnRender((!m_CurrentScene) ? dummyScene : m_CurrentScene);
 						layer->OnRenderEnd();
 					}
 				}
 			}
 		}
-		else
-		{
-			for (auto& const layer : m_Layers)
-			{
-				if (layer->IsActive())
-				{
-					if (layer->IsUpdate())
-						layer->OnUpdate(dummyScene, deltaTime);
-					if (layer->IsRender())
-					{
-						layer->OnRenderBegin();
-						layer->OnRender(dummyScene);
-						layer->OnRenderEnd();
-					}
-				}
-			}
-		}
-		
+
 		m_Window->OnUpdate();
+		AssetManager::_Get()._DispatchAssets();
 	}
+
+	shade::AssetManager::_Get()._Clear();
 }
 
 void shade::Application::Quit()
@@ -112,7 +98,7 @@ void shade::Application::OnEvent(shade::Event& event)
 	for (auto& layer : m_Layers)
 	{
 		if (layer->IsActive())
-			layer->OnEvent(event);
+			layer->OnEvent(m_CurrentScene, event);
 	}
 
 }

@@ -4,6 +4,7 @@
 #include "shade/core/scene/Scene.h"
 #include "shade/core/application/Application.h"
 #include "shade/core/render/Render.h"
+#include "shade/core/assets/AssetManager.h"
 
 namespace shade
 {
@@ -18,7 +19,7 @@ namespace shade
 		virtual void OnRender(const shade::Shared<Scene>& scene) = 0;
 		virtual void OnRenderEnd()		= 0;
 		virtual void OnDelete()			= 0;
-		virtual void OnEvent(Event& event) = 0;
+		virtual void OnEvent(const shade::Shared<Scene>& scene, Event& event) = 0;
 		void SetActive(const bool& isActive);
 		void SetRender(const bool& isRender);
 		void SetUpdate(const bool& isUpdate);

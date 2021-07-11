@@ -32,7 +32,7 @@ void shade::OpenGLRenderAPI::Init()
 #endif
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
+	glEnable(GL_CULL_FACE);
 	glEnable(GL_DEPTH_TEST);
 }
 
@@ -51,8 +51,53 @@ void shade::OpenGLRenderAPI::SetViewPort(std::uint32_t x, std::uint32_t y, std::
 	glViewport(x, y, width, height);
 }
 
-void shade::OpenGLRenderAPI::DrawIndexed(const Shared<VertexArray>& vao)
+void shade::OpenGLRenderAPI::BeginScene(const Shared<Shader>& shader, const Shared<Camera>& camera, const Shared<Environment>* enviroments, const std::size_t& enviromentsCount)
 {
-	vao->Bind();
-	glDrawElements(GL_TRIANGLES, vao->GetIndexBuffer()->GetCount(), GL_UNSIGNED_INT, nullptr);
+	if (enviroments != nullptr && enviromentsCount > 0)
+	{
+		for (auto i = 0; i < enviromentsCount; i++)
+		{
+			enviroments[i]->Process(shader);
+		}
+	}
+}
+
+void shade::OpenGLRenderAPI::EndScene(const Shared<Shader>& shader)
+{
+	shader->UnBind();
+}
+
+void shade::OpenGLRenderAPI::DrawIndexed(const Drawable::DrawMode& mode, const Shared<VertexArray>& VAO, const Shared<IndexBuffer>& IBO) const
+{
+
+	VAO->Bind(); glDrawElements(static_cast<GLenum>(mode), IBO->GetCount(), GL_UNSIGNED_INT, nullptr);
+}
+
+void shade::OpenGLRenderAPI::DrawInstanced(const Drawable::DrawMode& mode, const Shared<VertexArray>& VAO, const Shared<IndexBuffer>& IBO, const std::uint32_t& instanceCount)
+{
+	VAO->Bind(); glDrawElementsInstanced(static_cast<GLenum>(mode), IBO->GetCount(), GL_UNSIGNED_INT, nullptr, instanceCount);
+}
+
+void shade::OpenGLRenderAPI::DrawNotIndexed(const Drawable::DrawMode& mode, const Shared<VertexArray>& VAO)
+{
+	VAO->Bind();  glDrawArrays(static_cast<GLenum>(mode), 0, VAO->GetIndexBuffer()->GetCount());
+}
+
+void shade::OpenGLRenderAPI::Begin(Shared<FrameBuffer> framebuffer)
+{
+	if (framebuffer != nullptr)
+	{
+		framebuffer->Bind();
+		Clear();
+	}
+}
+
+void shade::OpenGLRenderAPI::End(Shared<FrameBuffer> framebuffer)
+{
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+void shade::OpenGLRenderAPI::DepthTest(const bool& enable)
+{
+	(enable) ? glEnable(GL_DEPTH_TEST): glDisable(GL_DEPTH_TEST);
 }

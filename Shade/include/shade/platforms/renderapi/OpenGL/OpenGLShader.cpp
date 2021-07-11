@@ -160,7 +160,19 @@ void shade::OpenGLShader::CheckShaderError(GLuint shader, GLuint flag, bool isPr
 	}
 }
 
-GLint shade::OpenGLShader::GetUniformLocation(const std::string& name) const
+GLenum shade::OpenGLShader::ToOpenGLShaderType(const Type& type)
+{
+	switch (type)
+	{
+	case Type::Vertex:		return GL_VERTEX_SHADER;
+	case Type::Fragment:	return GL_FRAGMENT_SHADER;
+	case Type::Geometry:	return GL_GEOMETRY_SHADER;
+	default:
+		SHADE_CORE_WARNING("Undefined shader type!"); return -1;
+	}
+}
+
+int shade::OpenGLShader::GetUniformLocation(const std::string& name) const
 {
 	if (m_UniformLocation.find(name) != m_UniformLocation.end())
 	{
@@ -171,18 +183,6 @@ GLint shade::OpenGLShader::GetUniformLocation(const std::string& name) const
 		GLint _Location = glGetUniformLocation(m_Program, name.c_str());
 		m_UniformLocation[name] = _Location;
 		return _Location;
-	}
-}
-
-GLenum shade::OpenGLShader::ToOpenGLShaderType(const Type& type)
-{
-	switch (type)
-	{
-	case Type::Vertex:		return GL_VERTEX_SHADER;
-	case Type::Fragment:	return GL_FRAGMENT_SHADER;
-	case Type::Geometry:	return GL_GEOMETRY_SHADER;
-	default:
-		SHADE_CORE_WARNING("Undefined shader type!"); return -1;
 	}
 }
 

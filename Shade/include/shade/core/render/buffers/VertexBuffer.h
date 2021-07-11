@@ -55,15 +55,20 @@ namespace shade
 	public:
 		// Vertex Buffer
 		virtual ~VertexBuffer()		= default;
-		virtual void Bind()			= 0;
+		virtual void Bind()	 const = 0;
 		virtual void UnBind() const	= 0;
-		virtual void SetData(const uint32_t& offset, const uint32_t& size, const Vertex3D* data) = 0;
+		virtual void SetData(const void* data, const uint32_t& size, const uint32_t& offset) = 0;
+		virtual void Copy(const Shared<VertexBuffer>& other, const std::uint32_t& size, const std::uint32_t& readOffset, const std::uint32_t& writeOffset) = 0;
+		virtual void Resize(const std::uint32_t& size) = 0;
+
 		virtual void SetLayout(const Layout& layout)		= 0;
+		virtual const std::uint32_t& GetRenderID()  const = 0;
 		virtual const Layout& GetLayout()			const	= 0;
-
-		static Shared<VertexBuffer> Create(const Vertex3D* data, const uint32_t& size, const BufferType& type);
-		static Shared<VertexBuffer> Create(const uint32_t& size, const BufferType& type);
-	private:
-
+		const std::uint32_t& GetSize() const;
+		static Shared<VertexBuffer> Create(const void* data, const std::uint32_t& size, const BufferType& type = BufferType::Static);
+		static Shared<VertexBuffer> Create(const std::uint32_t& size, const BufferType& type = BufferType::Static);
+	protected:
+		std::uint32_t  m_Size = 0;
+		BufferType     m_Type;
 	};
 }

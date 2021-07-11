@@ -1,6 +1,10 @@
 #pragma once
 #include "shade/config/API.h"
 #include "shade/core/events/ApplicationEvent.h"
+#include "shade/core/events/KeyEvent.h"
+#include "shade/core/events/KeyCodes.h"
+#include "shade/core/events/Input.h"
+#include "shade/core/events/MouseEvent.h"
 #include "shade/core/window/Window.h"
 #include "shade/core/entities/EntitiesDocker.h"
 #include "shade/core/entities/Entity.h"

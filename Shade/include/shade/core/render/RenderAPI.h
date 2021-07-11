@@ -3,6 +3,12 @@
 #include "shade/core/Types.h"
 #include "shade/core/utils/Log.h"
 #include "shade/core/render/buffers/VertexArray.h"
+#include "shade/core/render/drawable/Drawable.h"
+#include "shade/core/camera/Camera.h"
+#include "shade/core/render/Shader.h"
+#include "shade/core/environment/Environment.h"
+#include "shade/core/render/buffers/FrameBuffer.h"
+#include "shade/core/image/Texture.h"
 
 namespace shade
 {
@@ -20,12 +26,19 @@ namespace shade
 		virtual void Init() = 0;
 		virtual void SetClearColor(const float& r, const float& g, const float& b, const float& a) = 0;
 		virtual void Clear() = 0;
+		virtual void DepthTest(const bool& enable) = 0;
 		virtual void SetViewPort(std::uint32_t x, std::uint32_t y, std::uint32_t width, std::uint32_t height) = 0;
-		virtual void DrawIndexed(const Shared<VertexArray>& vao) = 0;
+		virtual void Begin(Shared<FrameBuffer> framebuffer = nullptr) = 0;
+		virtual void End(Shared<FrameBuffer> framebuffer = nullptr) = 0;
+		virtual void BeginScene(const Shared<Shader>& shader, const Shared<Camera>& camera, const Shared<Environment>* enviroments = nullptr, const std::size_t& enviromentsCount = 0) = 0;
+		virtual void EndScene(const Shared<Shader>& shader) = 0;
+		virtual void DrawIndexed(const Drawable::DrawMode& mode, const Shared<VertexArray>& VAO, const Shared<IndexBuffer>& IBO)   const = 0;
+		virtual void DrawInstanced(const Drawable::DrawMode& mode, const Shared<VertexArray>& VAO, const Shared<IndexBuffer>& IBO, const std::uint32_t& instanceCount) = 0;
+		virtual void DrawNotIndexed(const Drawable::DrawMode& mode, const Shared<VertexArray>& VAO) = 0;
 		static API GetAPI();
 		static Unique<RenderAPI> Create();
 	private:
 		static API	m_sRenderAPI;
-	
+	protected:
 	};
 }

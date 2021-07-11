@@ -18,3 +18,5 @@ Shade/vendors/spdlog
 Shade/vendors/glfw
 Shade/vendors/glm
 Shade/vendors/ImGui
+Shade/vendors/ImGuizmo
+Editor/resources/assets

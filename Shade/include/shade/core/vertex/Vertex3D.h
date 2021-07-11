@@ -1,11 +1,11 @@
 #pragma once
 #include "shade/config/API.h"
 #include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 namespace shade
 {
-	typedef std::uint32_t Index;
-
+	
 	class SHADE_API Vertex3D
 	{
 	public:
@@ -15,4 +15,9 @@ namespace shade
 		glm::vec3 Normal;
 		glm::vec3 Tangent;
 	};
+
+	typedef std::vector<Vertex3D>	Vertices;
+	typedef std::uint32_t			Index;
+	typedef std::vector<Index>		Indices;
+
 }

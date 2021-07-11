@@ -1,6 +1,7 @@
 #pragma once
 #include "shade/core/layer/Layer.h"
 #include <ImGui/imgui.h>
+#include <ImGuizmo/ImGuizmo.h>
 
 struct ImGuiViewport;
 
@@ -12,13 +13,9 @@ namespace shade
 		ImGuiLayer(const std::string& name);
 		virtual ~ImGuiLayer();
 		// Inherited via Layer
-		virtual void OnCreate() = 0;
 		virtual void OnUpdate(const shade::Shared<Scene>& scene, const shade::Timer& deltaTime) = 0;
 		virtual void OnRenderBegin() override;
-		virtual void OnRender(const shade::Shared<Scene>& scene) = 0;
 		virtual void OnRenderEnd() override;
-		virtual void OnDelete() = 0;
-		virtual void OnEvent(shade::Event& event) = 0;
 	protected:
 		void OnImGuiEvent(shade::Event& event);
 		int m_WindowFlags;
@@ -31,11 +28,21 @@ namespace shade
 		void ShowWindowBar(const char* title, Callback callback, Args&& ...args);
 		template<typename Comp, typename Call, typename ...Args>
 		void DrawComponent(const char* title, Entity& entity, Call callback, Args&& ...args);
+		template<typename Call, typename ...Args>
+		void DrawTreeNode(const char* title, Call callback, Args&& ...args);
+		template<typename Comp, typename Call, typename ...Args>
+		void AddComponent(const char* title, const bool& isMenu, Entity& entity, Call callback, Args&& ...args);
 		template<typename Comp>
 		bool RemoveComponent(const char* title, Entity& entity);
 		template<typename Callback, typename ...Args>
 		bool InputText(const char* title, char* buffer, std::size_t buffer_size, Callback callback, Args&& ...args);
 		bool InputText(const char* title, char* buffer, std::size_t buffer_size);
+		void FpsOverlay(ImGuiViewport* viewport);
+		void DrawImage(const std::uint32_t& renderId, const float& width, const float& height, const bool& tooltip = false);
+		bool DrawVec3F(const char* title, float* data, const float& resetValue = 0.0f, const float& min = -FLT_MAX, const float& max = FLT_MAX, const float& colw1 = 80.0f);
+		bool DrawFlaot(const char* lable, float* data, const float& reset = 0.0f, const float& min = -FLT_MAX, const float& max = FLT_MAX, const float& cw1 = 80.0f, const float& cw2 = 0.0f);
+		bool DrawColor3(const char* title, float* data, const float& cw1 = 80.0f, const float& cw2 = 0);
+		bool DrawImGuizmo(glm::mat4& transform, const Shared<Camera>& camera, const ImGuizmo::OPERATION& operation, const float& x, const float& y, const float& width, const float& height);
 		/*template<typename T, typename ...Args, typename R = std::result_of<T(Args&&...)>::type>
 		auto ShowWindowBar(const char* title, T callback, Args&& ...args)
 		{
@@ -67,8 +74,41 @@ namespace shade
 				{
 					if (!RemoveComponent<Comp>(title, entity))
 						std::invoke(callback, std::forward<Args>(args)...);
-						//callback(std::forward<Args>(args)...);
+					//callback(std::forward<Args>(args)...);
 					ImGui::TreePop();
+				}
+			}
+		}
+	}
+	template<typename Call, typename ...Args>
+	inline void ImGuiLayer::DrawTreeNode(const char* title, Call callback, Args && ...args)
+	{
+		ImGui::AlignTextToFramePadding();
+		if (ImGui::TreeNodeEx(title, ImGuiTreeNodeFlags_KeppFramedWhenOpen))
+		{
+			std::invoke(callback, std::forward<Args>(args)...);
+			ImGui::TreePop();
+		}
+	}
+	template<typename Comp, typename Call, typename ...Args>
+	inline void ImGuiLayer::AddComponent(const char* title, const bool& isMenu, Entity& entity, Call callback, Args && ...args)
+	{
+		if (entity.IsValid())
+		{
+			if (!entity.HasComponent<Comp>())
+			{
+				if (isMenu)
+				{
+					if (ImGui::BeginMenu(title))
+					{
+						std::invoke(callback, std::forward<Args>(args)...);
+						ImGui::EndMenu();
+					}
+				}
+				else
+				{
+					if (ImGui::MenuItem(title))
+						std::invoke(callback, std::forward<Args>(args)...);
 				}
 			}
 		}
@@ -109,7 +149,7 @@ namespace shade
 	template<typename Callback, typename ...Args>
 	inline bool ImGuiLayer::InputText(const char* title, char* buffer, std::size_t buffer_size, Callback callback, Args && ...args)
 	{
-		ImGui::Text(title); 
+		ImGui::Text(title);
 		ImGui::SameLine();
 		ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth());
 		std::stringstream _title;

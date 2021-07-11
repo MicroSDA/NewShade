@@ -22,6 +22,7 @@ namespace shade
 		virtual void SendFlaot4(const std::string& name, const float* value) override;
 		virtual void SendMat3(const std::string& name, const bool& isTransponse, const float* value) override;
 		virtual void SendMat4(const std::string& name, const bool& isTransponse, const float* value) override;
+		virtual int GetUniformLocation(const std::string& name) const override;
 
 		virtual bool Serialize(std::ostream& stream) const override;
 		virtual bool Deserialize(std::istream& stream) override;
@@ -36,8 +37,8 @@ namespace shade
 		void CheckShaderError(GLuint shader, GLuint flag, bool isProgram, const std::string& errorMessage);
 		std::unordered_map<GLenum, std::string> m_OpenGLSourceCode;
 		mutable std::unordered_map<std::string, GLint> m_UniformLocation; // Make it static ?
-		GLint GetUniformLocation(const std::string& name) const;
 		GLenum ToOpenGLShaderType(const Type& type);
+
 	};
 }
 	
