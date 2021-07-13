@@ -45,7 +45,7 @@ namespace shade
 
 		inline void SetPosition(const float& x, const float& y, const float& z) { m_Position = glm::vec3(x, y, z); }
 		inline void SetPosition(const glm::vec3& position) { m_Position = position; }
-		inline void SeDirection(const glm::vec3& direction) { m_Forward = direction; }
+		inline void SetDirection(const glm::vec3& direction) { m_Forward = direction; }
 		inline void MoveForward(const float& value) { m_Position += m_Forward * value; }
 		inline void MoveBack(const float& value) { m_Position -= m_Forward * value; }
 		inline void MoveRight(const float& value) { m_Position -= glm::cross(m_Up, m_Forward) * value; }

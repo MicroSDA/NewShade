@@ -26,6 +26,11 @@ void shade::EntitiesDocker::DestroyEntities()
     m_Registry.clear();
 }
 
+const entt::registry& shade::EntitiesDocker::GetEntities() const
+{
+    return m_Registry;
+}
+
 entt::registry& shade::EntitiesDocker::GetEntities()
 {
     return m_Registry;

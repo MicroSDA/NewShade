@@ -1,0 +1,12 @@
+Scene: scene
+Entities:
+  - Entity: 1048577
+    Tag: Direct light
+  - Entity: 0
+    Tag: Cube
+    Transform3D:
+      Position: [0, 0, 0]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    Model3D:
+      Asset: Cube

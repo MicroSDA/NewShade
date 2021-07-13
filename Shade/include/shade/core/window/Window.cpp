@@ -2,7 +2,7 @@
 #include "Window.h"
 
 #ifdef SHADE_WINDOWS_PLATFORM
-	#include "shade/platforms/window/WindowsWindow.h"
+	#include "shade/platforms/windows/WindowsWindow.h"
 #endif
 
 namespace shade

@@ -16,7 +16,7 @@ shade::Application::Application(int argc, char* argv[])
 	{
 		SHADE_CORE_ERROR("Application already exists!")
 	}
-	
+
 }
 
 shade::Application::~Application()
@@ -41,11 +41,12 @@ shade::Unique<shade::Window>& shade::Application::GetWindow()
 
 void shade::Application::Start()
 {
-	if(m_Window != nullptr)
+	if (m_Window != nullptr)
 		m_Window->SetEventCallback(SHADE_BIND_EVENT_FN(Application::OnEvent));
 
+	// TODO Scenee assigment
 	Timer deltaTime;
-	Shared<Scene> dummyScene = CreateUnique<Scene>("Dummy");
+	Shared<Scene> dummyScene = Scene::Create();
 
 	Render::Init();
 	Render::SetViewPort(0, 0, m_Window->GetWidth(), m_Window->GetHeight());
@@ -58,22 +59,20 @@ void shade::Application::Start()
 		shade::Render::Clear();
 		NativeScriptsUpdate(deltaTime);
 
-		if (m_CurrentScene != nullptr)
-		{
-			m_CurrentScene->NativeScriptsUpdate(deltaTime);
 
-			for (auto&const layer : m_Layers)
+		((!m_CurrentScene) ? dummyScene : m_CurrentScene)->NativeScriptsUpdate(deltaTime);
+
+		for (auto& const layer : m_Layers)
+		{
+			if (layer->IsActive())
 			{
-				if (layer->IsActive())
+				if (layer->IsUpdate())
+					layer->OnUpdate((!m_CurrentScene) ? dummyScene : m_CurrentScene, deltaTime);
+				if (layer->IsRender())
 				{
-					if (layer->IsUpdate())
-						layer->OnUpdate((!m_CurrentScene) ? dummyScene : m_CurrentScene, deltaTime);
-					if (layer->IsRender())
-					{
-						layer->OnRenderBegin();
-						layer->OnRender((!m_CurrentScene) ? dummyScene : m_CurrentScene);
-						layer->OnRenderEnd();
-					}
+					layer->OnRenderBegin();
+					layer->OnRender((!m_CurrentScene) ? dummyScene : m_CurrentScene);
+					layer->OnRenderEnd();
 				}
 			}
 		}
@@ -102,7 +101,7 @@ void shade::Application::OnEvent(shade::Event& event)
 	}
 
 }
-shade::Layer* shade::Application::GetLayer(const std::string& name) 
+shade::Layer* shade::Application::GetLayer(const std::string& name)
 {
 	for (auto& layer : m_Layers)
 	{
@@ -131,13 +130,24 @@ void shade::Application::NativeScriptsUpdate(const shade::Timer& timer)
 
 shade::Shared<shade::Scene> shade::Application::CreateScene(const std::string& name)
 {
-	m_CurrentScene = shade::CreateShared<Scene>(name);
-	return m_CurrentScene;
+	//m_CurrentScene = shade::CreateShared<Scene>(name);
+	//return m_CurrentScene;
+	return nullptr;
 }
 
 void shade::Application::DeleteCurrentScene()
 {
 	m_CurrentScene.reset();
+}
+
+void shade::Application::SetCurrentScene(const Shared<Scene>& scene)
+{
+	m_CurrentScene = scene;
+}
+
+shade::Shared<shade::Scene> shade::Application::GetCurrentScene()
+{
+	return m_CurrentScene;
 }
 
 bool shade::Application::DeleteLayer(const std::string& name)
@@ -149,7 +159,7 @@ bool shade::Application::DeleteLayer(const std::string& name)
 			delete layer;
 			return true;
 		}
-			
+
 	}
 
 	SHADE_CORE_WARNING("Layer '{0}' has not been found!", name);

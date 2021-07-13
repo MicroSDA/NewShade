@@ -71,6 +71,7 @@ bool shade::AssetData::Deserialize(std::istream& stream)
 
 bool shade::AssetData::Serialize() const
 {
+    // TODO: Need to rewrite it
     if (Attribute("path").empty())
     {
         SHADE_CORE_WARNING("Saving path is empty for asset data '{0}'", Attribute("id").as_string());

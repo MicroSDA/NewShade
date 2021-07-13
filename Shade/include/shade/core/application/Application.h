@@ -29,6 +29,8 @@ namespace shade
 		static  Application& Get();
 		Unique<Window>& CreateWindow(const WindowConfig& config = WindowConfig());
 		Unique<Window>& GetWindow();
+		void						SetCurrentScene(const Shared<Scene>& scene);
+		Shared<Scene>				GetCurrentScene();
 	private:
 	//Need make private and specific friend for handle this
 		void Start();

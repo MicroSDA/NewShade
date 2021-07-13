@@ -4,7 +4,7 @@
 
 namespace shade
 {
-	class UniformBuffer
+	class SHADE_API UniformBuffer
 	{
 	public:
 		virtual ~UniformBuffer() = default;

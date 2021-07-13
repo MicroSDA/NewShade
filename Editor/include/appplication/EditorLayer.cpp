@@ -57,10 +57,13 @@ void EditorLayer::OnRender(const shade::Shared<shade::Scene>& scene)
 			ImGuiID dockspace_id = ImGui::GetID("DockSpace");
 			ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), m_DockSpaceFlags);
 		}
-
+		
+		MainMenu(scene.get());
 		ShowWindowBar("Entities", &EditorLayer::Entities, this, scene.get());
 		ShowWindowBar("Inspector", &EditorLayer::Inspector, this, m_SelectedEntity);
 		ShowWindowBar("Scene", &EditorLayer::Scene, this, scene.get());
+		ShowWindowBar("File explorer", &EditorLayer::FileExplorer, this, "");
+		ShowWindowBar("Asset explorer", &EditorLayer::AssetsExplorer, this, shade::AssetManager::GetAssetsDataList());
 
 	} ImGui::End(); // Begin("DockSpace")
 
@@ -69,12 +72,12 @@ void EditorLayer::OnRender(const shade::Shared<shade::Scene>& scene)
 		shade::Render::Begin(m_FrameBuffer);
 			
 			shade::Render::BeginScene(m_GridShader, m_EditorCamera);
-				shade::Render::DepthTest(false);
+				//shade::Render::DepthTest(false);
 				shade::Render::DrawSubmited(m_GridShader);
 			shade::Render::EndScene(m_GridShader);
 
 			shade::Render::BeginScene(m_InstancedShader, m_EditorCamera, environments.raw(), environments.size());
-				shade::Render::DepthTest(true);
+				//shade::Render::DepthTest(true);
 				shade::Render::DrawInstanced(m_InstancedShader);
 			shade::Render::EndScene(m_InstancedShader);
 
@@ -315,12 +318,104 @@ void EditorLayer::TagComponent(shade::Entity& entity)
 		tag = std::string(buffer);
 }
 
+void EditorLayer::FileExplorer(const std::string& rootPath)
+{
+	ImGui::Text("FileExplorer");
+
+}
+
+void EditorLayer::MainMenu(shade::Scene* scene)
+{
+	if (ImGui::BeginMenuBar())
+	{
+		if (ImGui::BeginMenu("File"))
+		{
+			if (ImGui::BeginMenu("Scene"))
+			{
+				if (ImGui::MenuItem("Open scene"))
+				{
+					auto path = shade::FileDialog::OpenFile("Shade scene(*.scene) \0*.scene\0");
+					if (!path.empty())
+					{
+						/*shade::AssetManager::Hold<shade::Scene>("Scene", shade::Asset::State::RemoveIfPosible, [](auto& asset) 
+							{
+								shade::Application::Get().SetCurrentScene(shade::AssetManager::Receive<shade::Scene>(asset));
+							});*/
+
+						auto scene = shade::Scene::Create();
+						scene->GetAssetData().Attribute("path").set_value(path.string().c_str());
+						scene->Deserialize(); 
+						shade::Application::Get().SetCurrentScene(scene);
+					}
+				}
+
+				if (ImGui::MenuItem("Save scene"))
+				{
+					auto path = shade::FileDialog::SaveFile("Shade scene(*.scene) \0*.scene\0");
+					if (!path.empty())
+					{
+						scene->GetAssetData().Attribute("id").set_value(path.stem().string().c_str());
+						scene->GetAssetData().Attribute("path").set_value(path.string().c_str());
+						scene->Serialize();
+					}
+						
+				}
+
+				ImGui::EndMenu();
+			}
+
+			ImGui::EndMenu();
+		}
+
+		ImGui::EndMenuBar();
+	}
+}
+
+void EditorLayer::AssetsExplorer(shade::AssetManager::AssetsDataList& data)
+{
+	for (auto& asset : data)
+	{
+		if (ImGui::BeginMenu(asset.second.Attribute("type").as_string()))
+		{
+			AssetDataExpader(asset.second);
+
+			ImGui::EndMenu();
+		}
+		
+	}
+}
+
 void EditorLayer::Transform3DComponent(shade::Entity& entity)
 {
 	auto& transform = entity.GetComponent<shade::Transform3DComponent>();
 	DrawVec3F("Position", glm::value_ptr(transform.GetPosition()));
 	DrawVec3F("Roatation", glm::value_ptr(transform.GetRotation()));
 	DrawVec3F("Scale", glm::value_ptr(transform.GetScale()), 1.0f);
+}
+
+void EditorLayer::AssetDataExpader(shade::AssetData& data)
+{
+	if (data.Dependencies().size())
+	{
+		if (ImGui::BeginMenu(data.Attribute("id").as_string()))
+		{
+			for (auto& asset : data.Dependencies())
+			{
+				AssetDataExpader(asset);
+			}
+
+			ImGui::EndMenu();
+		}
+	}
+	else
+	{
+		if(ImGui::MenuItem(data.Attribute("id").as_string()))
+		{
+			// Preveiw i guess
+			if (strcmp(data.Attribute("type").as_string(), "texture") == 0)
+				DrawImage(1, 100, 100, false);	
+		}
+	}
 }
 
 void EditorLayer::Model3dComponent(shade::Entity& entity)

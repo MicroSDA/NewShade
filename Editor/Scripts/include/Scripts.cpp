@@ -22,6 +22,7 @@ void Script::OnDestroy()
 void Script::OnUpdate(const shade::Timer& deltaTime)
 {
 	auto _Camera = GetComponent<shade::CameraComponent>();
+	//SHADE_CORE_TRACE("x:{0} y:{1} z:{2}", _Camera->GetForwardDirrection().x, _Camera->GetForwardDirrection().y, _Camera->GetForwardDirrection().z);
 	{ // Movment
 		if (shade::Input::IsKeyPressed(shade::Key::W))
 			_Camera->MoveForward(m_MovementSpeed * deltaTime);
@@ -34,8 +35,7 @@ void Script::OnUpdate(const shade::Timer& deltaTime)
 			_Camera->MoveRight(m_MovementSpeed * deltaTime);
 	}
 	{
-		if (shade::Input::IsMouseButtonPressed(shade::Mouse::ButtonLeft)&&
-			shade::Input::IsMouseButtonPressed(shade::Mouse::ButtonRight))
+		if (shade::Input::IsMouseButtonPressed(shade::Mouse::ButtonMiddle))
 		{
 			shade::Input::ShowMouseCursor(false);
 			glm::ivec2 _DeltaPos = shade::Input::GetMousePosition();

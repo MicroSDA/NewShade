@@ -16,6 +16,7 @@ namespace shade
 	
 		void DestroyEntity(const Entity& entity);
 		void DestroyEntities();
+		const entt::registry& GetEntities() const;
 		entt::registry& GetEntities();
 	private:
 		entt::registry     m_Registry;

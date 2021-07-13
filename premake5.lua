@@ -14,12 +14,14 @@ includeDir["glm"]  	 	= "Shade/vendors/glm"
 includeDir["ImGui"]  	= "Shade/vendors/ImGui"
 includeDir["pugixml"]   = "Shade/vendors/pugixml"
 includeDir["ImGuizmo"]  = "Shade/vendors/ImGuizmo"
+includeDir["Yaml"]  	= "Shade/vendors/Yaml/include"
 
 
 include "Shade/vendors/glfw"
 include "Shade/vendors/glad"
 include "Shade/vendors/ImGui"
 include "Shade/vendors/pugixml"
+include "Shade/vendors/Yaml"
 
 group "Engine"
 project "Shade"
@@ -51,7 +53,8 @@ project "Shade"
 		"%{includeDir.glm}",
 		"%{includeDir.ImGui}",
 		"%{includeDir.pugixml}",
-		"%{includeDir.ImGuizmo}"
+		"%{includeDir.ImGuizmo}",
+		"%{includeDir.Yaml}"
 	}
 	
 	links {
@@ -59,7 +62,8 @@ project "Shade"
 		"glad",
 		"opengl32.lib",
 		"ImGui",
-		"pugixml"
+		"pugixml",
+		"Yaml"
 	}
 
 	filter "files:vendors/ImGuizmo/**.cpp"

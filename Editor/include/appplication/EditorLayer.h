@@ -32,6 +32,9 @@ private:
 	shade::Shared<shade::Grid>   m_Grid;
 
 	shade::Entity m_SelectedEntity;
+	void MainMenu(shade::Scene* scene);
+	void AssetsExplorer(shade::AssetManager::AssetsDataList& data);
+	void FileExplorer(const std::string& rootPath);
 	void Entities(shade::Scene* scene);
 	void Inspector(shade::Entity& entity);
 	void Scene(shade::Scene* scene);
@@ -39,6 +42,8 @@ private:
 	void Transform3DComponent(shade::Entity& entity);
 	void EnvironmentComponent(shade::Entity& entity);
 	void Model3dComponent(shade::Entity& entity);
+
+	void AssetDataExpader(shade::AssetData& data);
 
 	void DarkVineTheme();
 

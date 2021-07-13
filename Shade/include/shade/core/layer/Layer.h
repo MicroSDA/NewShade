@@ -5,6 +5,7 @@
 #include "shade/core/application/Application.h"
 #include "shade/core/render/Render.h"
 #include "shade/core/assets/AssetManager.h"
+#include "shade/core/utils/FileDialog.h"
 
 namespace shade
 {

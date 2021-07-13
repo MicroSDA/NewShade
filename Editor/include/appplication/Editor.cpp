@@ -9,15 +9,17 @@ void Editor::OnCreate()
 {
 	auto& widnow = CreateWindow();
 	shade::AssetManager::LoadAssetDataListFromFile("resources/assets/Assets.xml");
-	auto& scene = this->CreateScene("Main");
+	//auto& scene = this->CreateScene("Main");
 
 
 	auto layer = this->CreateLayer<EditorLayer>("EditorLayer");
 	auto camera = CreateEntity("Camera");
 
 
-	camera.AddComponent<shade::CameraComponent>(shade::CreateShared<shade::Camera>());
-
+	auto& _camera = camera.AddComponent<shade::CameraComponent>(shade::CreateShared<shade::Camera>());
+	_camera->SetDirection(glm::vec3(-0.011512465, -0.33462766, 0.94228005));
+	_camera->SetPosition(glm::vec3(0, 10, -20));
+	// x:-0.011512465 y:-0.33462766 z:0.94228005
 	HMODULE hModule = LoadLibrary(TEXT("../Scripts/Scripts.dll"));
 	if (hModule)
 	{
