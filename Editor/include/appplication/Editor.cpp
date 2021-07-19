@@ -19,14 +19,17 @@ void Editor::OnCreate()
 	auto& _camera = camera.AddComponent<shade::CameraComponent>(shade::CreateShared<shade::Camera>());
 	_camera->SetDirection(glm::vec3(-0.011512465, -0.33462766, 0.94228005));
 	_camera->SetPosition(glm::vec3(0, 10, -20));
-	// x:-0.011512465 y:-0.33462766 z:0.94228005
+
 	HMODULE hModule = LoadLibrary(TEXT("../Scripts/Scripts.dll"));
+
 	if (hModule)
 	{
 		auto script = shade::GetScript<shade::ScriptableEntity*>("Instantiate", hModule);
 		if(script)
 			camera.AddComponent<shade::NativeScriptComponent>().Bind(script);
 	}
+
+	//FreeLibrary(hModule);
 
 	//auto directLight = scene->CreateEntity("DirectLight");
 	//directLight.AddComponent<shade::EnvironmentComponent>(shade::CreateShared<shade::DirectLight>());

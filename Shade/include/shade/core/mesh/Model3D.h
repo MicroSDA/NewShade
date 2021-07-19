@@ -17,7 +17,7 @@ namespace shade
 		virtual bool Deserialize(std::istream& stream) override;
 		virtual bool Serialize() const override;
 		virtual bool Deserialize() override;
-	private:
+	protected:// Temporary
 		std::vector<Shared<Mesh>> m_Meshes;
 	};
 }

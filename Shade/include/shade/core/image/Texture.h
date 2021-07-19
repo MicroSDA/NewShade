@@ -5,7 +5,7 @@
 
 namespace shade
 {
-	class Texture : public Asset
+	class SHADE_API Texture : public Asset
 	{
 	public:
 		static Shared<Texture> Create();

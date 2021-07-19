@@ -10,6 +10,7 @@ namespace shade
 	std::unordered_map<const Drawable*, Render::InstancedRender> Render::m_sInstancedRender;
 	std::unordered_map<const Drawable*, Render::Submited> Render::m_sSubmitedRender;
 	Shared<UniformBuffer> Render::m_sCameraUniformBuffer;
+	Shared<UniformBuffer> Render::m_sClippingUniformBuffer;
 }
 
 void shade::Render::Init()
@@ -21,6 +22,7 @@ void shade::Render::Init()
 
 
 		m_sCameraUniformBuffer = UniformBuffer::Create(sizeof(Camera::Data), 0);
+		m_sClippingUniformBuffer = UniformBuffer::Create(sizeof(glm::vec4), 1);
 	}
 	else
 		SHADE_CORE_WARNING("Render API has been already initialized!");
@@ -207,10 +209,11 @@ void shade::Render::SubmitInstanced(const Drawable* drawable, const glm::mat4& t
 	}
 }
 
-void shade::Render::BeginScene(const Shared<Shader>& shader, const Shared<Camera>& camera, const Shared<Environment>* enviroments, const std::size_t& enviromentsCount)
+void shade::Render::BeginScene(const Shared<Shader>& shader, const Shared<Camera>& camera, const Shared<Environment>* enviroments, const std::size_t& enviromentsCount, const glm::vec4& clipping)
 {
 	shader->Bind();
 	m_sCameraUniformBuffer->SetData(&camera->GetData(), sizeof(Camera::Data), 0);
+	m_sClippingUniformBuffer->SetData(glm::value_ptr(clipping), sizeof(glm::vec4), 0);
 	m_sRenderAPI->BeginScene(shader, camera, enviroments, enviromentsCount);
 }
 

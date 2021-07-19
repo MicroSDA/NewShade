@@ -27,12 +27,21 @@ layout(std140, binding = 0) uniform UniformCamera
 	Camera u_Camera;
 };
 
+layout(std140, binding = 1) uniform UniformClipDistance
+{
+	vec4 u_ClipDistance;
+};
+
 out mat3 out_TBN;
 
  
 void main()
 {
+	
 	gl_Position = u_Camera._Projection * u_Camera._View * Transform *  vec4(Position, 1.0f);
+	gl_ClipDistance[0] = dot(u_Camera._View * vec4(Position, 1.0f), u_ClipDistance);
+	
+	
 	out_UV_Coordinates = UV_Coordinates;
 	out_Normal  = (Transform * vec4(Normal, 0.0)).xyz;
 	out_TBN =  CalculateTBNMatrix(Transform, Normal, Tangent);
@@ -77,10 +86,12 @@ in mat3 out_TBN;
 void main()
 {
 
+		
 	    vec3 TBNNormal = CalculateTBNNormal(texture(textures.Samplers[TEXTURE_NORMAL].Sampler, UV_Coordinates).rgb, out_TBN);
 		vec3 ToCameraDirection = normalize(CameraPosition - Vertex);
 
 		vec4 TotalColor = ProcessDirectLight(TBNNormal, u_Lighting._DirectLight, u_Material, ToCameraDirection, texture(textures.Samplers[TEXTURE_DIFFUSE].Sampler, UV_Coordinates).rgba, texture(textures.Samplers[TEXTURE_SPECULAR].Sampler, UV_Coordinates).rgba);
+		//vec4 TotalColor = ProcessDirectLight(Normal, u_Lighting._DirectLight, u_Material, ToCameraDirection, vec4(1,1,1,1), vec4(1,1,1,1));
 		for(int i = 0; i < u_Lighting._PointLightsCount; i++)
 		{
 			TotalColor += ProcessPointLight(TBNNormal, u_Lighting._PointLights[i], u_Material, Vertex, ToCameraDirection, texture(textures.Samplers[TEXTURE_DIFFUSE].Sampler, UV_Coordinates).rgba, texture(textures.Samplers[TEXTURE_SPECULAR].Sampler, UV_Coordinates).rgba);
@@ -94,6 +105,11 @@ void main()
 				break;
 		}
 
+		if(texture(textures.Samplers[TEXTURE_DIFFUSE].Sampler, UV_Coordinates).a <= 0.5)
+			discard;
+		if(texture(textures.Samplers[TEXTURE_SPECULAR].Sampler, UV_Coordinates).a <= 0.5)
+			discard;
+		
 		ColorAttachment = vec4(pow(TotalColor.rgb, vec3(0.60/1)), 1.0 ); // m_TotalColor.a for imgui alpha shoudl be as 1.0 
 		//ColorAttachment = vec4(TotalColor.rgb, 1.0); // m_TotalColor.a for imgui alpha shoudl be as 1.0 
 		//ColorAttachment = texture(Textures[TEXTURE_DIFFUSE], UV_Coordinates).rgba;

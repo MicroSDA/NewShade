@@ -1,6 +1,7 @@
 #include "EditorLayer.h"
 //#include <pugixml/pugixml.hpp> // Temporary
 //#include <pugixml/pugiconfig.hpp> // Temporary
+#include "IModel3D.h"
 
 EditorLayer::EditorLayer(const std::string& name) :
 	shade::ImGuiLayer(name)
@@ -97,31 +98,7 @@ void EditorLayer::OnEvent(const shade::Shared<shade::Scene>& scene, shade::Event
 	{
 		shade::KeyCode keyCode = static_cast<shade::KeyEvent*>(&event)->GetKeyCode();
 
-		if (keyCode == shade::Key::Insert)
-		{
-			for (auto i = 0; i < 100; i++)
-			{
-				shade::AssetManager::Hold<shade::Model3D>("nanosuit", shade::Asset::State::RemoveIfPosible,
-					[scene](auto& model)
-					{
-						auto& entity = scene->CreateEntity("Nanosuit");
-						entity.AddComponent<shade::Model3DComponent>(shade::AssetManager::Receive<shade::Model3D>(model));
-						auto& transform = entity.AddComponent<shade::Transform3DComponent>();
-						transform.SetPostition(1 + rand() % 100, 1 + rand() % 100, 1 + rand() % 100);
-						transform.SetRotation(1 + rand() % 100, 1 + rand() % 100, 1 + rand() % 100);
-					});
-				shade::AssetManager::Hold<shade::Model3D>("Cube", shade::Asset::State::RemoveIfPosible,
-					[scene](auto& model)
-					{
-						auto& entity = scene->CreateEntity("Cube");
-						entity.AddComponent<shade::Model3DComponent>(shade::AssetManager::Receive<shade::Model3D>(model));
-						auto& transform = entity.AddComponent<shade::Transform3DComponent>();
-						transform.SetPostition(1 + rand() % 100, 1 + rand() % 100, 1 + rand() % 100);
-						transform.SetRotation(1 + rand() % 100, 1 + rand() % 100, 1 + rand() % 100);
-					});
-			}
-		}
-		else if (keyCode == shade::Key::Home)
+		if (keyCode == shade::Key::Home)
 		{
 			scene->DestroyEntities();
 		}
@@ -139,6 +116,11 @@ void EditorLayer::OnEvent(const shade::Shared<shade::Scene>& scene, shade::Event
 				if (m_AllowedGuizmoOperation & ImGuizmo::OPERATION::TRANSLATE)
 					m_GuizmoOperation = ImGuizmo::OPERATION::TRANSLATE; break;
 			}
+		}
+		else if (keyCode == shade::Key::F9)
+		{
+			m_InstancedShader->Recompile();
+			m_GridShader->Recompile();
 		}
 		
 	}
@@ -359,6 +341,26 @@ void EditorLayer::MainMenu(shade::Scene* scene)
 						scene->Serialize();
 					}
 						
+				}
+
+				ImGui::EndMenu();
+			}
+
+			if (ImGui::BeginMenu("Import"))
+			{
+				if (ImGui::MenuItem("Model"))
+				{
+					auto path = shade::FileDialog::OpenFile("Supported formats(*.obj, *.fbx, *.dae) \0*.obj;*.fbx;*.dae\0");
+					if (!path.empty())
+					{
+						auto model = IModel3D::Import(path.string());
+						if (model)
+						{
+							auto entity = scene->CreateEntity("ImportedModel");
+							entity.AddComponent<shade::Transform3DComponent>();
+							entity.AddComponent<shade::Model3DComponent>(model);
+						}
+					}
 				}
 
 				ImGui::EndMenu();

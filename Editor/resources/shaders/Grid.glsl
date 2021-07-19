@@ -56,13 +56,13 @@ vec4 grid(vec3 fragPos3D, float scale, bool drawAxis) {
     float line = min(grid.x, grid.y);
     float minimumz = min(derivative.y, 1);
     float minimumx = min(derivative.x, 1);
-    vec4 color = vec4(0.3, 0.3, 0.3, 1.0 - min(line, 1.0));
+    vec4 color = vec4(0.2, 0.2, 0.2, 1.0 - min(line, 1));
     // z axis
-    if(fragPos3D.x > -0.1 * minimumx && fragPos3D.x < 5 * minimumx)
-       color.rgb = vec3(0.1, 0.1, 1.0);
+    if(fragPos3D.x > - 10 * minimumx && fragPos3D.x < 5 * minimumx)
+       color.rgb = vec3(0.0, 0.0, 1.0);
     // x axis
-    if(fragPos3D.z > -0.1 * minimumz && fragPos3D.z < 5 * minimumz)
-        color.rgb = vec3(1.0, 0.1, 0.1);
+    if(fragPos3D.z > - 10 * minimumz && fragPos3D.z < 5 * minimumz)
+        color.rgb = vec3(1.0, 0.0, 0.0);
     return color;
 }
 float computeDepth(vec3 pos) {
@@ -78,11 +78,11 @@ float computeDepth(vec3 pos) {
 float computeLinearDepth(vec3 pos) {
     vec4 clip_space_pos = fragProj * fragView * vec4(pos.xyz, 1.0);
     float clip_space_depth = (clip_space_pos.z / clip_space_pos.w) * 2.0 - 1.0; // put back between -1 and 1
-    float linearDepth = (2.0 * 0.01 * 100) / (100 + 0.01 - clip_space_depth * (100 - 0.01)); // get linear value between 0.01 and 100
+    float linearDepth = (2.0 * gl_DepthRange.near * gl_DepthRange.far) / (gl_DepthRange.far + gl_DepthRange.near - clip_space_depth * (gl_DepthRange.far - gl_DepthRange.near)); // get linear value between 0.01 and 100
     return linearDepth / 100; // normalize
 }
 
-layout (depth_any) out float gl_FragDepth;
+//layout (depth_any) out float gl_FragDepth;
 
 void main()
 {
@@ -95,9 +95,9 @@ void main()
     float linearDepth = computeLinearDepth(fragPos3D);
     float fading = max(0, (0.5 - linearDepth));
 
-    ColorAttachment = (grid(fragPos3D, 0.1, true) + grid(fragPos3D, 1, true))* float(t > 0); 
+    ColorAttachment = (grid(fragPos3D, 0.01, true) + grid(fragPos3D, 0.1, true))* float(t > 0); 
 	ColorAttachment.a *= fading;
-	if(ColorAttachment.a == 0.0)
+	if(ColorAttachment.a <= 0.2)
 		discard;
 	
 }

@@ -54,7 +54,7 @@ namespace shade
 			const Shared<Shader>& shader,
 			const Shared<Camera>& camera,
 			const Shared<Environment>* enviroments = nullptr,
-			const std::size_t& enviromentsCount = 0);
+			const std::size_t& enviromentsCount = 0, const glm::vec4& clipping = glm::vec4(0));
 		static void EndScene(const Shared<Shader>& shader);
 		static void End(Shared<FrameBuffer> framebuffer = nullptr);
 		static void DrawIndexed(const Drawable* drawable, const Shared<VertexArray>& VAO, const Shared<IndexBuffer>& IBO);
@@ -65,5 +65,6 @@ namespace shade
 		static std::unordered_map<const Drawable*, InstancedRender> m_sInstancedRender;
 		static std::unordered_map<const Drawable*, Submited>		m_sSubmitedRender;
 		static Shared<UniformBuffer>								m_sCameraUniformBuffer;
+		static Shared<UniformBuffer>								m_sClippingUniformBuffer;
 	};
 }

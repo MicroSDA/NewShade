@@ -14,7 +14,7 @@ void OpenGLMessageCallback(
 {
 	switch (severity)
 	{
-	case GL_DEBUG_SEVERITY_HIGH:         SHADE_CORE_ERROR(message);		return;
+	case GL_DEBUG_SEVERITY_HIGH:         SHADE_CORE_WARNING(message);		return;
 	case GL_DEBUG_SEVERITY_MEDIUM:       SHADE_CORE_WARNING(message);	return;
 	case GL_DEBUG_SEVERITY_LOW:          SHADE_CORE_WARNING(message);	return;
 	case GL_DEBUG_SEVERITY_NOTIFICATION: SHADE_CORE_TRACE(message);		return;
@@ -27,13 +27,14 @@ void shade::OpenGLRenderAPI::Init()
 	glEnable(GL_DEBUG_OUTPUT);
 	glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 	glDebugMessageCallback(OpenGLMessageCallback, nullptr);
-
 	glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_NOTIFICATION, 0, NULL, GL_FALSE);
 #endif
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glEnable(GL_CULL_FACE);
 	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_CLIP_DISTANCE0);
+	glEnable(GL_CLIP_DISTANCE1);
 }
 
 void shade::OpenGLRenderAPI::SetClearColor(const float& r, const float& g, const float& b, const float& a)
@@ -43,7 +44,7 @@ void shade::OpenGLRenderAPI::SetClearColor(const float& r, const float& g, const
 
 void shade::OpenGLRenderAPI::Clear()
 {
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 }
 
 void shade::OpenGLRenderAPI::SetViewPort(std::uint32_t x, std::uint32_t y, std::uint32_t width, std::uint32_t height)

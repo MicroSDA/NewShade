@@ -28,6 +28,8 @@ namespace shade
 		virtual bool Deserialize(std::istream& stream) override;
 		virtual bool Serialize() const override;
 		virtual bool Deserialize() override;
+
+		virtual void Recompile() override;
 	private:
 		std::vector<GLuint> m_Shaders;
 		GLuint				m_Program;
@@ -38,7 +40,6 @@ namespace shade
 		std::unordered_map<GLenum, std::string> m_OpenGLSourceCode;
 		mutable std::unordered_map<std::string, GLint> m_UniformLocation; // Make it static ?
 		GLenum ToOpenGLShaderType(const Type& type);
-
 	};
 }
 	

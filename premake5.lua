@@ -110,15 +110,19 @@ project "Editor"
 
 	includedirs {
 		"%{prj.name}/include",
+		"%{prj.name}/include/vendors",
 		"Shade/vendors/spdlog/include",
 		"Shade/vendors/glm/",
 		"Shade/include",
 		"Shade/vendors"
 	}
+	
+	libdirs {"%{prj.name}/libs/assimp" }
 
 	links {
 		"Shade",
-		"pugixml"
+		"pugixml",
+		"assimp-vc142-mt"
 	}
 	filter "system:windows"
 		cppdialect "C++17"

@@ -33,10 +33,13 @@ namespace shade
 		virtual void SendMat4(const std::string& name,		const bool& isTransponse, const float* value) = 0;
 		virtual int GetUniformLocation(const std::string& name) const = 0;
 		static Shared<Shader> Create(const std::string& filePath);
+		virtual void Recompile() = 0;
 	protected:
 		std::unordered_map<Type, std::string> m_SourceCode;
 		bool Parse(const std::string& source);
 		Type GetTypeFromString(const std::string& type);
 		void FindInclude(std::string& source);
+
+		std::string m_Path;
 	};
 }

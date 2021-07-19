@@ -3,6 +3,7 @@
 
 shade::OpenGLShader::OpenGLShader(const std::string& filePath)
 {
+	m_Path = filePath;
 	std::ifstream file;
 	file.open(filePath, std::ios::in | std::ios::binary);
 	if (file.is_open())
@@ -170,6 +171,29 @@ GLenum shade::OpenGLShader::ToOpenGLShaderType(const Type& type)
 	default:
 		SHADE_CORE_WARNING("Undefined shader type!"); return -1;
 	}
+}
+
+void shade::OpenGLShader::Recompile()
+{
+	UnBind();
+	for (unsigned int i = 0; i < m_Shaders.size(); i++) {
+		glDeleteShader(m_Shaders[i]);
+	}
+	glDeleteProgram(m_Program);
+
+	std::ifstream file;
+	file.open(m_Path, std::ios::in | std::ios::binary);
+	if (file.is_open())
+	{
+		if (Deserialize(file))
+		{
+			m_Program = CreateProgram();
+		}
+		else
+			SHADE_CORE_WARNING("Failed to deserialize source file :'{0}'.", m_Path);
+	}
+	else
+		SHADE_CORE_WARNING("Failed to open shader source file :'{0}'.", m_Path);
 }
 
 int shade::OpenGLShader::GetUniformLocation(const std::string& name) const

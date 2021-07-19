@@ -39,24 +39,32 @@ bool shade::Texture::Deserialize()
 	std::string id = GetAssetData().Attribute("id").as_string();
 	std::string path = GetAssetData().Attribute("path").as_string();
 
-	std::ifstream file;
-	file.open(path + id + ".dds", std::ios::binary);
-
-	if (file.is_open() && file.good())
+	if (std::filesystem::path(path).extension().string() == ".dds")
 	{
-		m_ImageData = Image::LoadFromStream(file);
-		file.close();
-		if (m_ImageData.Data != nullptr)
-			return true;
+		std::ifstream file;
+		file.open(path, std::ios::binary);
+
+		if (file.is_open() && file.good())
+		{
+			m_ImageData = Image::LoadFromStream(file);
+			file.close();
+			if (m_ImageData.Data != nullptr)
+				return true;
+			else
+			{
+				SHADE_CORE_WARNING("Failed to decode image '{0}'.", path);
+				return false;
+			}
+		}
 		else
 		{
-			SHADE_CORE_WARNING("Failed to decode image '{0}'.", path + id + ".dds");
+			SHADE_CORE_WARNING("Failed to open file '{0}'.", path);
 			return false;
 		}
 	}
 	else
 	{
-		SHADE_CORE_WARNING("Failed to open file '{0}'.", path + id + ".dds");
+		SHADE_CORE_WARNING("Failed to import image, only dds supported :'{0}'.", path);
 		return false;
 	}
 }
