@@ -26,14 +26,16 @@ void shade::Mesh::AssetInit()
 	// Empty there
 }
 
-void shade::Mesh::LoadFromAssetData(shade::AssetData& data)
+void shade::Mesh::LoadFromAssetData(shade::AssetData& data, const shade::AssetData& bundle)
 {
 	SetAssetData(data);
 
-	for (auto& dependency : GetAssetData().Dependencies())
+	for (auto& dependency : bundle.Dependencies())
 	{
-		const std::string id = dependency.Attribute("id").as_string();
-		if (std::string(dependency.Attribute("type").as_string()) == "texture")
+		const std::string id	= dependency.Attribute("Id").as_string();
+		auto asset				= AssetManager::GetAssetData(id);
+
+		if (std::string(asset.Attribute("Type").as_string()) == "Texture")
 		{
 			AssetManager::Hold<Texture>(id, Asset::State::RemoveIfPosible,
 				[this](auto& texture) mutable
@@ -61,8 +63,8 @@ bool shade::Mesh::Serialize() const
 		return false;
 	else
 	{
-		std::string id		= GetAssetData().Attribute("id").as_string();
-		std::string path	= GetAssetData().Attribute("path").as_string();
+		std::string id		= GetAssetData().Attribute("Id").as_string();
+		std::string path	= GetAssetData().Attribute("Path").as_string();
 
 		if (path.empty())
 		{
@@ -72,7 +74,7 @@ bool shade::Mesh::Serialize() const
 
 		// Need to create one varible to save total size of file and place it in header to evade corupted file when reading
 		std::ofstream file;
-		file.open(path + id + ".s_mesh", std::ios::binary);
+		file.open(path, std::ios::binary);
 		if (file.is_open() && file.good())
 		{
 			shade::util::Binarizer::Write(file, "@s_mesh");
@@ -133,11 +135,11 @@ bool shade::Mesh::Serialize() const
 bool shade::Mesh::Deserialize()
 {
 	// Now only if it prsenet in asset data list
-	std::string id		= GetAssetData().Attribute("id").as_string();
-	std::string path	= GetAssetData().Attribute("path").as_string();
+	std::string id		= GetAssetData().Attribute("Id").as_string();
+	std::string path	= GetAssetData().Attribute("Path").as_string();
 
 	std::ifstream file;
-	file.open(path + id + ".s_mesh", std::ios::binary);
+	file.open(path, std::ios::binary);
 
 	if (file.is_open() && file.good())
 	{

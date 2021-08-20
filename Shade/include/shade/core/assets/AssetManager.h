@@ -32,13 +32,14 @@ namespace shade
 		// use Asset::State::KeepAlive or Asset::State::RemoveIfPosible if you don't want to keep it in memeory.
 		// All assets that were held with Asset::State::RemoveIfPosible flag will be removed automatically !
 		template<typename T>
-		static void Hold(const std::string& id, const Asset::State& state, ReceiverCallback reciverCallback);
+		static void Hold(const std::string& id, const Asset::State& state, ReceiverCallback reciverCallback, const AssetData& bundle = AssetData());
 		// For casting asset
 		template<typename T>
 		static auto Receive(shade::Shared<shade::Asset>& asset)->auto;
 		// Unload specific asset if ref count is 0
 		static void Free(const std::string& id);
 		static AssetsDataList& GetAssetsDataList();
+		static AssetData GetAssetData(const std::string& id);
 	public:
 		~AssetManager();
 	private:
@@ -51,7 +52,7 @@ namespace shade
 				ReceiverCallbacks.push_back(callback);
 			}
 			std::string						Id;
-			Asset::State					State;
+			Asset::State					State = Asset::State::RemoveIfPosible;
 			LoadingResult					Result;
 			std::vector<ReceiverCallback>	ReceiverCallbacks;
 		};
@@ -65,13 +66,15 @@ namespace shade
 	private:
 		static AssetManager& _Get();
 		void _RecursiveReadingAssetDataList(pugi::xml_node node);
+		void _ReadAssetDataList(pugi::xml_node node);
 		template<typename T>
-		void _LoadNewAsset(const std::string& id, const Asset::State& state, ReceiverCallback reciverCallback);
+		void _LoadNewAsset(const std::string& id, const Asset::State& state, ReceiverCallback reciverCallback, const AssetData& bundle);
 		void _DispatchAssets();
 		// Internal use for asset object only, will remove entry from AssetsDataList
 		static void _ImLast(const std::string& assetId);
 		// Internal use for Application only
 		static void _Clear();
+		static std::tuple<std::string, std::string> _IsBundle(const std::string& bundle);
 
 		bool											m_ImDestructing = false;
 		std::mutex										m_TasksMutex;
@@ -82,12 +85,14 @@ namespace shade
 		std::map<const std::string, AssetLoadingTask>	m_TasksList;
 	};
 	template<typename T>
-	inline void AssetManager::Hold(const std::string& id, const Asset::State& state, ReceiverCallback reciverCallback)
+	inline void AssetManager::Hold(const std::string& id, const Asset::State& state, ReceiverCallback reciverCallback, const AssetData& bundle)
 	{
-		// Cgeck if tsk exist at first!!!!!!!!!! Issue!!!!!!!
+		// Check if tsk exist at first!!!!!!!!!! Issue!!!!!!!
 		auto& manager = _Get();
 		std::unique_lock<std::mutex> lock{ manager.m_TasksMutex };
 		// Trying to find in Assets data list
+		//auto _id = _IsBundle(id);
+
 		auto assetReference = manager.m_AssetReferences.find(id);
 		if (assetReference != manager.m_AssetReferences.end())
 		{
@@ -121,7 +126,7 @@ namespace shade
 				else
 				{
 					// Start to load new asset
-					manager._LoadNewAsset<T>(id, state, reciverCallback);
+					manager._LoadNewAsset<T>(id, state, reciverCallback, bundle);
 				}
 			} // Check if asset was loaded with State::KeepAlive
 			else if (std::get_if<shade::Shared<shade::Asset>>(&assetReference->second.Reference))
@@ -139,12 +144,12 @@ namespace shade
 		}// We couldn't find so need to load
 		else
 		{
-			manager._LoadNewAsset<T>(id, state, reciverCallback);
+			manager._LoadNewAsset<T>(id, state, reciverCallback, bundle);
 		}
 	}
 
 	template<typename T>
-	inline void AssetManager::_LoadNewAsset(const std::string& id, const Asset::State& state, ReceiverCallback reciverCallback)
+	inline void AssetManager::_LoadNewAsset(const std::string& id, const Asset::State& state, ReceiverCallback reciverCallback, const AssetData& bundle)
 	{
 		//static_assert(std::is_member_function_pointer<decltype(&T::Create)>::value, "Specified asset doesn't have static Create fucntion");
 
@@ -157,6 +162,7 @@ namespace shade
 		else
 		{
 			auto assetData = m_AssetsDataList.find(id);
+
 			if (assetData != m_AssetsDataList.end())
 			{
 				AssetLoadingTask task(
@@ -167,7 +173,7 @@ namespace shade
 							try
 							{
 								auto asset = T::Create();
-								asset->LoadFromAssetData(assetData->second);
+								asset->LoadFromAssetData(assetData->second, bundle);
 								return std::make_tuple(std::static_pointer_cast<shade::Asset>(asset), std::current_exception());
 							}
 							catch (...)
@@ -182,7 +188,7 @@ namespace shade
 			}
 			else
 			{
-				SHADE_CORE_WARNING("Specifaed class name '{0}' hasn't been found.", id)
+				SHADE_CORE_WARNING("Specifaed asset id '{0}' hasn't been found.", id)
 			}
 		}
 	}

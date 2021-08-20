@@ -36,7 +36,7 @@ namespace shade
 		void					Append(AssetData& data);
 		const bool&				IsValid() const;
 		AssetData				Parent();
-		std::vector<AssetData>	Dependencies();
+		std::vector<AssetData>	Dependencies() const;
 
 		virtual bool Serialize(std::ostream& stream) const override;
 		virtual bool Deserialize(std::istream& stream) override;

@@ -5,11 +5,11 @@ shade::AssetData::AssetData():
     m_IsValid(false)
 {
     m_AssetData = m_Root.append_child("asset");
-    m_AssetData.append_attribute("id");
-    m_AssetData.append_attribute("description");
-    m_AssetData.append_attribute("category");
-    m_AssetData.append_attribute("type");
-    m_AssetData.append_attribute("path");
+    m_AssetData.append_attribute("Id");
+    m_AssetData.append_attribute("Description");
+    m_AssetData.append_attribute("Category");
+    m_AssetData.append_attribute("Type");
+    m_AssetData.append_attribute("Path");
 }
 
 shade::AssetData::AssetData(pugi::xml_node data):
@@ -37,15 +37,19 @@ shade::AssetData shade::AssetData::Parent()
     return AssetData();
 }
 
-std::vector<shade::AssetData> shade::AssetData::Dependencies()
+std::vector<shade::AssetData> shade::AssetData::Dependencies() const
 {
     std::vector<AssetData> dependencies;
     //dependencies.reserve(m_AssetData.child("dependencies").attribute("count").as_int());
     // &dependency ?
-    for (auto& dependency : m_AssetData.child("dependencies").children("asset"))
+    if (!m_AssetData.child("dependencies").empty())
     {
-        dependencies.push_back(dependency);
+        for (auto dependency : m_AssetData.child("dependencies").children("dependency"))
+        {
+            dependencies.push_back(dependency);
+        }
     }
+    
     return dependencies;
 }
 
@@ -71,16 +75,15 @@ bool shade::AssetData::Deserialize(std::istream& stream)
 
 bool shade::AssetData::Serialize() const
 {
-    // TODO: Need to rewrite it
-    if (Attribute("path").empty())
+    std::string path = Attribute("Path").as_string();
+
+    if (path.empty())
     {
-        SHADE_CORE_WARNING("Saving path is empty for asset data '{0}'", Attribute("id").as_string());
+        SHADE_CORE_WARNING("Saving path is empty for asset data '{0}'", Attribute("Id").as_string());
         return false;
     }
 
-    std::string path = Attribute("path").as_string();
-    path = path + Attribute("id").as_string();
-
+    path = path + Attribute("Id").as_string();
     path += ".xml";
     pugi::xml_document file;
     file.append_copy(_Raw());

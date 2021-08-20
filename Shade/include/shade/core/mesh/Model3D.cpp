@@ -18,20 +18,22 @@ shade::Model3D::~Model3D()
 
 }
 
-void shade::Model3D::LoadFromAssetData(shade::AssetData& data)
+void shade::Model3D::LoadFromAssetData(shade::AssetData& data, const shade::AssetData& bundle)
 {
     SetAssetData(data);
 
     for (auto& dependancy : GetAssetData().Dependencies())
     {
-        const std::string id = dependancy.Attribute("id").as_string();
-        if (std::string(dependancy.Attribute("type").as_string()) == "mesh")
+        const std::string id    = dependancy.Attribute("Id").as_string();
+        auto asset              = AssetManager::GetAssetData(id);
+
+        if (std::string(asset.Attribute("Type").as_string()) == "Mesh")
         {
             AssetManager::Hold<Mesh>(id, Asset::State::RemoveIfPosible,
                 [this](auto& mesh) mutable
                 {
                     m_Meshes.push_back(AssetManager::Receive<Mesh>(mesh));
-                });
+                }, dependancy);
         }
     }
 }

@@ -28,7 +28,7 @@ bool shade::AssetManager::LoadAssetDataListFromFile(const std::string& filePath)
 			SHADE_CORE_ERROR("Assets were not been found in '{0}'", filePath);
 			return false;
 		}
-		instance._RecursiveReadingAssetDataList(instance.m_AssetsDoc.child("assets"));
+		instance._ReadAssetDataList(instance.m_AssetsDoc.child("assets"));
 		return true;
 	}
 }
@@ -69,6 +69,20 @@ shade::AssetManager::AssetsDataList& shade::AssetManager::GetAssetsDataList()
 	return _Get().m_AssetsDataList;
 }
 
+shade::AssetData shade::AssetManager::GetAssetData(const std::string& id)
+{
+	auto& instance = _Get();
+
+	auto assetData = instance.m_AssetsDataList.find(id);
+	if (assetData != instance.m_AssetsDataList.end())
+		return AssetData(assetData->second);
+	else
+	{
+		SHADE_CORE_WARNING("Couldn't find specified asset data by asset id :{0}", id);
+		return AssetData();
+	}
+}
+
 shade::AssetManager& shade::AssetManager::_Get()
 {
 	static AssetManager instatnce;
@@ -98,6 +112,37 @@ void shade::AssetManager::_RecursiveReadingAssetDataList(pugi::xml_node node)
 			}
 		}
 	}
+}
+
+void shade::AssetManager::_ReadAssetDataList(pugi::xml_node node)
+{
+	if (!node.child("asset").empty())
+	{
+		for (auto& asset : node.children("asset"))
+		{
+			std::string id = asset.attribute("Id").as_string();
+
+			if (m_AssetsDataList.find(id) != m_AssetsDataList.end())
+			{
+				SHADE_CORE_WARNING("Current asset id already exists '{0}'. Skipped...", id);
+				continue;
+			}
+			else
+			{
+				m_AssetsDataList.emplace(id, AssetData(asset));
+			}
+		}
+	}
+
+
+	/*pugi::xml_document doc;
+	auto n = doc.append_child("assets");
+	for (auto asset : m_AssetsDataList)
+	{
+		n.append_copy(asset.second._Raw());
+	}
+
+	doc.save_file("Test.xml");*/
 }
 
 void shade::AssetManager::_DispatchAssets()
@@ -142,7 +187,7 @@ void shade::AssetManager::_DispatchAssets()
 				}
 				catch (std::exception& exc)
 				{
-					SHADE_CORE_ERROR("Exception: {0}", exc.what());
+					SHADE_CORE_ERROR("Asset load exception: {0}", exc.what());
 					task = instance.m_TasksList.erase(task);
 				}
 			}
@@ -172,4 +217,37 @@ void shade::AssetManager::_Clear()
 	// Trying to evade recursive deleting
 	_Get().m_ImDestructing = true;
 	_Get().m_AssetReferences.clear();
+}
+
+std::tuple<std::string, std::string> shade::AssetManager::_IsBundle(const std::string& bundle)
+{
+	const char delim = '/';
+	size_t start = 0;
+	size_t end = bundle.find(delim);
+	std::vector<std::string> _bundle;
+	std::tuple<std::string, std::string> out;
+
+	if (end != std::string::npos)
+	{
+		while (end != std::string::npos)
+		{
+			_bundle.push_back(bundle.substr(start, end - start));
+			//std::cout << bundle.substr(start, end - start) << std::endl;
+			start = end + 1; // delim size
+			end = bundle.find(delim, start);
+		}
+
+		_bundle.push_back(bundle.substr(start, end - start));
+ 		//std::cout << bundle.substr(start, end) << std::endl;
+	}
+	else
+	{
+		return { "",bundle };// single one
+		//_bundle.push_back(bundle); // single one
+	}
+	
+	return {"Cube/Mesh" ,_bundle.back()};
+
+	//if(start != std::string::npos && end != std::string::npos)
+	
 }

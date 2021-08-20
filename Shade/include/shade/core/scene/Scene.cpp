@@ -61,8 +61,8 @@ bool shade::Scene::Serialize() const
 
 	SHADE_CORE_TRACE("Star of scene serializing !");
 
-	std::string id = GetAssetData().Attribute("id").as_string();
-	std::string path = GetAssetData().Attribute("path").as_string();
+	std::string id = GetAssetData().Attribute("Id").as_string();
+	std::string path = GetAssetData().Attribute("Path").as_string();
 	YAML::Emitter out;
 	out << YAML::BeginMap;
 	out << YAML::Key << "Scene" << YAML::Value << id;
@@ -106,12 +106,12 @@ bool shade::Scene::Serialize() const
 
 bool shade::Scene::Deserialize()
 {
-	std::string path	= GetAssetData().Attribute("path").as_string();
-	std::string id		= GetAssetData().Attribute("id").as_string();
+	std::string path	= GetAssetData().Attribute("Path").as_string();
+	std::string id		= GetAssetData().Attribute("Id").as_string();
 
 	if (std::filesystem::exists(path))
 	{
-		YAML::Node scene = YAML::LoadFile(GetAssetData().Attribute("path").as_string());
+		YAML::Node scene = YAML::LoadFile(path);
 
 		auto entities = scene["Entities"];
 		if (entities)
@@ -141,7 +141,7 @@ bool shade::Scene::Deserialize()
 	
 }
 
-void shade::Scene::LoadFromAssetData(shade::AssetData& data)
+void shade::Scene::LoadFromAssetData(shade::AssetData& data, const shade::AssetData& bundle)
 {
 	SetAssetData(data);
 	Deserialize();

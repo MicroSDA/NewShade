@@ -15,7 +15,7 @@ namespace shade
 	public:
 		Asset() = default;
 		virtual ~Asset();
-		virtual void LoadFromAssetData(shade::AssetData& data) = 0;
+		virtual void LoadFromAssetData(shade::AssetData& data, const shade::AssetData& bundle = AssetData()) = 0;
 		void SetAssetData(shade::AssetData& data);
 		AssetData& GetAssetData();
 		const AssetData& GetAssetData() const;

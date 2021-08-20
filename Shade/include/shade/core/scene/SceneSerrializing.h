@@ -101,7 +101,7 @@ static bool SerrModel3DComponent(shade::Entity& entity, YAML::Emitter& emitter)
 	{
 		auto& component = entity.GetComponent<shade::Model3DComponent>();
 		emitter << YAML::Key << "Model3D" << YAML::BeginMap;
-		emitter << YAML::Key << "Asset" << YAML::Value << component->GetAssetData().Attribute("id").as_string();
+		emitter << YAML::Key << "Asset" << YAML::Value << component->GetAssetData().Attribute("Id").as_string();
 		emitter << YAML::EndMap;
 	}
 

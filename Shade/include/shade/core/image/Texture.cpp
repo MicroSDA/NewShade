@@ -36,8 +36,8 @@ bool shade::Texture::Deserialize()
 {
 	//return false; ////!!!!!!!!!!!!
 	 // Now only if it prsenet in asset data list
-	std::string id = GetAssetData().Attribute("id").as_string();
-	std::string path = GetAssetData().Attribute("path").as_string();
+	std::string id = GetAssetData().Attribute("Id").as_string();
+	std::string path = GetAssetData().Attribute("Path").as_string();
 
 	if (std::filesystem::path(path).extension().string() == ".dds")
 	{
@@ -84,7 +84,7 @@ shade::ImageData& shade::Texture::GetImageData()
 	return const_cast<ImageData&>(const_cast<const Texture*>(this)->GetImageData());
 }
 
-void shade::Texture::LoadFromAssetData(shade::AssetData& data)
+void shade::Texture::LoadFromAssetData(shade::AssetData& data, const shade::AssetData& bundle)
 {
 	SetAssetData(data);
 	Deserialize();

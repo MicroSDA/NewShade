@@ -4,8 +4,8 @@
 
 shade::Asset::~Asset()
 {
-    shade::AssetManager::_ImLast(m_AssetData.Attribute("id").as_string());
-    SHADE_CORE_DEBUG("Asset '{0}' has been deleted.", m_AssetData.Attribute("id").as_string())
+    shade::AssetManager::_ImLast(m_AssetData.Attribute("Id").as_string());
+    SHADE_CORE_DEBUG("Asset '{0}' has been deleted.", m_AssetData.Attribute("Id").as_string())
 }
 
 void shade::Asset::SetAssetData(shade::AssetData& data)

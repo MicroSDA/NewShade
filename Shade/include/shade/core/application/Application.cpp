@@ -47,6 +47,7 @@ void shade::Application::Start()
 	// TODO Scenee assigment
 	Timer deltaTime;
 	Shared<Scene> dummyScene = Scene::Create();
+	m_CurrentScene = Scene::Create();
 
 	Render::Init();
 	Render::SetViewPort(0, 0, m_Window->GetWidth(), m_Window->GetHeight());

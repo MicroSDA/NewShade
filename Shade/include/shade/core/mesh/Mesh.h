@@ -16,7 +16,7 @@ namespace shade
 
 		virtual void AssetInit() override;
 
-		virtual void LoadFromAssetData(shade::AssetData& data) override;
+		virtual void LoadFromAssetData(shade::AssetData& data, const shade::AssetData& bundle = AssetData()) override;
 		virtual bool Serialize(std::ostream& stream) const override;
 		virtual bool Deserialize(std::istream& stream) override;
 		virtual bool Serialize() const override;

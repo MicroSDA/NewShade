@@ -21,6 +21,19 @@ void EditorLayer::OnCreate()
 	m_Grid = shade::Grid::Create(0, 0, 0);
 	DarkVineTheme();
 
+	/*std::string s = "Cube.Mesh.Diffuse";
+	std::string delim = ".";
+
+	auto start = 0U;
+	auto end = s.find(delim);
+	while (end != std::string::npos)
+	{
+		std::cout << s.substr(start, end - start) << std::endl;
+		start = end + delim.length();
+		end = s.find(delim, start);
+	}
+
+	std::cout << s.substr(start, end);*/
 	
 }
 
@@ -67,7 +80,6 @@ void EditorLayer::OnRender(const shade::Shared<shade::Scene>& scene)
 		ShowWindowBar("Asset explorer", &EditorLayer::AssetsExplorer, this, shade::AssetManager::GetAssetsDataList());
 
 	} ImGui::End(); // Begin("DockSpace")
-
 	{
 		auto environments		= scene->GetEntities().view<shade::EnvironmentComponent>();
 		shade::Render::Begin(m_FrameBuffer);
@@ -121,6 +133,16 @@ void EditorLayer::OnEvent(const shade::Shared<shade::Scene>& scene, shade::Event
 		{
 			m_InstancedShader->Recompile();
 			m_GridShader->Recompile();
+		}
+		else if (keyCode == shade::Key::F1)
+		{
+			shade::AssetManager::Hold<shade::Model3D>("Nanosuit",
+				shade::Asset::State::RemoveIfPosible, [&](auto& asset) mutable
+				{
+					auto entity = scene->CreateEntity("Cube");
+					entity.AddComponent<shade::Model3DComponent>(shade::AssetManager::Receive<shade::Model3D>(asset));
+					entity.AddComponent<shade::Transform3DComponent>();
+				});
 		}
 		
 	}
@@ -189,7 +211,7 @@ void EditorLayer::Entities(shade::Scene* scene)
 						{
 							for (auto& asset : shade::AssetManager::GetAssetsDataList())
 							{
-								if (strcmp(asset.second.Attribute("type").as_string(), "model3D") == 0)
+								if (strcmp(asset.second.Attribute("Type").as_string(), "Model3D") == 0)
 									if (ImGui::MenuItem(asset.first.c_str()))
 									{
 										shade::AssetManager::Hold<shade::Model3D>(asset.first, shade::Asset::State::RemoveIfPosible,
@@ -325,7 +347,7 @@ void EditorLayer::MainMenu(shade::Scene* scene)
 							});*/
 
 						auto scene = shade::Scene::Create();
-						scene->GetAssetData().Attribute("path").set_value(path.string().c_str());
+						scene->GetAssetData().Attribute("Path").set_value(path.string().c_str());
 						scene->Deserialize(); 
 						shade::Application::Get().SetCurrentScene(scene);
 					}
@@ -336,8 +358,8 @@ void EditorLayer::MainMenu(shade::Scene* scene)
 					auto path = shade::FileDialog::SaveFile("Shade scene(*.scene) \0*.scene\0");
 					if (!path.empty())
 					{
-						scene->GetAssetData().Attribute("id").set_value(path.stem().string().c_str());
-						scene->GetAssetData().Attribute("path").set_value(path.string().c_str());
+						scene->GetAssetData().Attribute("Id").set_value(path.stem().string().c_str());
+						scene->GetAssetData().Attribute("Path").set_value(path.string().c_str());
 						scene->Serialize();
 					}
 						
@@ -377,7 +399,7 @@ void EditorLayer::AssetsExplorer(shade::AssetManager::AssetsDataList& data)
 {
 	for (auto& asset : data)
 	{
-		if (ImGui::BeginMenu(asset.second.Attribute("type").as_string()))
+		if (ImGui::BeginMenu(asset.second.Attribute("Type").as_string()))
 		{
 			AssetDataExpader(asset.second);
 
@@ -399,7 +421,7 @@ void EditorLayer::AssetDataExpader(shade::AssetData& data)
 {
 	if (data.Dependencies().size())
 	{
-		if (ImGui::BeginMenu(data.Attribute("id").as_string()))
+		if (ImGui::BeginMenu(data.Attribute("Id").as_string()))
 		{
 			for (auto& asset : data.Dependencies())
 			{
@@ -411,10 +433,10 @@ void EditorLayer::AssetDataExpader(shade::AssetData& data)
 	}
 	else
 	{
-		if(ImGui::MenuItem(data.Attribute("id").as_string()))
+		if(ImGui::MenuItem(data.Attribute("Id").as_string()))
 		{
 			// Preveiw i guess
-			if (strcmp(data.Attribute("type").as_string(), "texture") == 0)
+			if (strcmp(data.Attribute("Type").as_string(), "Texture") == 0)
 				DrawImage(1, 100, 100, false);	
 		}
 	}
@@ -429,7 +451,7 @@ void EditorLayer::Model3dComponent(shade::Entity& entity)
 		for (auto i = 0; i < model->GetMeshes().size(); i++)
 		{
 			// When model is imported, asset data is nullptr and we have crash in the GetAssetData()
-			DrawTreeNode(model->GetMeshes()[i]->GetAssetData().Attribute("id").as_string(),
+			DrawTreeNode(model->GetMeshes()[i]->GetAssetData().Attribute("Id").as_string(),
 				[&](const shade::Shared<shade::Mesh>& mesh)
 				{
 					DrawTreeNode("Material", [&](shade::Material& material) 
@@ -446,7 +468,7 @@ void EditorLayer::Model3dComponent(shade::Entity& entity)
 						{
 							for (auto texture : mesh->GetTextures())
 							{
-								ImGui::Text(texture->GetAssetData().Attribute("texture_type").as_string());
+								ImGui::Text(texture->GetAssetData().Attribute("TextureType").as_string());
 								DrawImage(texture->GetRenderID(), 100, 100, true);
 							}
 						}, mesh->GetTextures());
