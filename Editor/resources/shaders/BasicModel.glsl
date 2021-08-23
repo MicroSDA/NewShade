@@ -105,7 +105,7 @@ void main()
 				break;
 		}
 
-		ColorAttachment = vec4(pow(TotalColor.rgb, vec3(0.60/1)), 1.0 ); // m_TotalColor.a for imgui alpha shoudl be as 1.0 
+		ColorAttachment = vec4(pow(TotalColor.rgb, vec3(0.40/1)), 1.0 ); // m_TotalColor.a for imgui alpha shoudl be as 1.0 
 		//ColorAttachment = vec4(TotalColor.rgb, 1.0); // m_TotalColor.a for imgui alpha shoudl be as 1.0 
 		//ColorAttachment = texture(Textures[TEXTURE_DIFFUSE], UV_Coordinates).rgba;
 }

@@ -41,11 +41,12 @@ void shade::Mesh::LoadFromAssetData(shade::AssetData& data, const shade::AssetDa
 				[this](auto& texture) mutable
 				{
 					m_Textures.push_back(AssetManager::Receive<Texture>(texture));
-				});
+				}, dependency);
 		}
 	}
 
 	Deserialize();
+	GenerateHalfExt();
 }
 bool shade::Mesh::Serialize(std::ostream& stream) const
 {

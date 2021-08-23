@@ -1,6 +1,52 @@
 #include "shade_pch.h"
 #include "Drawable.h"
 
+void shade::Drawable::GenerateHalfExt()
+{
+    // Generate min and max half extension based on mesh origin
+    float xMax = 0.0f, yMax = 0.0f, zMax = 0.0f;
+    for (auto i = 0; i < GetVertices().size(); i++)
+    {
+        for (auto j = i + 1; j < GetVertices().size(); j++)
+        {
+            auto x = std::abs(GetVertices()[j].Position.x - GetVertices()[i].Position.x);
+            if (x > xMax)
+            {
+                xMax = x;
+                m_MinHalfExt.x = std::min(GetVertices()[i].Position.x, GetVertices()[j].Position.x);
+                m_MaxHalfExt.x = std::max(GetVertices()[i].Position.x, GetVertices()[j].Position.x);
+            }
+
+            auto y = std::abs(GetVertices()[j].Position.y - GetVertices()[i].Position.y);
+            if (y > yMax)
+            {
+                yMax = y;
+                m_MinHalfExt.y = std::min(GetVertices()[i].Position.y, GetVertices()[j].Position.y);
+                m_MaxHalfExt.y = std::max(GetVertices()[i].Position.y, GetVertices()[j].Position.y);
+            }
+          
+            auto z = std::abs(GetVertices()[j].Position.z - GetVertices()[i].Position.z);
+            if (z > zMax)
+            {
+                zMax = z;
+                m_MinHalfExt.z = std::min(GetVertices()[i].Position.z, GetVertices()[j].Position.z);
+                m_MaxHalfExt.z = std::max(GetVertices()[i].Position.z, GetVertices()[j].Position.z);
+            }
+           
+        }
+    }
+}
+
+const glm::vec3& shade::Drawable::GetMinHalfExt()
+{
+    return m_MinHalfExt;
+}
+
+const glm::vec3& shade::Drawable::GetMaxHalfExt()
+{
+    return m_MaxHalfExt;
+}
+
 const shade::Drawable::DrawMode& shade::Drawable::GetDrawMode() const
 {
     return m_DrawMode;

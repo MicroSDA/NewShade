@@ -46,7 +46,7 @@ namespace shade
 		static void SetViewPort(std::uint32_t x, std::uint32_t y, std::uint32_t width, std::uint32_t height);
 		static void Submit(const Drawable* drawable, const glm::mat4& transform, const Material* material = nullptr, const std::vector<Shared<Texture>>* textures = nullptr);
 		static void DrawSubmited(const Shared<Shader>& shader);
-		static void SubmitInstanced(const Drawable* drawable, const glm::mat4& transform, const Material& material, const std::vector<Shared<Texture>>& textures, const std::uint32_t& count = 1);
+		static void SubmitInstanced(const Drawable* drawable, const glm::mat4& transform, const Material& material, const std::vector<Shared<Texture>>& textures);
 		static void DrawInstanced(const Shared<Shader>& shader);
 		static void DrawNotIndexed(const Drawable::DrawMode& mode, const Shared<VertexArray>& VAO);
 		static void Begin(Shared<FrameBuffer> framebuffer = nullptr);
@@ -58,6 +58,7 @@ namespace shade
 		static void EndScene(const Shared<Shader>& shader);
 		static void End(Shared<FrameBuffer> framebuffer = nullptr);
 		static void DrawIndexed(const Drawable* drawable, const Shared<VertexArray>& VAO, const Shared<IndexBuffer>& IBO);
+		//Util
 	private:
 		static Unique<RenderAPI>	m_sRenderAPI;
 		static bool					m_sIsInit;

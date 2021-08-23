@@ -30,7 +30,7 @@ namespace shade
 		void SetVertices(Vertices& vertices);
 		void SetIndices(Indices& indices);
 		void SetMaterial(const Material& material);
-		void AddTexture(const Shared<Texture>& texture);
+		void AddTexture(const Shared<Texture>& texture); // TODO Remove or so
 
 		const Vertices& GetVertices() const;
 		const Indices& GetIndices()  const;
@@ -40,10 +40,16 @@ namespace shade
 		Indices&	GetIndices();
 		Material&	GetMaterial();
 
+		void GenerateHalfExt();
+		const glm::vec3& GetMinHalfExt();
+		const glm::vec3& GetMaxHalfExt();
+
 		const DrawMode& GetDrawMode() const;
 	private:
 		DrawMode			 m_DrawMode = DrawMode::Triangles;
 		Vertices			 m_Vertices;
+		glm::vec3			 m_MinHalfExt;
+		glm::vec3			 m_MaxHalfExt;
 		Indices				 m_Indices;
 		Material			 m_Material;
 	};

@@ -2,7 +2,7 @@
 //#include <pugixml/pugixml.hpp> // Temporary
 //#include <pugixml/pugiconfig.hpp> // Temporary
 #include "IModel3D.h"
-
+#include <minwindef.h> //Todo need to remove from here
 EditorLayer::EditorLayer(const std::string& name) :
 	shade::ImGuiLayer(name)
 {
@@ -34,7 +34,7 @@ void EditorLayer::OnCreate()
 	}
 
 	std::cout << s.substr(start, end);*/
-	
+
 }
 
 void EditorLayer::OnUpdate(const shade::Shared<shade::Scene>& scene, const shade::Timer& deltaTime)
@@ -44,15 +44,19 @@ void EditorLayer::OnUpdate(const shade::Shared<shade::Scene>& scene, const shade
 		{
 			m_EditorCamera = camera;
 		});*/
-	// When scene inst playing
+		// When scene inst playing
 	shade::Application::Get().GetEntities().view<shade::CameraComponent>().each([&](auto entity, auto& camera) { m_EditorCamera = camera; });
 
-	auto& instancedPool = scene->GetEntities().view<shade::Model3DComponent, shade::Transform3DComponent>();
-	instancedPool.each( [&] (auto& entity, shade::Model3DComponent& model, shade::Transform3DComponent& transform)
+	auto frustum = m_EditorCamera->GetFrustum();
+	
+	scene->GetEntities().view<shade::Model3DComponent, shade::Transform3DComponent>().each([&](auto& entity, shade::Model3DComponent& model, shade::Transform3DComponent& transform)
 		{
 			for (auto& mesh : model->GetMeshes())
 			{
-				shade::Render::SubmitInstanced(mesh.get(), transform.GetModelMatrix(), mesh->GetMaterial(), mesh->GetTextures(), instancedPool.size());
+				// Frustum culling, for AABB only without rotation and scale
+				if (frustum.IsInFrustum(transform, mesh->GetMinHalfExt(), mesh->GetMaxHalfExt()))
+					shade::Render::SubmitInstanced(mesh.get(), transform.GetModelMatrix(), mesh->GetMaterial(), mesh->GetTextures());
+				
 			}
 		});
 
@@ -71,7 +75,7 @@ void EditorLayer::OnRender(const shade::Shared<shade::Scene>& scene)
 			ImGuiID dockspace_id = ImGui::GetID("DockSpace");
 			ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), m_DockSpaceFlags);
 		}
-		
+
 		MainMenu(scene.get());
 		ShowWindowBar("Entities", &EditorLayer::Entities, this, scene.get());
 		ShowWindowBar("Inspector", &EditorLayer::Inspector, this, m_SelectedEntity);
@@ -81,18 +85,17 @@ void EditorLayer::OnRender(const shade::Shared<shade::Scene>& scene)
 
 	} ImGui::End(); // Begin("DockSpace")
 	{
-		auto environments		= scene->GetEntities().view<shade::EnvironmentComponent>();
+		auto environments = scene->GetEntities().view<shade::EnvironmentComponent>();
 		shade::Render::Begin(m_FrameBuffer);
-			
-			shade::Render::BeginScene(m_GridShader, m_EditorCamera);
-				//shade::Render::DepthTest(false);
-				shade::Render::DrawSubmited(m_GridShader);
-			shade::Render::EndScene(m_GridShader);
 
-			shade::Render::BeginScene(m_InstancedShader, m_EditorCamera, environments.raw(), environments.size());
-				//shade::Render::DepthTest(true);
-				shade::Render::DrawInstanced(m_InstancedShader);
-			shade::Render::EndScene(m_InstancedShader);
+		shade::Render::BeginScene(m_GridShader, m_EditorCamera);
+			shade::Render::DrawSubmited(m_GridShader);
+		shade::Render::EndScene(m_GridShader);
+
+		shade::Render::BeginScene(m_InstancedShader, m_EditorCamera, environments.raw(), environments.size());
+			shade::Render::DrawInstanced(m_InstancedShader);
+		shade::Render::EndScene(m_InstancedShader);
+
 
 		shade::Render::End(m_FrameBuffer);
 	}
@@ -118,8 +121,8 @@ void EditorLayer::OnEvent(const shade::Shared<shade::Scene>& scene, shade::Event
 		{
 			switch (m_GuizmoOperation)
 			{
-			case ImGuizmo::OPERATION::TRANSLATE: 
-				if(m_AllowedGuizmoOperation & ImGuizmo::OPERATION::ROTATE)
+			case ImGuizmo::OPERATION::TRANSLATE:
+				if (m_AllowedGuizmoOperation & ImGuizmo::OPERATION::ROTATE)
 					m_GuizmoOperation = ImGuizmo::OPERATION::ROTATE; break;
 			case ImGuizmo::OPERATION::ROTATE:
 				if (m_AllowedGuizmoOperation & ImGuizmo::OPERATION::SCALE)
@@ -136,15 +139,30 @@ void EditorLayer::OnEvent(const shade::Shared<shade::Scene>& scene, shade::Event
 		}
 		else if (keyCode == shade::Key::F1)
 		{
-			shade::AssetManager::Hold<shade::Model3D>("Nanosuit",
-				shade::Asset::State::RemoveIfPosible, [&](auto& asset) mutable
-				{
-					auto entity = scene->CreateEntity("Cube");
-					entity.AddComponent<shade::Model3DComponent>(shade::AssetManager::Receive<shade::Model3D>(asset));
-					entity.AddComponent<shade::Transform3DComponent>();
-				});
+			for (auto i = 0; i < 100; i++)
+			{
+				shade::AssetManager::Hold<shade::Model3D>("Nanosuit",
+					shade::Asset::State::RemoveIfPosible, [&](auto& asset) mutable
+					{
+						auto entity = scene->CreateEntity("Nanosuit");
+						entity.AddComponent<shade::Model3DComponent>(shade::AssetManager::Receive<shade::Model3D>(asset));
+						float x = 1 + rand() % 550;
+						float z = 1 + rand() % 550;
+						entity.AddComponent<shade::Transform3DComponent>().SetPostition(x, 0, z);
+					});
+				shade::AssetManager::Hold<shade::Model3D>("Cube",
+					shade::Asset::State::RemoveIfPosible, [&](auto& asset) mutable
+					{
+						auto entity = scene->CreateEntity("Cube");
+						entity.AddComponent<shade::Model3DComponent>(shade::AssetManager::Receive<shade::Model3D>(asset));
+						float x = 1 + rand() % 550;
+						float z = 1 + rand() % 550;
+						entity.AddComponent<shade::Transform3DComponent>().SetPostition(x, 0, z);
+					});
+			}
+
 		}
-		
+
 	}
 }
 
@@ -153,7 +171,7 @@ void EditorLayer::Entities(shade::Scene* scene)
 	static char search[256];
 	InputText("Search", search, 256);
 
-	
+
 	if (ImGui::ListBoxHeader("##EntitiesList", ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y)))
 	{
 		if (ImGui::BeginPopupContextWindow())
@@ -198,16 +216,16 @@ void EditorLayer::Entities(shade::Scene* scene)
 		{
 			if (ImGui::BeginPopupContextItem("##ComponentPopup"))
 			{
-				
+
 				if (!m_SelectedEntity.HasComponent<shade::EnvironmentComponent>() && !m_SelectedEntity.HasComponent<shade::CameraComponent>())
 				{
-					AddComponent<shade::Transform3DComponent>("Transform3D", false, m_SelectedEntity, [](shade::Entity& entity) 
+					AddComponent<shade::Transform3DComponent>("Transform3D", false, m_SelectedEntity, [](shade::Entity& entity)
 						{
 							entity.AddComponent<shade::Transform3DComponent>();
 
-						},m_SelectedEntity);
+						}, m_SelectedEntity);
 
-					AddComponent<shade::Model3DComponent>("Model3D", true, m_SelectedEntity, [&](shade::Entity& entity) 
+					AddComponent<shade::Model3DComponent>("Model3D", true, m_SelectedEntity, [&](shade::Entity& entity)
 						{
 							for (auto& asset : shade::AssetManager::GetAssetsDataList())
 							{
@@ -222,7 +240,7 @@ void EditorLayer::Entities(shade::Scene* scene)
 
 									}
 							}
-						}, m_SelectedEntity);	
+						}, m_SelectedEntity);
 				}
 
 				if (!m_SelectedEntity.HasComponent<shade::Transform3DComponent>() &&
@@ -246,7 +264,7 @@ void EditorLayer::Entities(shade::Scene* scene)
 
 void EditorLayer::Inspector(shade::Entity& entity)
 {
-	DrawComponent<shade::Tag>("Tag", entity,       &EditorLayer::TagComponent, this, entity); // "this" as first argument ! for std::invoke when non static fucntion provided it should know instance
+	DrawComponent<shade::Tag>("Tag", entity, &EditorLayer::TagComponent, this, entity); // "this" as first argument ! for std::invoke when non static fucntion provided it should know instance
 	DrawComponent<shade::Transform3DComponent>("Transform", entity, &EditorLayer::Transform3DComponent, this, entity); // "this" as first argument ! for std::invoke when non static fucntion provided it should know instance
 	DrawComponent<shade::Model3DComponent>("Model", entity, &EditorLayer::Model3dComponent, this, entity); // "this" as first argument ! for std::invoke when non static fucntion provided it should know instance
 	DrawComponent<shade::EnvironmentComponent>("Enviroment", entity, &EditorLayer::EnvironmentComponent, this, entity); // "this" as first argument ! for std::invoke when non static fucntion provided it should know instance
@@ -341,14 +359,14 @@ void EditorLayer::MainMenu(shade::Scene* scene)
 					auto path = shade::FileDialog::OpenFile("Shade scene(*.scene) \0*.scene\0");
 					if (!path.empty())
 					{
-						/*shade::AssetManager::Hold<shade::Scene>("Scene", shade::Asset::State::RemoveIfPosible, [](auto& asset) 
+						/*shade::AssetManager::Hold<shade::Scene>("Scene", shade::Asset::State::RemoveIfPosible, [](auto& asset)
 							{
 								shade::Application::Get().SetCurrentScene(shade::AssetManager::Receive<shade::Scene>(asset));
 							});*/
 
 						auto scene = shade::Scene::Create();
 						scene->GetAssetData().Attribute("Path").set_value(path.string().c_str());
-						scene->Deserialize(); 
+						scene->Deserialize();
 						shade::Application::Get().SetCurrentScene(scene);
 					}
 				}
@@ -362,7 +380,7 @@ void EditorLayer::MainMenu(shade::Scene* scene)
 						scene->GetAssetData().Attribute("Path").set_value(path.string().c_str());
 						scene->Serialize();
 					}
-						
+
 				}
 
 				ImGui::EndMenu();
@@ -405,7 +423,7 @@ void EditorLayer::AssetsExplorer(shade::AssetManager::AssetsDataList& data)
 
 			ImGui::EndMenu();
 		}
-		
+
 	}
 }
 
@@ -433,11 +451,11 @@ void EditorLayer::AssetDataExpader(shade::AssetData& data)
 	}
 	else
 	{
-		if(ImGui::MenuItem(data.Attribute("Id").as_string()))
+		if (ImGui::MenuItem(data.Attribute("Id").as_string()))
 		{
 			// Preveiw i guess
 			if (strcmp(data.Attribute("Type").as_string(), "Texture") == 0)
-				DrawImage(1, 100, 100, false);	
+				DrawImage(1, 100, 100, false);
 		}
 	}
 }
@@ -454,13 +472,13 @@ void EditorLayer::Model3dComponent(shade::Entity& entity)
 			DrawTreeNode(model->GetMeshes()[i]->GetAssetData().Attribute("Id").as_string(),
 				[&](const shade::Shared<shade::Mesh>& mesh)
 				{
-					DrawTreeNode("Material", [&](shade::Material& material) 
+					DrawTreeNode("Material", [&](shade::Material& material)
 						{
-							DrawColor3("Ambinet",  glm::value_ptr(material.GetAmbientColor()));
-							DrawColor3("Diffuse",  glm::value_ptr(material.GetDiffuseColor()));
+							DrawColor3("Ambinet", glm::value_ptr(material.GetAmbientColor()));
+							DrawColor3("Diffuse", glm::value_ptr(material.GetDiffuseColor()));
 							DrawColor3("Specular", glm::value_ptr(material.GetSpecularColor()));
-							DrawFlaot("Shininess",	   &material.GetShininess());
-							DrawFlaot("Shininess strength",	   &material.GetShininessStrength());
+							DrawFlaot("Shininess", &material.GetShininess());
+							DrawFlaot("Shininess strength", &material.GetShininessStrength());
 
 						}, mesh->GetMaterial());
 
@@ -488,7 +506,7 @@ void EditorLayer::EnvironmentComponent(shade::Entity& entity)
 	{
 		auto light = static_cast<shade::DirectLight*>(environment.get());
 		DrawVec3F("Direction", glm::value_ptr(light->GetDirection()));
-		DrawColor3("Ambient",   glm::value_ptr(light->GetAmbientColor()));
+		DrawColor3("Ambient", glm::value_ptr(light->GetAmbientColor()));
 		DrawColor3("Diffuse", glm::value_ptr(light->GetDiffuseColor()));
 		DrawColor3("Specular", glm::value_ptr(light->GetSpecularColor()));
 
@@ -497,15 +515,15 @@ void EditorLayer::EnvironmentComponent(shade::Entity& entity)
 	case shade::Environment::Type::PointLight:
 	{
 		auto light = static_cast<shade::PointLight*>(environment.get());
-		DrawVec3F("Position",	glm::value_ptr(light->GetPosition()));
-		DrawColor3("Ambient",	glm::value_ptr(light->GetAmbientColor()));
-		DrawColor3("Diffuse",	glm::value_ptr(light->GetDiffuseColor()));
-		DrawColor3("Specular",	glm::value_ptr(light->GetSpecularColor()));
-		DrawFlaot("Constant",	&light->GetConstant());
-		DrawFlaot("Liner",		&light->GetLinear());
-		DrawFlaot("Qaudratic",	&light->GetQaudratic());
+		DrawVec3F("Position", glm::value_ptr(light->GetPosition()));
+		DrawColor3("Ambient", glm::value_ptr(light->GetAmbientColor()));
+		DrawColor3("Diffuse", glm::value_ptr(light->GetDiffuseColor()));
+		DrawColor3("Specular", glm::value_ptr(light->GetSpecularColor()));
+		DrawFlaot("Constant", &light->GetConstant());
+		DrawFlaot("Liner", &light->GetLinear());
+		DrawFlaot("Qaudratic", &light->GetQaudratic());
 		break;
-	}	
+	}
 	case shade::Environment::Type::SpotLight:
 	{
 		auto light = static_cast<shade::SpotLight*>(environment.get());

@@ -4,7 +4,7 @@
 
 shade::Camera::Camera() :
 	m_Fov(45.0f),  m_Aspect(1), // Be aware about aspect 1
-	m_zNear(0.1f), m_zFar(3000.0f)
+	m_zNear(0.1f), m_zFar(1000.0f)
 {
 	m_Perpective = glm::perspective(glm::radians(m_Fov), m_Aspect, m_zNear, m_zFar);
 	m_Position = glm::vec3(0, 0, -10);

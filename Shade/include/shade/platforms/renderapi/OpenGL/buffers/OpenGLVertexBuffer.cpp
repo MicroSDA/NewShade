@@ -59,6 +59,7 @@ const std::uint32_t& shade::OpenGLVertexBuffer::GetRenderID() const
 
 void shade::OpenGLVertexBuffer::Copy(const Shared<VertexBuffer>& other, const std::uint32_t& size, const std::uint32_t & readOffset, const std::uint32_t& writeOffset)
 {
+	// Not sure if this works
 	m_Layout = other->GetLayout();
 	glBindBuffer(GL_COPY_READ_BUFFER, other->GetRenderID());
 	glBindBuffer(GL_COPY_WRITE_BUFFER, m_RenderID);

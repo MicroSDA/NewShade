@@ -78,14 +78,20 @@ void shade::Render::End(Shared<FrameBuffer> framebuffer)
 
 	for (auto& instances : m_sInstancedRender)
 	{
-		instances.second.InstanceCount = 0;
-		instances.second.Transforms.clear();
-		instances.second.IsExpired = true;
+		if (!instances.second.IsExpired)
+		{
+			instances.second.InstanceCount = 0;
+			instances.second.Transforms.clear();
+			instances.second.IsExpired = true;
+		}
 	}
 	for (auto& instance : m_sSubmitedRender)
 	{
-		instance.second.IsExpired = true;
-		instance.second.Transforms.clear();
+		if (!instance.second.IsExpired)
+		{
+			instance.second.IsExpired = true;
+			instance.second.Transforms.clear();
+		}	
 	}
 }
 void shade::Render::Submit(const Drawable* drawable, const glm::mat4& transform, const Material* material, const std::vector<Shared<Texture>>* textures)
@@ -165,8 +171,10 @@ void shade::Render::DrawNotIndexed(const Drawable::DrawMode& mode, const Shared<
 	m_sRenderAPI->DrawNotIndexed(mode, VAO);
 }
 
-void shade::Render::SubmitInstanced(const Drawable* drawable, const glm::mat4& transform, const Material& material, const std::vector<Shared<Texture>>& textures, const std::uint32_t& count)
+void shade::Render::SubmitInstanced(const Drawable* drawable, const glm::mat4& transform, const Material& material, const std::vector<Shared<Texture>>& textures)
 {
+	// Wrong Count !!!!!!! its total enties caount not current instances
+
 	auto& instances = m_sInstancedRender.find(drawable);
 	if (instances == m_sInstancedRender.end())
 	{
@@ -174,7 +182,7 @@ void shade::Render::SubmitInstanced(const Drawable* drawable, const glm::mat4& t
 		newInstances.DrawMode = drawable->GetDrawMode();
 		newInstances.Material = &material;
 		newInstances.Textures = &textures;
-		newInstances.Transforms.reserve(count);
+		//newInstances.Transforms.reserve(count);
 		newInstances.IsExpired = false;
 
 		newInstances.VAO = VertexArray::Create();
@@ -183,8 +191,8 @@ void shade::Render::SubmitInstanced(const Drawable* drawable, const glm::mat4& t
 							{shade::VertexBuffer::ElementType::Float2, "UV_Coords"},
 							{shade::VertexBuffer::ElementType::Float3, "Normal"},
 							{shade::VertexBuffer::ElementType::Float3, "Tangent"} });
-		// Create empty ebo with 10 size and set data later
-		auto EBO = VertexBuffer::Create(sizeof(glm::mat4) * count, VertexBuffer::BufferType::Dynamic); // size is 10 !!!
+		// Create empty ebo set data later
+		auto EBO = VertexBuffer::Create(sizeof(glm::mat4), VertexBuffer::BufferType::Dynamic); // size is 10 !!!
 		EBO->SetLayout({ {shade::VertexBuffer::ElementType::Mat4,	"Transform"} });
 
 		auto IBO = IndexBuffer::Create(drawable->GetIndices().data(), drawable->GetIndices().size());
@@ -197,14 +205,14 @@ void shade::Render::SubmitInstanced(const Drawable* drawable, const glm::mat4& t
 	}
 	else if(instances != m_sInstancedRender.end())
 	{
-		if (instances->second.Transforms.size() < count)
-		{
-			instances->second.VAO->GetVertexBuffers()[1]->Resize(sizeof(glm::mat4) * count);
-		}
-
 		instances->second.Transforms.push_back(transform);
-		instances->second.InstanceCount++;
+		instances->second.InstanceCount++; // We can get it form transforms.size()
 		instances->second.IsExpired = false;
+
+		if (instances->second.VAO->GetVertexBuffers()[1]->GetSize() != sizeof(glm::mat4) * instances->second.Transforms.size())
+		{
+			instances->second.VAO->GetVertexBuffers()[1]->Resize(sizeof(glm::mat4) * instances->second.Transforms.size());
+		}
 
 	}
 }

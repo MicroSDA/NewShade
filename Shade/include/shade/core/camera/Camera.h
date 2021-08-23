@@ -1,8 +1,6 @@
 #pragma once
 #include "shade/config/API.h"
-#include <glm/glm.hpp>
-#include <glm/gtx/transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
+#include "shade/core/camera/Frustum.h"
 
 namespace shade
 {
@@ -55,6 +53,7 @@ namespace shade
 		inline void SetNear(const float& zNear) { m_zNear = zNear; }
 		inline void SetFar(const float& zFar) { m_zFar = zFar; }
 
+		inline Frustum GetFrustum() const { return Frustum(GetView(), GetProjection()); };
 		// Counter clockwise issue here
 		// Y
 		inline void RotateYaw(float angle)
