@@ -1,9 +1,7 @@
 #pragma once
 #include "shade/config/API.h"
 #include "shade/core/transform/Transform3D.h"
-#include <glm/glm.hpp>
-#include <glm/gtx/transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
+#include "shade/core/math/Math.h"
 
 namespace shade
 {
@@ -27,7 +25,7 @@ namespace shade
 		void _Normalize(glm::vec4& side);
 		bool _AABBTest(const glm::vec3& minHalfExt, const glm::vec3& maxHalfExt);
 		bool _OBBTest(const Transform3D& transform, const glm::vec3& minHalfExt, const glm::vec3& maxHalfExt);
-		//bool _SSE_AABBTest(const glm::vec4& minExt, const glm::vec4& maxExt);
+		bool _SSE_OBBTest(const Transform3D& transform, const glm::vec3& minHalfExt, const glm::vec3& maxHalfExt);
 	private:
 		glm::mat4 m_VP_Matrix; // Camera View and Projection product
 		glm::vec4 m_Frustum[6];

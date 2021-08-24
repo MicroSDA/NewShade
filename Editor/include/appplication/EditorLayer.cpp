@@ -49,6 +49,7 @@ void EditorLayer::OnUpdate(const shade::Shared<shade::Scene>& scene, const shade
 
 	auto frustum = m_EditorCamera->GetFrustum();
 	
+	auto start = std::chrono::steady_clock::now();
 	scene->GetEntities().view<shade::Model3DComponent, shade::Transform3DComponent>().each([&](auto& entity, shade::Model3DComponent& model, shade::Transform3DComponent& transform)
 		{
 			for (auto& mesh : model->GetMeshes())
@@ -59,6 +60,10 @@ void EditorLayer::OnUpdate(const shade::Shared<shade::Scene>& scene, const shade
 				
 			}
 		});
+
+	auto end = std::chrono::steady_clock::now();
+
+	//SHADE_TRACE("Frustum calculation time: {0}", std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count());
 
 	shade::Render::Submit(m_Grid.get(), glm::mat4(1));
 }
@@ -139,7 +144,7 @@ void EditorLayer::OnEvent(const shade::Shared<shade::Scene>& scene, shade::Event
 		}
 		else if (keyCode == shade::Key::F1)
 		{
-			for (auto i = 0; i < 100; i++)
+			for (auto i = 0; i < 1000; i++)
 			{
 				shade::AssetManager::Hold<shade::Model3D>("Nanosuit",
 					shade::Asset::State::RemoveIfPosible, [&](auto& asset) mutable

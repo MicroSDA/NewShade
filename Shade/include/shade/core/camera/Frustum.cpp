@@ -20,20 +20,22 @@ bool shade::Frustum::IsInFrustum(const Transform3D& transform, const glm::vec3& 
 	// Set min and max ext in world possition by transform GetPosition()
 	//return _AABBTest(glm::vec3(transform.GetPosition() - halfExt), glm::vec3(transform.GetPosition() + halfExt)); // In this case that we using position and + half extension need to be tested
 	// With rotation and scale for dynamic object, slower than AABB
-	return _OBBTest(transform, minHalfExt, maxHalfExt);
+	//return _OBBTest(transform, minHalfExt, maxHalfExt);
+	// SSE optimization
+	return _SSE_OBBTest(transform, minHalfExt, maxHalfExt);
 }
 
 void shade::Frustum::_CalculateFrustum(const glm::mat4& viewMatrix, const glm::mat4& projMatrix)
 {
-	m_VP_Matrix		 = projMatrix * viewMatrix;
+	m_VP_Matrix = projMatrix * viewMatrix;
 	glm::mat4 matrix = glm::transpose(m_VP_Matrix);
 
-	m_Frustum[(std::uint32_t)Side::Left]	= matrix[3] + matrix[0];
-	m_Frustum[(std::uint32_t)Side::Right]	= matrix[3] - matrix[0];
-	m_Frustum[(std::uint32_t)Side::Bottom]	= matrix[3] + matrix[1];
-	m_Frustum[(std::uint32_t)Side::Top]		= matrix[3] - matrix[1];
-	m_Frustum[(std::uint32_t)Side::Near]	= matrix[3] + matrix[2];
-	m_Frustum[(std::uint32_t)Side::Far]		= matrix[3] - matrix[2];
+	m_Frustum[(std::uint32_t)Side::Left] = matrix[3] + matrix[0];
+	m_Frustum[(std::uint32_t)Side::Right] = matrix[3] - matrix[0];
+	m_Frustum[(std::uint32_t)Side::Bottom] = matrix[3] + matrix[1];
+	m_Frustum[(std::uint32_t)Side::Top] = matrix[3] - matrix[1];
+	m_Frustum[(std::uint32_t)Side::Near] = matrix[3] + matrix[2];
+	m_Frustum[(std::uint32_t)Side::Far] = matrix[3] - matrix[2];
 
 	// Normalizing
 	for (auto i = 0; i < 6; i++)
@@ -60,9 +62,9 @@ bool shade::Frustum::_AABBTest(const glm::vec3& minHalfExt, const glm::vec3& max
 		//находим ближайшую к плоскости вершину
 		//проверяем, если она находится за плоскостью, то объект вне врустума
 		float d = std::max(minHalfExt.x * m_Frustum[i].x, maxHalfExt.x * m_Frustum[i].x)
-				+ std::max(minHalfExt.y * m_Frustum[i].y, maxHalfExt.y * m_Frustum[i].y)
-				+ std::max(minHalfExt.z * m_Frustum[i].z, maxHalfExt.z * m_Frustum[i].z)
-				+ m_Frustum[i].w;
+			+ std::max(minHalfExt.y * m_Frustum[i].y, maxHalfExt.y * m_Frustum[i].y)
+			+ std::max(minHalfExt.z * m_Frustum[i].z, maxHalfExt.z * m_Frustum[i].z)
+			+ m_Frustum[i].w;
 		inside &= d > 0;
 		//return false; //флаг работает быстрее
 	}
@@ -119,4 +121,52 @@ bool shade::Frustum::_OBBTest(const Transform3D& transform, const glm::vec3& min
 		outside = outside || outsidePositivePlane || outsideNegativePlane;
 	}
 	return !outside;
+}
+
+bool shade::Frustum::_SSE_OBBTest(const Transform3D& transform, const glm::vec3& minHalfExt, const glm::vec3& maxHalfExt)
+{
+	math::sse_mat4f clipSpaceMatrix = math::sse_mat4f(m_VP_Matrix) * math::sse_mat4f(transform.GetModelMatrix());
+	//box points in local space
+	math::sse_vec4f obb_points_sse[8];
+	obb_points_sse[0] = _mm_set_ps(1.f, minHalfExt.z, maxHalfExt.y, minHalfExt.x);
+	obb_points_sse[1] = _mm_set_ps(1.f, maxHalfExt.z, maxHalfExt.y, minHalfExt.x);
+	obb_points_sse[2] = _mm_set_ps(1.f, maxHalfExt.z, maxHalfExt.y, maxHalfExt.x);
+	obb_points_sse[3] = _mm_set_ps(1.f, minHalfExt.z, maxHalfExt.y, maxHalfExt.x);
+	obb_points_sse[4] = _mm_set_ps(1.f, minHalfExt.z, minHalfExt.y, maxHalfExt.x);
+	obb_points_sse[5] = _mm_set_ps(1.f, maxHalfExt.z, minHalfExt.y, maxHalfExt.x);
+	obb_points_sse[6] = _mm_set_ps(1.f, maxHalfExt.z, minHalfExt.y, minHalfExt.x);
+	obb_points_sse[7] = _mm_set_ps(1.f, minHalfExt.z, minHalfExt.y, minHalfExt.x);
+
+	__m128 zero_v = _mm_setzero_ps();
+	//initially assume that planes are separating
+	//if any axis is separating - we get 0 in certain outside_* place
+	__m128 outside_positive_plane = _mm_set1_ps(-1.f); //NOTE: there should be negative value..
+	__m128 outside_negative_plane = _mm_set1_ps(-1.f); //because _mm_movemask_ps (while storing result) cares abount 'most significant bits' (it is sign of float value)
+
+	//for all 8 box points
+	for (auto i = 0u; i < 8; i++)
+	{
+		//transform point to clip space
+		math::sse_vec4f obb_transformed_point = clipSpaceMatrix * obb_points_sse[i];
+
+		//gather w & -w
+		__m128 wwww = _mm_shuffle_ps(obb_transformed_point.xyzw, obb_transformed_point.xyzw, _MM_SHUFFLE(3, 3, 3, 3)); //get w
+		__m128 wwww_neg = _mm_sub_ps(zero_v, wwww);  // negate all elements
+
+	//box_point.xyz > box_point.w || box_point.xyz < -box_point.w ?
+	//similar to point normalization: point.xyz /= point.w; And compare: point.xyz > 1 && point.xyz < -1
+		__m128 outside_pos_plane = _mm_cmpge_ps(obb_transformed_point.xyzw, wwww);
+		__m128 outside_neg_plane = _mm_cmple_ps(obb_transformed_point.xyzw, wwww_neg);
+
+		//if at least 1 of 8 points in front of the plane - we get 0 in outside_* flag
+		outside_positive_plane = _mm_and_ps(outside_positive_plane, outside_pos_plane);
+		outside_negative_plane = _mm_and_ps(outside_negative_plane, outside_neg_plane);
+	}
+
+	//all 8 points xyz < -1 or > 1 ?
+	__m128 outside = _mm_or_ps(outside_positive_plane, outside_negative_plane);
+
+	//store result, if any of 3 axes is separating (i.e. outside != 0) - object outside frustum
+	//so, object inside frustum only if outside == 0 (there are no separating axes)
+	return ((_mm_movemask_ps(outside) & 0x7) == 0); //& 0x7 mask, because we interested only in 3 axes
 }
