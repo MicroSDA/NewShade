@@ -30,14 +30,14 @@ void shade::Frustum::_CalculateFrustum(const glm::mat4& viewMatrix, const glm::m
 	m_VP_Matrix = projMatrix * viewMatrix;
 	glm::mat4 matrix = glm::transpose(m_VP_Matrix);
 
-	m_Frustum[(std::uint32_t)Side::Left] = matrix[3] + matrix[0];
-	m_Frustum[(std::uint32_t)Side::Right] = matrix[3] - matrix[0];
+	m_Frustum[(std::uint32_t)Side::Left]   = matrix[3] + matrix[0];
+	m_Frustum[(std::uint32_t)Side::Right]  = matrix[3] - matrix[0];
 	m_Frustum[(std::uint32_t)Side::Bottom] = matrix[3] + matrix[1];
-	m_Frustum[(std::uint32_t)Side::Top] = matrix[3] - matrix[1];
-	m_Frustum[(std::uint32_t)Side::Near] = matrix[3] + matrix[2];
-	m_Frustum[(std::uint32_t)Side::Far] = matrix[3] - matrix[2];
+	m_Frustum[(std::uint32_t)Side::Top]    = matrix[3] - matrix[1];
+	m_Frustum[(std::uint32_t)Side::Near]   = matrix[3] + matrix[2];
+	m_Frustum[(std::uint32_t)Side::Far]    = matrix[3] - matrix[2];
 
-	// Normalizing
+	// Normalizing x,y,z
 	for (auto i = 0; i < 6; i++)
 	{
 		_Normalize(m_Frustum[i]);
@@ -62,11 +62,10 @@ bool shade::Frustum::_AABBTest(const glm::vec3& minHalfExt, const glm::vec3& max
 		//находим ближайшую к плоскости вершину
 		//провер€ем, если она находитс€ за плоскостью, то объект вне врустума
 		float d = std::max(minHalfExt.x * m_Frustum[i].x, maxHalfExt.x * m_Frustum[i].x)
-			+ std::max(minHalfExt.y * m_Frustum[i].y, maxHalfExt.y * m_Frustum[i].y)
-			+ std::max(minHalfExt.z * m_Frustum[i].z, maxHalfExt.z * m_Frustum[i].z)
-			+ m_Frustum[i].w;
+				+ std::max(minHalfExt.y * m_Frustum[i].y, maxHalfExt.y * m_Frustum[i].y)
+				+ std::max(minHalfExt.z * m_Frustum[i].z, maxHalfExt.z * m_Frustum[i].z)
+				+ m_Frustum[i].w;
 		inside &= d > 0;
-		//return false; //флаг работает быстрее
 	}
 	//если не нашли раздел€ющей плоскости, считаем объект видим
 	return inside;
@@ -153,8 +152,8 @@ bool shade::Frustum::_SSE_OBBTest(const Transform3D& transform, const glm::vec3&
 		__m128 wwww = _mm_shuffle_ps(obb_transformed_point.xyzw, obb_transformed_point.xyzw, _MM_SHUFFLE(3, 3, 3, 3)); //get w
 		__m128 wwww_neg = _mm_sub_ps(zero_v, wwww);  // negate all elements
 
-	//box_point.xyz > box_point.w || box_point.xyz < -box_point.w ?
-	//similar to point normalization: point.xyz /= point.w; And compare: point.xyz > 1 && point.xyz < -1
+		//box_point.xyz > box_point.w || box_point.xyz < -box_point.w ?
+		//similar to point normalization: point.xyz /= point.w; And compare: point.xyz > 1 && point.xyz < -1
 		__m128 outside_pos_plane = _mm_cmpge_ps(obb_transformed_point.xyzw, wwww);
 		__m128 outside_neg_plane = _mm_cmple_ps(obb_transformed_point.xyzw, wwww_neg);
 

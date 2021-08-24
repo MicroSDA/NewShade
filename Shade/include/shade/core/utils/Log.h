@@ -2,6 +2,8 @@
 #include "shade/config/API.h"
 #include "shade/core/Types.h"
 #include "spdlog/spdlog.h"
+#include "spdlog/fmt/ostr.h" 
+#include "spdlog/sinks/ostream_sink.h "
 #include "spdlog/sinks/stdout_color_sinks.h"
 
 namespace shade
@@ -12,9 +14,11 @@ namespace shade
 		static void Init();
 		inline static shade::Shared<spdlog::logger>& CoreLogger() { return m_sCoreLogger; }
 		inline static shade::Shared<spdlog::logger>& ClientLogger() { return m_sClientLogger; }
+		inline static std::ostringstream& GetCoreLoggerStream() { return m_sCoreLoggerStream; }
 	private:
 		static shade::Shared<spdlog::logger> m_sCoreLogger;
 		static shade::Shared<spdlog::logger> m_sClientLogger;
+		static std::ostringstream m_sCoreLoggerStream;
 	};
 
 #define SHADE_CORE_ERROR(...)     {::shade::Log::CoreLogger()->error(__VA_ARGS__);  abort(); }

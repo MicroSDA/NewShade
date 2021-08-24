@@ -44,8 +44,10 @@ private:
 	void Model3dComponent(shade::Entity& entity);
 
 	void AssetDataExpader(shade::AssetData& data);
-
+	void LogsExplorer();
+	// Themes
 	void DarkVineTheme();
+	void MiniDartTheme();
 
 	shade::Shared<shade::VertexBuffer>	VBO;
 	shade::Shared<shade::IndexBuffer>	EBO;

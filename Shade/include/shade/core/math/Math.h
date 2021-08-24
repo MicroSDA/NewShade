@@ -1,5 +1,4 @@
 #pragma once
-#include "shade_pch.h"
 #include <glm/glm.hpp>
 #include <glm/gtx/transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -22,6 +21,32 @@ namespace shade
 			{
 				xyzw = _mm_load_ps(glm::value_ptr(other));
 			}
+			// Sum two vectors
+			sse_vec4f operator + (const sse_vec4f& other)
+			{
+				return _mm_add_ps(this->xyzw, other.xyzw);
+			}
+			// Substract one vector from another
+			sse_vec4f operator - (const sse_vec4f& other)
+			{
+				return _mm_sub_ps(this->xyzw, other.xyzw);
+			}
+			// Multyply two vectors
+			sse_vec4f operator * (const sse_vec4f& other)
+			{
+				return _mm_mul_ps(this->xyzw, other.xyzw);
+			}
+			// Divide vector
+			sse_vec4f operator / (const sse_vec4f& other)
+			{
+				return _mm_div_ps(this->xyzw, other.xyzw);
+			}
+			// Getting glm::vec4  Not sure if this works, didnt tested
+			operator glm::vec4()
+			{
+				auto value = reinterpret_cast<float*>(&xyzw);
+				return glm::vec4(value[0], value[1], value[2], value[3]);
+			}
 		};
 		// Allgiment for sse
 		__declspec(align(16)) struct sse_mat4f
@@ -34,7 +59,7 @@ namespace shade
 			sse_mat4f() = default;
 			sse_mat4f(glm::mat4& other)
 			{
-				col0 = _mm_loadu_ps(glm::value_ptr(other));
+				col0 = _mm_loadu_ps(glm::value_ptr(other)); // + 0
 				col1 = _mm_loadu_ps(glm::value_ptr(other) + 4);
 				col2 = _mm_loadu_ps(glm::value_ptr(other) + 8);
 				col3 = _mm_loadu_ps(glm::value_ptr(other) + 12);

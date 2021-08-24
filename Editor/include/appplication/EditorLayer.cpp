@@ -19,22 +19,12 @@ void EditorLayer::OnCreate()
 	m_GridShader = shade::Shader::Create("resources/shaders/Grid.glsl");
 
 	m_Grid = shade::Grid::Create(0, 0, 0);
-	DarkVineTheme();
+	//DarkVineTheme();
+	//MiniDartTheme();
 
-	/*std::string s = "Cube.Mesh.Diffuse";
-	std::string delim = ".";
-
-	auto start = 0U;
-	auto end = s.find(delim);
-	while (end != std::string::npos)
-	{
-		std::cout << s.substr(start, end - start) << std::endl;
-		start = end + delim.length();
-		end = s.find(delim, start);
-	}
-
-	std::cout << s.substr(start, end);*/
-
+	
+	shade::ColorChemeEditor::SetColors(0x21272977, 0xFDFFFCFF, 0x621234FF, 0x13534CFF, 0x621234FF);
+	shade::ColorChemeEditor::ApplyTheme();
 }
 
 void EditorLayer::OnUpdate(const shade::Shared<shade::Scene>& scene, const shade::Timer& deltaTime)
@@ -87,7 +77,9 @@ void EditorLayer::OnRender(const shade::Shared<shade::Scene>& scene)
 		ShowWindowBar("Scene", &EditorLayer::Scene, this, scene.get());
 		ShowWindowBar("File explorer", &EditorLayer::FileExplorer, this, "");
 		ShowWindowBar("Asset explorer", &EditorLayer::AssetsExplorer, this, shade::AssetManager::GetAssetsDataList());
-
+		ShowWindowBar("Logs", &EditorLayer::LogsExplorer, this);
+		ShowDemoWindow();
+	
 	} ImGui::End(); // Begin("DockSpace")
 	{
 		auto environments = scene->GetEntities().view<shade::EnvironmentComponent>();
@@ -144,7 +136,7 @@ void EditorLayer::OnEvent(const shade::Shared<shade::Scene>& scene, shade::Event
 		}
 		else if (keyCode == shade::Key::F1)
 		{
-			for (auto i = 0; i < 1000; i++)
+			for (auto i = 0; i < 100; i++)
 			{
 				shade::AssetManager::Hold<shade::Model3D>("Nanosuit",
 					shade::Asset::State::RemoveIfPosible, [&](auto& asset) mutable
@@ -465,6 +457,39 @@ void EditorLayer::AssetDataExpader(shade::AssetData& data)
 	}
 }
 
+void EditorLayer::LogsExplorer()
+{
+	static unsigned int oldSize = 0;
+	unsigned int		currentsize = 0;
+
+	auto& logs = shade::Log::GetCoreLoggerStream();
+
+	std::stringstream  stream;
+	stream << logs.str();
+
+	for (std::string line; std::getline(stream, line); ) {
+		if (line.find("[info]") != std::string::npos)
+			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.2, 0.5, 0.2, 1.0));
+		else if(line.find("[debug]") != std::string::npos)
+			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.3, 0.3, 0.8, 1.0));
+		else if (line.find("[warning]") != std::string::npos)
+			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5, 0.5, 0.2, 1.0));
+		else if (line.find("[error]") != std::string::npos)
+			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5, 0.2, 0.2, 1.0));
+		else
+			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5, 0.5, 0.5, 1.0));
+
+		ImGui::TextWrapped(line.c_str());
+		ImGui::PopStyleColor();
+		currentsize++;
+	}
+
+	if(currentsize > oldSize)
+		ImGui::SetScrollY(ImGui::GetWindowContentRegionWidth());
+
+	oldSize = currentsize;
+}
+
 void EditorLayer::Model3dComponent(shade::Entity& entity)
 {
 	if (ImGui::TreeNodeEx("Meshes: ", ImGuiTreeNodeFlags_KeppFramedWhenOpen))
@@ -558,11 +583,11 @@ void EditorLayer::DarkVineTheme()
 // backgrounds (@todo: complete with BG_MED, BG_LOW)
 #define BG(v)   ImVec4(0.200f, 0.220f, 0.270f, v)
 // text
-#define TEXT(v) ImVec4(0.860f, 0.930f, 0.890f, v)
+#define TEXT_IMGUI(v) ImVec4(0.860f, 0.930f, 0.890f, v)
 
 	auto& style = ImGui::GetStyle();
-	style.Colors[ImGuiCol_Text] = TEXT(0.78f);
-	style.Colors[ImGuiCol_TextDisabled] = TEXT(0.28f);
+	style.Colors[ImGuiCol_Text] = TEXT_IMGUI(0.78f);
+	style.Colors[ImGuiCol_TextDisabled] = TEXT_IMGUI(0.28f);
 	style.Colors[ImGuiCol_WindowBg] = ImVec4(0.13f, 0.14f, 0.17f, 1.00f);
 	//style.Colors[ImGuiCol_ChildWindowBg] = BG(0.58f);
 	style.Colors[ImGuiCol_PopupBg] = BG(0.9f);
@@ -594,9 +619,9 @@ void EditorLayer::DarkVineTheme()
 	style.Colors[ImGuiCol_ResizeGrip] = ImVec4(0.47f, 0.77f, 0.83f, 0.04f);
 	style.Colors[ImGuiCol_ResizeGripHovered] = MED(0.78f);
 	style.Colors[ImGuiCol_ResizeGripActive] = MED(1.00f);
-	style.Colors[ImGuiCol_PlotLines] = TEXT(0.63f);
+	style.Colors[ImGuiCol_PlotLines] = TEXT_IMGUI(0.63f);
 	style.Colors[ImGuiCol_PlotLinesHovered] = MED(1.00f);
-	style.Colors[ImGuiCol_PlotHistogram] = TEXT(0.63f);
+	style.Colors[ImGuiCol_PlotHistogram] = TEXT_IMGUI(0.63f);
 	style.Colors[ImGuiCol_PlotHistogramHovered] = MED(1.00f);
 	style.Colors[ImGuiCol_TextSelectedBg] = MED(0.43f);
 	// [...]
@@ -621,4 +646,75 @@ void EditorLayer::DarkVineTheme()
 	style.FrameBorderSize = 0.0f;
 	style.WindowBorderSize = 1.0f;
 
+}
+
+void EditorLayer::MiniDartTheme()
+{
+	auto style = &ImGui::GetStyle();
+	ImVec4* colors = style->Colors;
+
+	style->WindowRounding = 2.0f;             // Radius of window corners rounding. Set to 0.0f to have rectangular windows
+	style->ScrollbarRounding = 3.0f;             // Radius of grab corners rounding for scrollbar
+	style->GrabRounding = 2.0f;             // Radius of grabs corners rounding. Set to 0.0f to have rectangular slider grabs.
+	style->AntiAliasedLines = true;
+	style->AntiAliasedFill = true;
+	style->WindowRounding = 2;
+	style->ChildRounding = 2;
+	style->ScrollbarSize = 16;
+	style->ScrollbarRounding = 3;
+	style->GrabRounding = 2;
+	style->ItemSpacing.x = 10;
+	style->ItemSpacing.y = 4;
+	style->IndentSpacing = 22;
+	style->FramePadding.x = 6;
+	style->FramePadding.y = 4;
+	style->Alpha = 1.0f;
+	style->FrameRounding = 3.0f;
+
+	colors[ImGuiCol_Text] = ImVec4(0.00f, 0.00f, 0.00f, 1.00f);
+	colors[ImGuiCol_TextDisabled] = ImVec4(0.60f, 0.60f, 0.60f, 1.00f);
+	colors[ImGuiCol_WindowBg] = ImVec4(0.86f, 0.86f, 0.86f, 1.00f);
+	//colors[ImGuiCol_ChildWindowBg]         = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
+	colors[ImGuiCol_ChildBg] = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
+	colors[ImGuiCol_PopupBg] = ImVec4(0.93f, 0.93f, 0.93f, 0.98f);
+	colors[ImGuiCol_Border] = ImVec4(0.71f, 0.71f, 0.71f, 0.08f);
+	colors[ImGuiCol_BorderShadow] = ImVec4(0.00f, 0.00f, 0.00f, 0.04f);
+	colors[ImGuiCol_FrameBg] = ImVec4(0.71f, 0.71f, 0.71f, 0.55f);
+	colors[ImGuiCol_FrameBgHovered] = ImVec4(0.94f, 0.94f, 0.94f, 0.55f);
+	colors[ImGuiCol_FrameBgActive] = ImVec4(0.71f, 0.78f, 0.69f, 0.98f);
+	colors[ImGuiCol_TitleBg] = ImVec4(0.85f, 0.85f, 0.85f, 1.00f);
+	colors[ImGuiCol_TitleBgCollapsed] = ImVec4(0.82f, 0.78f, 0.78f, 0.51f);
+	colors[ImGuiCol_TitleBgActive] = ImVec4(0.78f, 0.78f, 0.78f, 1.00f);
+	colors[ImGuiCol_MenuBarBg] = ImVec4(0.86f, 0.86f, 0.86f, 1.00f);
+	colors[ImGuiCol_ScrollbarBg] = ImVec4(0.20f, 0.25f, 0.30f, 0.61f);
+	colors[ImGuiCol_ScrollbarGrab] = ImVec4(0.90f, 0.90f, 0.90f, 0.30f);
+	colors[ImGuiCol_ScrollbarGrabHovered] = ImVec4(0.92f, 0.92f, 0.92f, 0.78f);
+	colors[ImGuiCol_ScrollbarGrabActive] = ImVec4(1.00f, 1.00f, 1.00f, 1.00f);
+	colors[ImGuiCol_CheckMark] = ImVec4(0.184f, 0.407f, 0.193f, 1.00f);
+	colors[ImGuiCol_SliderGrab] = ImVec4(0.26f, 0.59f, 0.98f, 0.78f);
+	colors[ImGuiCol_SliderGrabActive] = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
+	colors[ImGuiCol_Button] = ImVec4(0.71f, 0.78f, 0.69f, 0.40f);
+	colors[ImGuiCol_ButtonHovered] = ImVec4(0.725f, 0.805f, 0.702f, 1.00f);
+	colors[ImGuiCol_ButtonActive] = ImVec4(0.793f, 0.900f, 0.836f, 1.00f);
+	colors[ImGuiCol_Header] = ImVec4(0.71f, 0.78f, 0.69f, 0.31f);
+	colors[ImGuiCol_HeaderHovered] = ImVec4(0.71f, 0.78f, 0.69f, 0.80f);
+	colors[ImGuiCol_HeaderActive] = ImVec4(0.71f, 0.78f, 0.69f, 1.00f);
+	//colors[ImGuiCol_Column] = ImVec4(0.39f, 0.39f, 0.39f, 1.00f);
+	//colors[ImGuiCol_ColumnHovered] = ImVec4(0.26f, 0.59f, 0.98f, 0.78f);
+	//colors[ImGuiCol_ColumnActive] = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
+	colors[ImGuiCol_Separator] = ImVec4(0.39f, 0.39f, 0.39f, 1.00f);
+	colors[ImGuiCol_SeparatorHovered] = ImVec4(0.14f, 0.44f, 0.80f, 0.78f);
+	colors[ImGuiCol_SeparatorActive] = ImVec4(0.14f, 0.44f, 0.80f, 1.00f);
+	colors[ImGuiCol_ResizeGrip] = ImVec4(1.00f, 1.00f, 1.00f, 0.00f);
+	colors[ImGuiCol_ResizeGripHovered] = ImVec4(0.26f, 0.59f, 0.98f, 0.45f);
+	colors[ImGuiCol_ResizeGripActive] = ImVec4(0.26f, 0.59f, 0.98f, 0.78f);
+	colors[ImGuiCol_PlotLines] = ImVec4(0.39f, 0.39f, 0.39f, 1.00f);
+	colors[ImGuiCol_PlotLinesHovered] = ImVec4(1.00f, 0.43f, 0.35f, 1.00f);
+	colors[ImGuiCol_PlotHistogram] = ImVec4(0.90f, 0.70f, 0.00f, 1.00f);
+	colors[ImGuiCol_PlotHistogramHovered] = ImVec4(1.00f, 0.60f, 0.00f, 1.00f);
+	colors[ImGuiCol_TextSelectedBg] = ImVec4(0.26f, 0.59f, 0.98f, 0.35f);
+	//colors[ImGuiCol_ModalWindowDarkening] = ImVec4(0.20f, 0.20f, 0.20f, 0.35f);
+	colors[ImGuiCol_DragDropTarget] = ImVec4(0.26f, 0.59f, 0.98f, 0.95f);
+	colors[ImGuiCol_NavHighlight] = colors[ImGuiCol_HeaderHovered];
+	colors[ImGuiCol_NavWindowingHighlight] = ImVec4(0.70f, 0.70f, 0.70f, 0.70f);
 }

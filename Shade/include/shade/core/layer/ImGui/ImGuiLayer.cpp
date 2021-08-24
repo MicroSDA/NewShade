@@ -53,8 +53,9 @@ shade::ImGuiLayer::~ImGuiLayer()
 	ImGui::DestroyContext();
 }
 
-void shade::ImGuiLayer::OnUpdate(const shade::Shared<Scene>& scene, const shade::Timer& deltaTime)
+void shade::ImGuiLayer::ShowDemoWindow()
 {
+	ImGui::ShowDemoWindow();
 }
 
 void shade::ImGuiLayer::OnRenderBegin()

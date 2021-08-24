@@ -1,6 +1,8 @@
 #pragma once
+// Precompailed headers
 #include <condition_variable>
 #include <initializer_list>
+#include <xmmintrin.h>
 #include <functional>
 #include <filesystem>
 #include <exception>

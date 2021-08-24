@@ -5,6 +5,8 @@ void shade::Drawable::GenerateHalfExt()
 {
     // Generate min and max half extension based on mesh origin
     float xMax = 0.0f, yMax = 0.0f, zMax = 0.0f;
+    unsigned int ixMax = 0, iyMax, izMax = 0, jxMax = 0, jyMax, jzMax = 0;
+
     for (auto i = 0; i < GetVertices().size(); i++)
     {
         for (auto j = i + 1; j < GetVertices().size(); j++)
@@ -12,29 +14,32 @@ void shade::Drawable::GenerateHalfExt()
             auto x = std::abs(GetVertices()[j].Position.x - GetVertices()[i].Position.x);
             if (x > xMax)
             {
-                xMax = x;
-                m_MinHalfExt.x = std::min(GetVertices()[i].Position.x, GetVertices()[j].Position.x);
-                m_MaxHalfExt.x = std::max(GetVertices()[i].Position.x, GetVertices()[j].Position.x);
+                xMax = x; ixMax = i; jxMax = j;
             }
 
             auto y = std::abs(GetVertices()[j].Position.y - GetVertices()[i].Position.y);
             if (y > yMax)
             {
-                yMax = y;
-                m_MinHalfExt.y = std::min(GetVertices()[i].Position.y, GetVertices()[j].Position.y);
-                m_MaxHalfExt.y = std::max(GetVertices()[i].Position.y, GetVertices()[j].Position.y);
+                yMax = y;  iyMax = i; jyMax = j;
             }
           
             auto z = std::abs(GetVertices()[j].Position.z - GetVertices()[i].Position.z);
             if (z > zMax)
             {
-                zMax = z;
-                m_MinHalfExt.z = std::min(GetVertices()[i].Position.z, GetVertices()[j].Position.z);
-                m_MaxHalfExt.z = std::max(GetVertices()[i].Position.z, GetVertices()[j].Position.z);
+                zMax = z; izMax = i; jzMax = j;
             }
            
         }
     }
+
+    // Some optimization 
+    m_MinHalfExt = glm::vec3(std::min(GetVertices()[ixMax].Position.x, GetVertices()[jxMax].Position.x),
+                             std::min(GetVertices()[iyMax].Position.y, GetVertices()[jyMax].Position.y),
+                             std::min(GetVertices()[izMax].Position.z, GetVertices()[jzMax].Position.z));
+
+    m_MaxHalfExt = glm::vec3(std::max(GetVertices()[ixMax].Position.x, GetVertices()[jxMax].Position.x),
+                             std::max(GetVertices()[iyMax].Position.y, GetVertices()[jyMax].Position.y),
+                             std::max(GetVertices()[izMax].Position.z, GetVertices()[jzMax].Position.z));
 }
 
 const glm::vec3& shade::Drawable::GetMinHalfExt()
