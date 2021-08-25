@@ -26,11 +26,15 @@ private:
 
 	ImVec2 m_SceneViewPort = {0, 0};
 	shade::Shared<shade::Camera> m_EditorCamera;
+	shade::Shared<shade::Camera> m_TestEditorCamera;
 	shade::Shared<shade::Shader> m_InstancedShader;
 	shade::Shared<shade::Shader> m_GridShader;
+	shade::Shared<shade::Shader> m_FrustumShader;
+
+	shade::util::ThreadPool      m_ThreadPool;
 
 	shade::Shared<shade::Grid>   m_Grid;
-
+	shade::Shared<shade::Box>    m_Box;
 	shade::Entity m_SelectedEntity;
 	void MainMenu(shade::Scene* scene);
 	void AssetsExplorer(shade::AssetManager::AssetsDataList& data);
@@ -47,11 +51,11 @@ private:
 	void LogsExplorer();
 	// Themes
 	void DarkVineTheme();
-	void MiniDartTheme();
 
+	shade::Shared<shade::VertexArray>	VAO;
 	shade::Shared<shade::VertexBuffer>	VBO;
 	shade::Shared<shade::IndexBuffer>	EBO;
-	shade::Shared<shade::VertexArray>	VAO;
+	
 	std::vector<shade::Vertex3D>		vertices;
 	std::vector<shade::Index>			indices;
 

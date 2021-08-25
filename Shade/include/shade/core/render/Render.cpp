@@ -94,6 +94,10 @@ void shade::Render::End(Shared<FrameBuffer> framebuffer)
 		}	
 	}
 }
+void shade::Render::DrawIndexed(const Drawable::DrawMode& mode, const Shared<VertexArray>& VAO, const Shared<IndexBuffer>& IBO)
+{
+	m_sRenderAPI->DrawIndexed(mode, VAO, IBO);
+}
 void shade::Render::Submit(const Drawable* drawable, const glm::mat4& transform, const Material* material, const std::vector<Shared<Texture>>* textures)
 {
 	auto& instance = m_sSubmitedRender.find(drawable);
@@ -166,9 +170,9 @@ void shade::Render::DrawInstanced(const Shared<Shader>& shader)
 	}
 }
 
-void shade::Render::DrawNotIndexed(const Drawable::DrawMode& mode, const Shared<VertexArray>& VAO)
+void shade::Render::DrawNotIndexed(const Drawable::DrawMode& mode, const Shared<VertexArray>& VAO, const std::uint32_t& count)
 {
-	m_sRenderAPI->DrawNotIndexed(mode, VAO);
+	m_sRenderAPI->DrawNotIndexed(mode, VAO, count);
 }
 
 void shade::Render::SubmitInstanced(const Drawable* drawable, const glm::mat4& transform, const Material& material, const std::vector<Shared<Texture>>& textures)

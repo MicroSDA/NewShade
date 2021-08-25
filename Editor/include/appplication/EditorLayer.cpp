@@ -14,48 +14,56 @@ EditorLayer::~EditorLayer()
 
 void EditorLayer::OnCreate()
 {
-	m_FrameBuffer = shade::FrameBuffer::Create(shade::FrameBuffer::Layout(100, 100, { shade::FrameBuffer::Texture::Format::RGBA8,shade::FrameBuffer::Texture::Format::DEPTH24STENCIL8 }));
-	m_InstancedShader = shade::Shader::Create("resources/shaders/BasicModel.glsl");
-	m_GridShader = shade::Shader::Create("resources/shaders/Grid.glsl");
+	
+	shade::ImGuiThemeEditor::SetColors(0x21272977, 0xFDFFFCFF, 0x621234FF, 0x13534CFF, 0x621234FF);
+	shade::ImGuiThemeEditor::ApplyTheme();
+
+	m_FrameBuffer     = shade::FrameBuffer::Create(shade::FrameBuffer::Layout(100, 100, { shade::FrameBuffer::Texture::Format::RGBA8,shade::FrameBuffer::Texture::Format::DEPTH24STENCIL8 }));
+
+
+	m_InstancedShader = shade::ShadersLibrary::Get("Instanced");
+	m_GridShader	  = shade::ShadersLibrary::Get("Grid");
+	m_FrustumShader   = shade::ShadersLibrary::Get("Frustum");
 
 	m_Grid = shade::Grid::Create(0, 0, 0);
-	//DarkVineTheme();
-	//MiniDartTheme();
+	m_Box = shade::Box::Create(0, 0);
 
+	shade::Application::Get().GetEntities().view<shade::CameraComponent>().each([&](auto entity, auto& camera) { m_EditorCamera = camera; });
 	
-	shade::ColorChemeEditor::SetColors(0x21272977, 0xFDFFFCFF, 0x621234FF, 0x13534CFF, 0x621234FF);
-	shade::ColorChemeEditor::ApplyTheme();
+	m_TestEditorCamera = shade::CreateShared<shade::Camera>();
+	m_TestEditorCamera->SetFar(500);
+
+	VAO = shade::VertexArray::Create();
+	VBO = shade::VertexBuffer::Create(m_Box->GetVertices().data(), sizeof(shade::Vertex3D) * m_Box->GetVertices().size(), shade::VertexBuffer::BufferType::Dynamic);
+	VBO->SetLayout({ {shade::VertexBuffer::ElementType::Float3, "Position"},
+					 {shade::VertexBuffer::ElementType::Float2, "UV_Coords"},
+					 {shade::VertexBuffer::ElementType::Float3, "Normal"},
+					 {shade::VertexBuffer::ElementType::Float3, "Tangent"} });
+
+	EBO = shade::IndexBuffer::Create(m_Box->GetIndices().data(), m_Box->GetIndices().size());
+
+	VAO->AddVertexBuffer(VBO);
+	VAO->SetIndexBuffer(EBO);
 }
 
 void EditorLayer::OnUpdate(const shade::Shared<shade::Scene>& scene, const shade::Timer& deltaTime)
 {
-	// When scene is playing
-	/*scene->GetEntities().view<shade::CameraComponent>().each([&](auto entity, auto& camera)
-		{
-			m_EditorCamera = camera;
-		});*/
-		// When scene inst playing
-	shade::Application::Get().GetEntities().view<shade::CameraComponent>().each([&](auto entity, auto& camera) { m_EditorCamera = camera; });
+	shade::Render::Submit(m_Grid.get(), glm::mat4(1));
 
-	auto frustum = m_EditorCamera->GetFrustum();
-	
 	auto start = std::chrono::steady_clock::now();
+
+	auto frustum = m_TestEditorCamera->GetFrustum();
 	scene->GetEntities().view<shade::Model3DComponent, shade::Transform3DComponent>().each([&](auto& entity, shade::Model3DComponent& model, shade::Transform3DComponent& transform)
 		{
 			for (auto& mesh : model->GetMeshes())
 			{
-				// Frustum culling, for AABB only without rotation and scale
 				if (frustum.IsInFrustum(transform, mesh->GetMinHalfExt(), mesh->GetMaxHalfExt()))
 					shade::Render::SubmitInstanced(mesh.get(), transform.GetModelMatrix(), mesh->GetMaterial(), mesh->GetTextures());
-				
 			}
 		});
 
 	auto end = std::chrono::steady_clock::now();
-
-	//SHADE_TRACE("Frustum calculation time: {0}", std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count());
-
-	shade::Render::Submit(m_Grid.get(), glm::mat4(1));
+    //SHADE_TRACE("Frustum calculation time: {0}", std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count());
 }
 
 void EditorLayer::OnRender(const shade::Shared<shade::Scene>& scene)
@@ -93,6 +101,12 @@ void EditorLayer::OnRender(const shade::Shared<shade::Scene>& scene)
 			shade::Render::DrawInstanced(m_InstancedShader);
 		shade::Render::EndScene(m_InstancedShader);
 
+
+		m_FrustumShader->Bind();
+		m_FrustumShader->SendMat4("CameraMatrix", false, glm::value_ptr(glm::inverse(m_TestEditorCamera->GetViewProjection())));
+		shade::Render::BeginScene(m_FrustumShader, m_EditorCamera);
+			shade::Render::DrawIndexed(shade::Drawable::DrawMode::Lines, VAO, VAO->GetIndexBuffer());
+		shade::Render::EndScene(m_FrustumShader);
 
 		shade::Render::End(m_FrameBuffer);
 	}
@@ -136,7 +150,7 @@ void EditorLayer::OnEvent(const shade::Shared<shade::Scene>& scene, shade::Event
 		}
 		else if (keyCode == shade::Key::F1)
 		{
-			for (auto i = 0; i < 100; i++)
+			for (auto i = 0; i < 1000; i++)
 			{
 				shade::AssetManager::Hold<shade::Model3D>("Nanosuit",
 					shade::Asset::State::RemoveIfPosible, [&](auto& asset) mutable
@@ -159,6 +173,16 @@ void EditorLayer::OnEvent(const shade::Shared<shade::Scene>& scene, shade::Event
 			}
 
 		}
+
+		if (keyCode == shade::Key::Left)
+			m_TestEditorCamera->SetPosition(m_TestEditorCamera->GetPosition().x + 1, m_TestEditorCamera->GetPosition().y, 0);
+		if (keyCode == shade::Key::Right)
+			m_TestEditorCamera->SetPosition(m_TestEditorCamera->GetPosition().x - 1, m_TestEditorCamera->GetPosition().y, 0);
+
+		if (keyCode == shade::Key::Up)
+			m_TestEditorCamera->SetPosition(m_TestEditorCamera->GetPosition().x, m_TestEditorCamera->GetPosition().y + 1, 0);
+		if (keyCode == shade::Key::Down)
+			m_TestEditorCamera->SetPosition(m_TestEditorCamera->GetPosition().x, m_TestEditorCamera->GetPosition().y -1, 0);
 
 	}
 }
@@ -462,7 +486,7 @@ void EditorLayer::LogsExplorer()
 	static unsigned int oldSize = 0;
 	unsigned int		currentsize = 0;
 
-	auto& logs = shade::Log::GetCoreLoggerStream();
+	auto& logs = shade::Log::GetClientStream();
 
 	std::stringstream  stream;
 	stream << logs.str();
@@ -646,75 +670,4 @@ void EditorLayer::DarkVineTheme()
 	style.FrameBorderSize = 0.0f;
 	style.WindowBorderSize = 1.0f;
 
-}
-
-void EditorLayer::MiniDartTheme()
-{
-	auto style = &ImGui::GetStyle();
-	ImVec4* colors = style->Colors;
-
-	style->WindowRounding = 2.0f;             // Radius of window corners rounding. Set to 0.0f to have rectangular windows
-	style->ScrollbarRounding = 3.0f;             // Radius of grab corners rounding for scrollbar
-	style->GrabRounding = 2.0f;             // Radius of grabs corners rounding. Set to 0.0f to have rectangular slider grabs.
-	style->AntiAliasedLines = true;
-	style->AntiAliasedFill = true;
-	style->WindowRounding = 2;
-	style->ChildRounding = 2;
-	style->ScrollbarSize = 16;
-	style->ScrollbarRounding = 3;
-	style->GrabRounding = 2;
-	style->ItemSpacing.x = 10;
-	style->ItemSpacing.y = 4;
-	style->IndentSpacing = 22;
-	style->FramePadding.x = 6;
-	style->FramePadding.y = 4;
-	style->Alpha = 1.0f;
-	style->FrameRounding = 3.0f;
-
-	colors[ImGuiCol_Text] = ImVec4(0.00f, 0.00f, 0.00f, 1.00f);
-	colors[ImGuiCol_TextDisabled] = ImVec4(0.60f, 0.60f, 0.60f, 1.00f);
-	colors[ImGuiCol_WindowBg] = ImVec4(0.86f, 0.86f, 0.86f, 1.00f);
-	//colors[ImGuiCol_ChildWindowBg]         = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
-	colors[ImGuiCol_ChildBg] = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
-	colors[ImGuiCol_PopupBg] = ImVec4(0.93f, 0.93f, 0.93f, 0.98f);
-	colors[ImGuiCol_Border] = ImVec4(0.71f, 0.71f, 0.71f, 0.08f);
-	colors[ImGuiCol_BorderShadow] = ImVec4(0.00f, 0.00f, 0.00f, 0.04f);
-	colors[ImGuiCol_FrameBg] = ImVec4(0.71f, 0.71f, 0.71f, 0.55f);
-	colors[ImGuiCol_FrameBgHovered] = ImVec4(0.94f, 0.94f, 0.94f, 0.55f);
-	colors[ImGuiCol_FrameBgActive] = ImVec4(0.71f, 0.78f, 0.69f, 0.98f);
-	colors[ImGuiCol_TitleBg] = ImVec4(0.85f, 0.85f, 0.85f, 1.00f);
-	colors[ImGuiCol_TitleBgCollapsed] = ImVec4(0.82f, 0.78f, 0.78f, 0.51f);
-	colors[ImGuiCol_TitleBgActive] = ImVec4(0.78f, 0.78f, 0.78f, 1.00f);
-	colors[ImGuiCol_MenuBarBg] = ImVec4(0.86f, 0.86f, 0.86f, 1.00f);
-	colors[ImGuiCol_ScrollbarBg] = ImVec4(0.20f, 0.25f, 0.30f, 0.61f);
-	colors[ImGuiCol_ScrollbarGrab] = ImVec4(0.90f, 0.90f, 0.90f, 0.30f);
-	colors[ImGuiCol_ScrollbarGrabHovered] = ImVec4(0.92f, 0.92f, 0.92f, 0.78f);
-	colors[ImGuiCol_ScrollbarGrabActive] = ImVec4(1.00f, 1.00f, 1.00f, 1.00f);
-	colors[ImGuiCol_CheckMark] = ImVec4(0.184f, 0.407f, 0.193f, 1.00f);
-	colors[ImGuiCol_SliderGrab] = ImVec4(0.26f, 0.59f, 0.98f, 0.78f);
-	colors[ImGuiCol_SliderGrabActive] = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
-	colors[ImGuiCol_Button] = ImVec4(0.71f, 0.78f, 0.69f, 0.40f);
-	colors[ImGuiCol_ButtonHovered] = ImVec4(0.725f, 0.805f, 0.702f, 1.00f);
-	colors[ImGuiCol_ButtonActive] = ImVec4(0.793f, 0.900f, 0.836f, 1.00f);
-	colors[ImGuiCol_Header] = ImVec4(0.71f, 0.78f, 0.69f, 0.31f);
-	colors[ImGuiCol_HeaderHovered] = ImVec4(0.71f, 0.78f, 0.69f, 0.80f);
-	colors[ImGuiCol_HeaderActive] = ImVec4(0.71f, 0.78f, 0.69f, 1.00f);
-	//colors[ImGuiCol_Column] = ImVec4(0.39f, 0.39f, 0.39f, 1.00f);
-	//colors[ImGuiCol_ColumnHovered] = ImVec4(0.26f, 0.59f, 0.98f, 0.78f);
-	//colors[ImGuiCol_ColumnActive] = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
-	colors[ImGuiCol_Separator] = ImVec4(0.39f, 0.39f, 0.39f, 1.00f);
-	colors[ImGuiCol_SeparatorHovered] = ImVec4(0.14f, 0.44f, 0.80f, 0.78f);
-	colors[ImGuiCol_SeparatorActive] = ImVec4(0.14f, 0.44f, 0.80f, 1.00f);
-	colors[ImGuiCol_ResizeGrip] = ImVec4(1.00f, 1.00f, 1.00f, 0.00f);
-	colors[ImGuiCol_ResizeGripHovered] = ImVec4(0.26f, 0.59f, 0.98f, 0.45f);
-	colors[ImGuiCol_ResizeGripActive] = ImVec4(0.26f, 0.59f, 0.98f, 0.78f);
-	colors[ImGuiCol_PlotLines] = ImVec4(0.39f, 0.39f, 0.39f, 1.00f);
-	colors[ImGuiCol_PlotLinesHovered] = ImVec4(1.00f, 0.43f, 0.35f, 1.00f);
-	colors[ImGuiCol_PlotHistogram] = ImVec4(0.90f, 0.70f, 0.00f, 1.00f);
-	colors[ImGuiCol_PlotHistogramHovered] = ImVec4(1.00f, 0.60f, 0.00f, 1.00f);
-	colors[ImGuiCol_TextSelectedBg] = ImVec4(0.26f, 0.59f, 0.98f, 0.35f);
-	//colors[ImGuiCol_ModalWindowDarkening] = ImVec4(0.20f, 0.20f, 0.20f, 0.35f);
-	colors[ImGuiCol_DragDropTarget] = ImVec4(0.26f, 0.59f, 0.98f, 0.95f);
-	colors[ImGuiCol_NavHighlight] = colors[ImGuiCol_HeaderHovered];
-	colors[ImGuiCol_NavWindowingHighlight] = ImVec4(0.70f, 0.70f, 0.70f, 0.70f);
 }

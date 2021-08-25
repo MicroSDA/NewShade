@@ -6,7 +6,8 @@ shade::Camera::Camera() :
 	m_Fov(45.0f),  m_Aspect(1), // Be aware about aspect 1
 	m_zNear(0.1f), m_zFar(1000.0f)
 {
-	m_Perpective = glm::perspective(glm::radians(m_Fov), m_Aspect, m_zNear, m_zFar);
+	_RecalculatePerpective();
+
 	m_Position = glm::vec3(0, 0, -10);
 	m_Forward = glm::vec3(0, 0, 1); // - Z
 	m_Up = glm::vec3(0, 1, 0);
@@ -50,4 +51,9 @@ void shade::Camera::Resize(const float& aspect)
 void shade::Camera::SetPrimary(const bool& isPrimary)
 {
 	m_IsPrimary = isPrimary;
+}
+
+void shade::Camera::_RecalculatePerpective()
+{
+	m_Perpective = glm::perspective(glm::radians(m_Fov), m_Aspect, m_zNear, m_zFar);
 }

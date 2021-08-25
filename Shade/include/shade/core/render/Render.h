@@ -12,6 +12,7 @@
 #include "shade/core/mesh/Material.h"
 #include "shade/core/mesh/Mesh.h"
 #include "shade/core/render/drawable/primitives/Grid.h"
+#include "shade/core/render/drawable/primitives/Box.h"
 #include "shade/core/render/buffers/UniformBuffer.h"
 
 namespace shade
@@ -48,7 +49,7 @@ namespace shade
 		static void DrawSubmited(const Shared<Shader>& shader);
 		static void SubmitInstanced(const Drawable* drawable, const glm::mat4& transform, const Material& material, const std::vector<Shared<Texture>>& textures);
 		static void DrawInstanced(const Shared<Shader>& shader);
-		static void DrawNotIndexed(const Drawable::DrawMode& mode, const Shared<VertexArray>& VAO);
+		static void DrawNotIndexed(const Drawable::DrawMode& mode, const Shared<VertexArray>& VAO, const std::uint32_t& count);
 		static void Begin(Shared<FrameBuffer> framebuffer = nullptr);
 		static void BeginScene(
 			const Shared<Shader>& shader,
@@ -57,7 +58,7 @@ namespace shade
 			const std::size_t& enviromentsCount = 0, const glm::vec4& clipping = glm::vec4(0));
 		static void EndScene(const Shared<Shader>& shader);
 		static void End(Shared<FrameBuffer> framebuffer = nullptr);
-		static void DrawIndexed(const Drawable* drawable, const Shared<VertexArray>& VAO, const Shared<IndexBuffer>& IBO);
+		static void DrawIndexed(const Drawable::DrawMode& mode, const Shared<VertexArray>& VAO, const Shared<IndexBuffer>& IBO);
 		//Util
 	private:
 		static Unique<RenderAPI>	m_sRenderAPI;

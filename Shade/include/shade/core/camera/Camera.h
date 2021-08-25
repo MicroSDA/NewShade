@@ -48,10 +48,10 @@ namespace shade
 		inline void MoveBack(const float& value) { m_Position -= m_Forward * value; }
 		inline void MoveRight(const float& value) { m_Position -= glm::cross(m_Up, m_Forward) * value; }
 		inline void MoveLeft(const float& value) { m_Position += glm::cross(m_Up, m_Forward) * value; }
-		inline void SetAspect(const float& aspect) { m_Aspect = aspect; }
-		inline void SetFov(const float& fov) { m_Fov = fov; }
-		inline void SetNear(const float& zNear) { m_zNear = zNear; }
-		inline void SetFar(const float& zFar) { m_zFar = zFar; }
+		inline void SetAspect(const float& aspect) { m_Aspect = aspect; _RecalculatePerpective(); }
+		inline void SetFov(const float& fov) { m_Fov = fov; _RecalculatePerpective();}
+		inline void SetNear(const float& zNear) { m_zNear = zNear; _RecalculatePerpective();}
+		inline void SetFar(const float& zFar) { m_zFar = zFar; _RecalculatePerpective();}
 
 		inline Frustum GetFrustum() const { return Frustum(GetView(), GetProjection()); };
 		// Counter clockwise issue here
@@ -76,6 +76,7 @@ namespace shade
 		void SetPrimary(const bool& isPrimary);
 		const bool& IsPrimary() const { return m_IsPrimary; }
 	private:
+		void _RecalculatePerpective();
 		const glm::vec3 UP = glm::vec3(0.0f, 1.0f, 0.0f); // Y is up
 		glm::mat4 m_Perpective;
 		glm::vec3 m_Position;

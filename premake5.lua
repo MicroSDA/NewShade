@@ -66,7 +66,7 @@ project "Shade"
 		"Yaml"
 	}
 
-	filter "files:vendors/ImGuizmo/**.cpp"
+	filter "files:%{includeDir.ImGuizmo}/**.cpp"
 		flags { "NoPCH" }
 		
 	
@@ -97,7 +97,6 @@ project "Shade"
 group "Clients"	
 project "Editor"
 	location	"Editor"
-	kind		"ConsoleApp"
 	language	"C++"
 
 	targetdir ("bin/" .. output_dir .. "/%{prj.name}")
@@ -137,10 +136,15 @@ project "Editor"
 	filter "configurations:Debug"
 		defines "SHADE_DEBUG"
 		symbols "On"
+		kind	"ConsoleApp"
+		linkoptions '/ENTRY:"mainCRTStartup"'
 
 	filter "configurations:Release"
 		defines "SHADE_RELAESE"
 		optimize "On"
+		kind	 "WindowedApp"
+		linkoptions '/ENTRY:"mainCRTStartup"'
+		
 group "Clients/Scripts"			
 project "Scripts"
 	location	"Editor/Scripts"

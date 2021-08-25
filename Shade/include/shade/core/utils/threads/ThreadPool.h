@@ -5,7 +5,7 @@ namespace shade
 {
 	namespace util
 	{
-		class ThreadPool
+		class SHADE_API ThreadPool
 		{
 			using Task = std::function<void()>;
 		public:

@@ -11,14 +11,17 @@ namespace shade
 	class SHADE_API Log
 	{
 	public:
-		static void Init();
+		// Initializing Log, if arguments were passed then use GeCore or Cleint stream
+		static void Init(const bool& cCore = false, const bool& cClient = false);
 		inline static shade::Shared<spdlog::logger>& CoreLogger() { return m_sCoreLogger; }
 		inline static shade::Shared<spdlog::logger>& ClientLogger() { return m_sClientLogger; }
-		inline static std::ostringstream& GetCoreLoggerStream() { return m_sCoreLoggerStream; }
+		inline static std::ostringstream& GetCoreStream() { return m_sCoreStream; }
+		inline static std::ostringstream& GetClientStream() { return m_sClientStream; }
 	private:
 		static shade::Shared<spdlog::logger> m_sCoreLogger;
 		static shade::Shared<spdlog::logger> m_sClientLogger;
-		static std::ostringstream m_sCoreLoggerStream;
+		static std::ostringstream m_sCoreStream;
+		static std::ostringstream m_sClientStream;
 	};
 
 #define SHADE_CORE_ERROR(...)     {::shade::Log::CoreLogger()->error(__VA_ARGS__);  abort(); }

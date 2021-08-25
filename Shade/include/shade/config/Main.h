@@ -5,8 +5,10 @@
 
 extern shade::Application* shade::CreateApplication(int argc, char* argv[]);
 
+
 int main(int argc, char* argv[])
 {
+	
 	shade::Application* pApp = nullptr;
 
 	pApp = shade::CreateApplication(argc, argv);

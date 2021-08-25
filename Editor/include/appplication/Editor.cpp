@@ -7,14 +7,20 @@ Editor::Editor(int argc, char* argv[]):
 
 void Editor::OnCreate()
 {
+	//Should be first before tuching opengl functions
 	auto& widnow = CreateWindow();
+	// Create shaders 
+	shade::ShadersLibrary::Create("Instanced",	"resources/shaders/BasicModel.glsl");
+	shade::ShadersLibrary::Create("Grid",		"resources/shaders/Grid.glsl");
+	shade::ShadersLibrary::Create("Frustum",		"resources/shaders/Frustum.glsl");
+	// Load assets data list
 	shade::AssetManager::LoadAssetDataListFromFile("resources/assets/Assets.xml");
-	//auto& scene = this->CreateScene("Main");
+
+	
+	auto camera = CreateEntity("Camera");// TODO need to remove from there some how
 
 
-	auto layer = this->CreateLayer<EditorLayer>("EditorLayer");
-	auto camera = CreateEntity("Camera");
-
+	
 
 	auto& _camera = camera.AddComponent<shade::CameraComponent>(shade::CreateShared<shade::Camera>());
 	_camera->SetDirection(glm::vec3(-0.011512465, -0.33462766, 0.94228005));
@@ -33,6 +39,9 @@ void Editor::OnCreate()
 
 	//auto directLight = scene->CreateEntity("DirectLight");
 	//directLight.AddComponent<shade::EnvironmentComponent>(shade::CreateShared<shade::DirectLight>());
+
+
+	auto layer = this->CreateLayer<EditorLayer>("EditorLayer");
 }
 
 void Editor::OnUpdate(const shade::Timer& timer)

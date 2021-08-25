@@ -8,7 +8,7 @@ shade::Application::Application(int argc, char* argv[])
 {
 	if (!m_pInstance)
 	{
-		Log::Init();
+		Log::Init(false, true);
 		m_pInstance = this;
 
 	}

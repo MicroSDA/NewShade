@@ -34,7 +34,7 @@ namespace shade
 		virtual void EndScene(const Shared<Shader>& shader) = 0;
 		virtual void DrawIndexed(const Drawable::DrawMode& mode, const Shared<VertexArray>& VAO, const Shared<IndexBuffer>& IBO)   const = 0;
 		virtual void DrawInstanced(const Drawable::DrawMode& mode, const Shared<VertexArray>& VAO, const Shared<IndexBuffer>& IBO, const std::uint32_t& instanceCount) = 0;
-		virtual void DrawNotIndexed(const Drawable::DrawMode& mode, const Shared<VertexArray>& VAO) = 0;
+		virtual void DrawNotIndexed(const Drawable::DrawMode& mode, const Shared<VertexArray>& VAO, const std::uint32_t& count) = 0;
 		static API GetAPI();
 		static Unique<RenderAPI> Create();
 	private:

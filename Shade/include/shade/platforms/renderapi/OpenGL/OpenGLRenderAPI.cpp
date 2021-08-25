@@ -79,9 +79,9 @@ void shade::OpenGLRenderAPI::DrawInstanced(const Drawable::DrawMode& mode, const
 	VAO->Bind(); glDrawElementsInstanced(static_cast<GLenum>(mode), IBO->GetCount(), GL_UNSIGNED_INT, nullptr, instanceCount);
 }
 
-void shade::OpenGLRenderAPI::DrawNotIndexed(const Drawable::DrawMode& mode, const Shared<VertexArray>& VAO)
+void shade::OpenGLRenderAPI::DrawNotIndexed(const Drawable::DrawMode& mode, const Shared<VertexArray>& VAO, const std::uint32_t& count)
 {
-	VAO->Bind();  glDrawArrays(static_cast<GLenum>(mode), 0, VAO->GetIndexBuffer()->GetCount());
+	VAO->Bind();  glDrawArrays(static_cast<GLenum>(mode), 0, count);
 }
 
 void shade::OpenGLRenderAPI::Begin(Shared<FrameBuffer> framebuffer)
