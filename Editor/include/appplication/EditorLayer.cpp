@@ -154,7 +154,7 @@ void EditorLayer::OnEvent(const shade::Shared<shade::Scene>& scene, shade::Event
 		}
 		else if (keyCode == shade::Key::F1)
 		{
-			for (auto i = 0; i < 1000; i++)
+			for (auto i = 0; i < 100; i++)
 			{
 				shade::AssetManager::Hold<shade::Model3D>("Nanosuit",
 					shade::Asset::State::RemoveIfPosible, [&](auto& asset) mutable

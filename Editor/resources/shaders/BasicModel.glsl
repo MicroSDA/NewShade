@@ -81,6 +81,18 @@ uniform Textures textures;
 
 in mat3 out_TBN;
 
+struct LTest
+{
+	vec3 Direction;
+	vec3 Ambient;
+	vec3 Diffuse;
+	vec3 Specular;
+};
+
+layout(std430, binding = 2) buffer TestBuffer
+{
+	LTest u_LTest[];
+};
 
 
 void main()

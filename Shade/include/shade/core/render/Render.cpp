@@ -11,6 +11,20 @@ namespace shade
 	std::unordered_map<const Drawable*, Render::Submited> Render::m_sSubmitedRender;
 	Shared<UniformBuffer> Render::m_sCameraUniformBuffer;
 	Shared<UniformBuffer> Render::m_sClippingUniformBuffer;
+	Shared<ShaderStorageBuffer> Render::m_sTestShaderStorageBuffer;
+
+	struct LTest
+	{
+		glm::vec3 Direction = glm::vec3(1, 0, 0);
+		float x;
+		glm::vec3 Ambient	= glm::vec3(1 ,1 ,0);
+		float y;
+		glm::vec3 Diffuse   = glm::vec3(1, 1, 1);
+		float z;
+		glm::vec3 Specular	= glm::vec3(0, 1, 1);
+		float w;
+	
+	};
 }
 
 void shade::Render::Init()
@@ -23,6 +37,7 @@ void shade::Render::Init()
 
 		m_sCameraUniformBuffer = UniformBuffer::Create(sizeof(Camera::Data), 0);
 		m_sClippingUniformBuffer = UniformBuffer::Create(sizeof(glm::vec4), 1);
+		m_sTestShaderStorageBuffer = ShaderStorageBuffer::Create(sizeof(LTest) * 2, 2);
 	}
 	else
 		SHADE_CORE_WARNING("Render API has been already initialized!");
@@ -226,6 +241,11 @@ void shade::Render::BeginScene(const Shared<Shader>& shader, const Shared<Camera
 	shader->Bind();
 	m_sCameraUniformBuffer->SetData(&camera->GetData(), sizeof(Camera::Data), 0);
 	m_sClippingUniformBuffer->SetData(glm::value_ptr(clipping), sizeof(glm::vec4), 0);
+	int test = 1+ rand() % 10;
+
+	LTest lTes[2];
+	lTes[1].Diffuse = glm::vec3(0, 0.5, 1);
+	m_sTestShaderStorageBuffer->SetData(lTes, sizeof(LTest) * 2, 0);
 	m_sRenderAPI->BeginScene(shader, camera, enviroments, enviromentsCount);
 }
 

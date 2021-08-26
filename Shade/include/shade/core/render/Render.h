@@ -13,7 +13,9 @@
 #include "shade/core/mesh/Mesh.h"
 #include "shade/core/render/drawable/primitives/Grid.h"
 #include "shade/core/render/drawable/primitives/Box.h"
+
 #include "shade/core/render/buffers/UniformBuffer.h"
+#include "shade/core/render/buffers/ShaderStorageBuffer.h"
 
 namespace shade
 {
@@ -68,5 +70,6 @@ namespace shade
 		static std::unordered_map<const Drawable*, Submited>		m_sSubmitedRender;
 		static Shared<UniformBuffer>								m_sCameraUniformBuffer;
 		static Shared<UniformBuffer>								m_sClippingUniformBuffer;
+		static Shared<ShaderStorageBuffer>							m_sTestShaderStorageBuffer;
 	};
 }
