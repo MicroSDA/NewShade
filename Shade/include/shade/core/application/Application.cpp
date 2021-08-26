@@ -45,7 +45,6 @@ void shade::Application::Start()
 		m_Window->SetEventCallback(SHADE_BIND_EVENT_FN(Application::OnEvent));
 
 	// TODO Scenee assigment
-	Timer deltaTime;
 	Shared<Scene> dummyScene = Scene::Create();
 	m_CurrentScene = Scene::Create();
 
@@ -55,20 +54,20 @@ void shade::Application::Start()
 
 	while (!m_IsQuitRequested)
 	{
-		deltaTime.Update();
+		m_DeltaTime.Update();
 
 		shade::Render::Clear();
-		NativeScriptsUpdate(deltaTime);
+		NativeScriptsUpdate(m_DeltaTime);
 
 
-		((!m_CurrentScene) ? dummyScene : m_CurrentScene)->NativeScriptsUpdate(deltaTime);
+		((!m_CurrentScene) ? dummyScene : m_CurrentScene)->NativeScriptsUpdate(m_DeltaTime);
 
 		for (auto& const layer : m_Layers)
 		{
 			if (layer->IsActive())
 			{
 				if (layer->IsUpdate())
-					layer->OnUpdate((!m_CurrentScene) ? dummyScene : m_CurrentScene, deltaTime);
+					layer->OnUpdate((!m_CurrentScene) ? dummyScene : m_CurrentScene, m_DeltaTime);
 				if (layer->IsRender())
 				{
 					layer->OnRenderBegin();
@@ -98,7 +97,7 @@ void shade::Application::OnEvent(shade::Event& event)
 	for (auto& layer : m_Layers)
 	{
 		if (layer->IsActive())
-			layer->OnEvent(m_CurrentScene, event);
+			layer->OnEvent(m_CurrentScene, event, m_DeltaTime);
 	}
 
 }

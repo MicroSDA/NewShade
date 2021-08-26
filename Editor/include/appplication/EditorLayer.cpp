@@ -3,9 +3,15 @@
 //#include <pugixml/pugiconfig.hpp> // Temporary
 #include "IModel3D.h"
 #include <minwindef.h> //Todo need to remove from here
+
+
 EditorLayer::EditorLayer(const std::string& name) :
 	shade::ImGuiLayer(name)
 {
+	//shade::ImGuiThemeEditor::SetColors(0x21272977, 0xFDFFFCFF, 0x621234FF, 0x13534CFF, 0x621234FF);
+	shade::ImGuiThemeEditor::SetColors(0x121612FF, 0xFDFFFCFF, 0x96223FFF, 0x13534CFF, 0x621234FF);
+	//shade::ImGuiThemeEditor::SetFont("resources/font/Roboto-Regular.ttf", 16.0);
+	shade::ImGuiThemeEditor::ApplyTheme();
 }
 
 EditorLayer::~EditorLayer()
@@ -14,22 +20,20 @@ EditorLayer::~EditorLayer()
 
 void EditorLayer::OnCreate()
 {
-	
-	shade::ImGuiThemeEditor::SetColors(0x21272977, 0xFDFFFCFF, 0x621234FF, 0x13534CFF, 0x621234FF);
-	shade::ImGuiThemeEditor::ApplyTheme();
 
-	m_FrameBuffer     = shade::FrameBuffer::Create(shade::FrameBuffer::Layout(100, 100, { shade::FrameBuffer::Texture::Format::RGBA8,shade::FrameBuffer::Texture::Format::DEPTH24STENCIL8 }));
 
+
+	m_FrameBuffer = shade::FrameBuffer::Create(shade::FrameBuffer::Layout(100, 100, { shade::FrameBuffer::Texture::Format::RGBA8,shade::FrameBuffer::Texture::Format::DEPTH24STENCIL8 }));
 
 	m_InstancedShader = shade::ShadersLibrary::Get("Instanced");
-	m_GridShader	  = shade::ShadersLibrary::Get("Grid");
-	m_FrustumShader   = shade::ShadersLibrary::Get("Frustum");
+	m_GridShader = shade::ShadersLibrary::Get("Grid");
+	m_FrustumShader = shade::ShadersLibrary::Get("Frustum");
 
 	m_Grid = shade::Grid::Create(0, 0, 0);
 	m_Box = shade::Box::Create(0, 0);
 
 	shade::Application::Get().GetEntities().view<shade::CameraComponent>().each([&](auto entity, auto& camera) { m_EditorCamera = camera; });
-	
+
 	m_TestEditorCamera = shade::CreateShared<shade::Camera>();
 	m_TestEditorCamera->SetFar(500);
 
@@ -63,7 +67,7 @@ void EditorLayer::OnUpdate(const shade::Shared<shade::Scene>& scene, const shade
 		});
 
 	auto end = std::chrono::steady_clock::now();
-    //SHADE_TRACE("Frustum calculation time: {0}", std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count());
+	//SHADE_TRACE("Frustum calculation time: {0}", std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count());
 }
 
 void EditorLayer::OnRender(const shade::Shared<shade::Scene>& scene)
@@ -87,25 +91,25 @@ void EditorLayer::OnRender(const shade::Shared<shade::Scene>& scene)
 		ShowWindowBar("Asset explorer", &EditorLayer::AssetsExplorer, this, shade::AssetManager::GetAssetsDataList());
 		ShowWindowBar("Logs", &EditorLayer::LogsExplorer, this);
 		ShowDemoWindow();
-	
+
 	} ImGui::End(); // Begin("DockSpace")
 	{
 		auto environments = scene->GetEntities().view<shade::EnvironmentComponent>();
 		shade::Render::Begin(m_FrameBuffer);
 
 		shade::Render::BeginScene(m_GridShader, m_EditorCamera);
-			shade::Render::DrawSubmited(m_GridShader);
+		shade::Render::DrawSubmited(m_GridShader);
 		shade::Render::EndScene(m_GridShader);
 
 		shade::Render::BeginScene(m_InstancedShader, m_EditorCamera, environments.raw(), environments.size());
-			shade::Render::DrawInstanced(m_InstancedShader);
+		shade::Render::DrawInstanced(m_InstancedShader);
 		shade::Render::EndScene(m_InstancedShader);
 
 
 		m_FrustumShader->Bind();
 		m_FrustumShader->SendMat4("CameraMatrix", false, glm::value_ptr(glm::inverse(m_TestEditorCamera->GetViewProjection())));
 		shade::Render::BeginScene(m_FrustumShader, m_EditorCamera);
-			shade::Render::DrawIndexed(shade::Drawable::DrawMode::Lines, VAO, VAO->GetIndexBuffer());
+		shade::Render::DrawIndexed(shade::Drawable::DrawMode::Lines, VAO, VAO->GetIndexBuffer());
 		shade::Render::EndScene(m_FrustumShader);
 
 		shade::Render::End(m_FrameBuffer);
@@ -117,7 +121,7 @@ void EditorLayer::OnDelete()
 
 }
 
-void EditorLayer::OnEvent(const shade::Shared<shade::Scene>& scene, shade::Event& event)
+void EditorLayer::OnEvent(const shade::Shared<shade::Scene>& scene, shade::Event& event, const shade::Timer& deltaTime)
 {
 	OnImGuiEvent(event);
 	if (event.GetEventType() == shade::EventType::KeyPressed)
@@ -182,7 +186,7 @@ void EditorLayer::OnEvent(const shade::Shared<shade::Scene>& scene, shade::Event
 		if (keyCode == shade::Key::Up)
 			m_TestEditorCamera->SetPosition(m_TestEditorCamera->GetPosition().x, m_TestEditorCamera->GetPosition().y + 1, 0);
 		if (keyCode == shade::Key::Down)
-			m_TestEditorCamera->SetPosition(m_TestEditorCamera->GetPosition().x, m_TestEditorCamera->GetPosition().y -1, 0);
+			m_TestEditorCamera->SetPosition(m_TestEditorCamera->GetPosition().x, m_TestEditorCamera->GetPosition().y - 1, 0);
 
 	}
 }
@@ -489,29 +493,58 @@ void EditorLayer::LogsExplorer()
 	auto& logs = shade::Log::GetClientStream();
 
 	std::stringstream  stream;
+	std::string	_info;
+	std::string	_trace;
+	std::string	_warning;
+	std::string	_error;
+
 	stream << logs.str();
+
+	ImGui::BeginGroup();
+	ImGui::BeginChild("Logs", ImVec2(0, -ImGui::GetFrameHeightWithSpacing())); // Leave room for 1 line below us
+
 
 	for (std::string line; std::getline(stream, line); ) {
 		if (line.find("[info]") != std::string::npos)
-			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.2, 0.5, 0.2, 1.0));
-		else if(line.find("[debug]") != std::string::npos)
-			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.3, 0.3, 0.8, 1.0));
-		else if (line.find("[warning]") != std::string::npos)
-			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5, 0.5, 0.2, 1.0));
-		else if (line.find("[error]") != std::string::npos)
-			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5, 0.2, 0.2, 1.0));
-		else
-			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5, 0.5, 0.5, 1.0));
+		{
 
-		ImGui::TextWrapped(line.c_str());
-		ImGui::PopStyleColor();
-		currentsize++;
+			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.2, 0.5, 0.2, 1.0));
+			ImGui::TextWrapped(line.c_str());
+			ImGui::PopStyleColor();
+		}
+		else if (line.find("[trace]") != std::string::npos)
+		{
+
+			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.3, 0.3, 0.8, 1.0));
+			ImGui::TextWrapped(line.c_str());
+			ImGui::PopStyleColor();
+		}
+		else if (line.find("[warning]") != std::string::npos)
+		{
+
+			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5, 0.5, 0.2, 1.0));
+			ImGui::TextWrapped(line.c_str());
+			ImGui::PopStyleColor();
+		}
+		else if (line.find("[error]") != std::string::npos)
+		{
+
+			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5, 0.2, 0.2, 1.0));
+			ImGui::TextWrapped(line.c_str());
+			ImGui::PopStyleColor();
+		}
+
+		if (ImGui::GetScrollY() >= ImGui::GetScrollMaxY())
+			ImGui::SetScrollHereY(1.0f);
 	}
 
-	if(currentsize > oldSize)
-		ImGui::SetScrollY(ImGui::GetWindowContentRegionWidth());
+	ImGui::EndChild();
+	ImGui::Separator();
+	if (ImGui::Button("Clear")) { shade::Log::GetClientStream().str(""); shade::Log::GetClientStream().clear(); }
+	ImGui::SameLine();
+	ImGui::EndGroup();
 
-	oldSize = currentsize;
+
 }
 
 void EditorLayer::Model3dComponent(shade::Entity& entity)

@@ -49,12 +49,13 @@ namespace shade
 		auto						GetLayer(const std::string& name)->T*;
 		bool						DeleteLayer(const std::string& name);
 	private:
-		void						OnEvent(shade::Event& event);	
-		void						NativeScriptsUpdate(const shade::Timer& timer);
+		void						OnEvent(shade::Event& event);
+		void						NativeScriptsUpdate(const shade::Timer& deltaTime);
 		Unique<Window>				m_Window;
 		static Application*			m_pInstance;
 		bool						m_IsQuitRequested = false;
 		std::vector<Layer*>	        m_Layers;
+		shade::Timer				m_DeltaTime;
 		friend int ::main(int argc, char* argv[]);
 	};
 

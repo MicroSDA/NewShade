@@ -12,7 +12,7 @@ void Editor::OnCreate()
 	// Create shaders 
 	shade::ShadersLibrary::Create("Instanced",	"resources/shaders/BasicModel.glsl");
 	shade::ShadersLibrary::Create("Grid",		"resources/shaders/Grid.glsl");
-	shade::ShadersLibrary::Create("Frustum",		"resources/shaders/Frustum.glsl");
+	shade::ShadersLibrary::Create("Frustum",	"resources/shaders/Frustum.glsl");
 	// Load assets data list
 	shade::AssetManager::LoadAssetDataListFromFile("resources/assets/Assets.xml");
 

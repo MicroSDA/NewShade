@@ -13,7 +13,7 @@ public:
 	virtual void OnRender(const shade::Shared<shade::Scene>& scene) override;
 	//virtual void OnRenderEnd() override;
 	virtual void OnDelete() override;
-	virtual void OnEvent(const shade::Shared<shade::Scene>& scene, shade::Event& event) override;
+	virtual void OnEvent(const shade::Shared<shade::Scene>& scene, shade::Event& event, const shade::Timer& deltaTime) override;
 private:
 
 	ImGuizmo::OPERATION m_GuizmoOperation = ImGuizmo::OPERATION::TRANSLATE;

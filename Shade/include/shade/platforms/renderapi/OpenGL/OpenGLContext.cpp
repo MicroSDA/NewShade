@@ -20,10 +20,15 @@ void shade::OpenGLContext::Init()
 		SHADE_CORE_ERROR("Failed to initialize Glad!");
 	}
 
-	SHADE_CORE_INFO("  OpenGL Info:");
-	SHADE_CORE_INFO("  Vendor: {0}",   glGetString(GL_VENDOR));
-	SHADE_CORE_INFO("  Renderer: {0}", glGetString(GL_RENDERER));
-	SHADE_CORE_INFO("  Version: {0}",  glGetString(GL_VERSION));
+	SHADE_CORE_INFO("OpenGL Info:");
+	SHADE_CORE_INFO("Vendor: {0}",   glGetString(GL_VENDOR));
+	SHADE_CORE_INFO("Renderer: {0}", glGetString(GL_RENDERER));
+	SHADE_CORE_INFO("Version: {0}",  glGetString(GL_VERSION));
+
+	SHADE_INFO("OpenGL Info:");
+	SHADE_INFO("Vendor: {0}", glGetString(GL_VENDOR));
+	SHADE_INFO("Renderer: {0}", glGetString(GL_RENDERER));
+	SHADE_INFO("Version: {0}", glGetString(GL_VERSION));
 
 	/*if (!(GLVersion.major > 4 || (GLVersion.major == 4 && GLVersion.minor >= 5)))
 		SHADE_CORE_ERROR("Unuported version OpenGL")*/

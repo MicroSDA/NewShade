@@ -2,7 +2,6 @@
 #include "shade/config/API.h"
 #include <ImGui/imgui.h>
 #include <ImGuizmo/ImGuizmo.h>
-// TODO need refactor
 
 namespace shade
 {
@@ -25,7 +24,7 @@ namespace shade
 		inline static int Alpha80 = 0xCC;
 		inline static int Alpha90 = 0xE6;
 		inline static int AlphaFull = 0xFF;
-
+		inline static std::string FontPath;
 		static float GetR(int colorCode) { return (float)((colorCode & 0xFF000000) >> 24) / (float)(0xFF); }
 		static float GetG(int colorCode) { return (float)((colorCode & 0x00FF0000) >> 16) / (float)(0xFF); }
 		static float GetB(int colorCode) { return (float)((colorCode & 0x0000FF00) >> 8) / (float)(0xFF); }
@@ -40,6 +39,11 @@ namespace shade
 		static ImVec4 Active(ImVec4 c) { return Lighten(ImVec4(c.x, c.y, c.z, 1.0f), 0.1f); }
 		static ImVec4 Collapsed(ImVec4 c) { return Darken(c, 0.2f); }
 
+		static void SetFont(const std::string& fontPath, const float& size)
+		{
+			ImGuiIO& io = ImGui::GetIO();
+			io.Fonts->AddFontFromFileTTF(fontPath.c_str(), size);
+		}
 		static void SetColors(int backGroundColor, int textColor, int mainColor, int mainAccentColor, int highlightColor)
 		{
 			BackGroundColor = backGroundColor;
@@ -58,7 +62,7 @@ namespace shade
 			colors[ImGuiCol_PopupBg] = GetColor(BackGroundColor, Alpha90);
 			colors[ImGuiCol_Border] = Lighten(GetColor(BackGroundColor), 0.1f);
 			colors[ImGuiCol_BorderShadow] = GetColor(Black);
-			colors[ImGuiCol_FrameBg] = GetColor(MainAccentColor, Alpha40);
+			colors[ImGuiCol_FrameBg] = GetColor(MainAccentColor);
 			colors[ImGuiCol_FrameBgHovered] = Hovered(colors[ImGuiCol_FrameBg]);
 			colors[ImGuiCol_FrameBgActive] = Active(colors[ImGuiCol_FrameBg]);
 			colors[ImGuiCol_TitleBg] = GetColor(BackGroundColor, Alpha80);
@@ -88,7 +92,7 @@ namespace shade
 			colors[ImGuiCol_TabHovered] = Hovered(colors[ImGuiCol_Tab]);
 			colors[ImGuiCol_TabActive] = Active(colors[ImGuiCol_Tab]);
 			colors[ImGuiCol_TabUnfocused] = colors[ImGuiCol_Tab];
-			colors[ImGuiCol_TabUnfocusedActive] = colors[ImGuiCol_TabActive];
+			colors[ImGuiCol_TabUnfocusedActive] = GetColor(MainColor, Alpha80);
 			colors[ImGuiCol_DockingPreview] = Lighten(GetColor(MainAccentColor), 0.2f);
 			colors[ImGuiCol_DockingEmptyBg] = Lighten(colors[ImGuiCol_HeaderActive], 0.6f);
 			colors[ImGuiCol_PlotLines] = GetColor(HighlightColor);
