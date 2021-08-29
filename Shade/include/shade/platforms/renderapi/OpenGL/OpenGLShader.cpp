@@ -14,7 +14,7 @@ shade::OpenGLShader::OpenGLShader(const std::string& filePath)
 		}
 		else
 			SHADE_CORE_WARNING("Failed to deserialize source file :'{0}'.", filePath);
-	}	
+	}
 	else
 		SHADE_CORE_WARNING("Failed to open shader source file :'{0}'.", filePath);
 }
@@ -37,6 +37,11 @@ void shade::OpenGLShader::Bind() const
 void shade::OpenGLShader::UnBind() const
 {
 	glUseProgram(0);
+}
+
+std::uint32_t shade::OpenGLShader::GetProgram()
+{
+	return m_Program;
 }
 
 void shade::OpenGLShader::SendInt(const std::string& name, const int& value)
@@ -89,6 +94,38 @@ void shade::OpenGLShader::SendMat4(const std::string& name, const bool& isTransp
 	glUniformMatrix4fv(GetUniformLocation(name), 1, isTransponse, value);
 }
 
+void shade::OpenGLShader::SelectSubrutine(const std::string& sUniformName, const std::string& subrutine, const Shader::Type& type)
+{
+	auto subrutineIndex = glGetSubroutineIndex(m_Program, ToOpenGLShaderType(type), subrutine.c_str());
+	if (subrutineIndex != GL_INVALID_INDEX)
+	{
+		auto uniformIndex = glGetSubroutineUniformLocation(m_Program, ToOpenGLShaderType(type), sUniformName.c_str());
+
+		if (uniformIndex >= 0)
+		{
+			switch (type)
+			{
+			case Shader::Type::Vertex:   if (uniformIndex < m_VertexSubrIndices.size())   m_VertexSubrIndices[uniformIndex]		= subrutineIndex; break;
+			case Shader::Type::Fragment: if (uniformIndex < m_FragemntSubrIndices.size()) m_FragemntSubrIndices[uniformIndex]	= subrutineIndex; break;
+			case Shader::Type::Geometry: if (uniformIndex < m_GeometrySubrIndices.size()) m_GeometrySubrIndices[uniformIndex]	= subrutineIndex; break;
+			default: SHADE_CORE_WARNING("Undefined shader type for subrutine selection! Type: '{0}.'", (std::uint32_t)type) break;
+			}
+		}
+		else
+			SHADE_CORE_WARNING("Subrutine invalid uniform index for : {0}.", sUniformName);
+	}
+	else
+		SHADE_CORE_WARNING("Subrutine invalid index for : {0} : {1}.", sUniformName, subrutine);
+}
+
+void shade::OpenGLShader::ExecuteSubrutines()
+{
+	// Update subrutines
+	if (m_VertexSubrIndices.size())		glUniformSubroutinesuiv(GL_VERTEX_SHADER,   m_VertexSubrIndices.size(),   m_VertexSubrIndices.data());
+	if (m_FragemntSubrIndices.size())	glUniformSubroutinesuiv(GL_FRAGMENT_SHADER, m_FragemntSubrIndices.size(), m_FragemntSubrIndices.data());
+	if (m_GeometrySubrIndices.size())	glUniformSubroutinesuiv(GL_GEOMETRY_SHADER, m_GeometrySubrIndices.size(), m_GeometrySubrIndices.data());
+}
+
 GLuint shade::OpenGLShader::CreateProgram()
 {
 	GLuint program = glCreateProgram();
@@ -105,6 +142,18 @@ GLuint shade::OpenGLShader::CreateProgram()
 	glValidateProgram(program);
 	CheckShaderError(program, GL_VALIDATE_STATUS, true, "Error: Shader program validate faild");
 
+
+	// Getting active subrutines;
+	GLint vS_Count = 0, fS_Count = 0, gS_Count = 0;
+	glGetProgramStageiv(program, GL_VERTEX_SHADER, GL_ACTIVE_SUBROUTINE_UNIFORMS, &vS_Count);
+	glGetProgramStageiv(program, GL_FRAGMENT_SHADER, GL_ACTIVE_SUBROUTINE_UNIFORMS, &fS_Count);
+	glGetProgramStageiv(program, GL_GEOMETRY_SHADER, GL_ACTIVE_SUBROUTINE_UNIFORMS, &gS_Count);
+
+	m_VertexSubrIndices.resize(vS_Count);
+	m_FragemntSubrIndices.resize(fS_Count);
+	m_GeometrySubrIndices.resize(gS_Count);
+
+
 	return program;
 }
 
@@ -120,8 +169,8 @@ GLuint shade::OpenGLShader::CreateShader(const std::string& source, GLenum shade
 	const GLchar* shaderSourceSrtings[1];
 	GLint shaderSourceStringLengths[1];
 
-	shaderSourceSrtings[0]			= source.c_str();
-	shaderSourceStringLengths[0]	= source.length();
+	shaderSourceSrtings[0] = source.c_str();
+	shaderSourceStringLengths[0] = source.length();
 
 
 	glShaderSource(shader, 1, shaderSourceSrtings, shaderSourceStringLengths);

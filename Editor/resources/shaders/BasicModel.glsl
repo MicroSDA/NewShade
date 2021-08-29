@@ -43,9 +43,9 @@ void main()
 	
 	
 	out_UV_Coordinates = UV_Coordinates;
-	out_Normal  = (Transform * vec4(Normal, 0.0)).xyz;
-	out_TBN =  CalculateTBNMatrix(Transform, Normal, Tangent);
-	out_Vertex = (Transform * vec4(Position, 1.0f)).xyz;
+	out_Normal  = normalize((Transform * vec4(Normal, 0.0)).xyz);
+	out_TBN 	=  CalculateTBNMatrix(Transform, Normal, Tangent);
+	out_Vertex 	= (Transform * vec4(Position, 1.0f)).xyz;
 	out_CameraPosition  = u_Camera._Position;
 	//InstanceID = gl_InstanceID;
 }
@@ -98,7 +98,6 @@ layout(std430, binding = 2) buffer TestBuffer
 void main()
 {
 
-		
 	    vec3 TBNNormal = CalculateTBNNormal(texture(textures.Samplers[TEXTURE_NORMAL].Sampler, UV_Coordinates).rgb, out_TBN);
 		vec3 ToCameraDirection = normalize(CameraPosition - Vertex);
 

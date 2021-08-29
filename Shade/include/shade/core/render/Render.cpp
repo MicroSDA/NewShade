@@ -9,22 +9,13 @@ namespace shade
 	bool Render::m_sIsInit = false;
 	std::unordered_map<const Drawable*, Render::InstancedRender> Render::m_sInstancedRender;
 	std::unordered_map<const Drawable*, Render::Submited> Render::m_sSubmitedRender;
-	Shared<UniformBuffer> Render::m_sCameraUniformBuffer;
-	Shared<UniformBuffer> Render::m_sClippingUniformBuffer;
-	Shared<ShaderStorageBuffer> Render::m_sTestShaderStorageBuffer;
 
-	struct LTest
-	{
-		glm::vec3 Direction = glm::vec3(1, 0, 0);
-		float x;
-		glm::vec3 Ambient	= glm::vec3(1 ,1 ,0);
-		float y;
-		glm::vec3 Diffuse   = glm::vec3(1, 1, 1);
-		float z;
-		glm::vec3 Specular	= glm::vec3(0, 1, 1);
-		float w;
-	
-	};
+	Shared<UniformBuffer>		Render::m_sCameraUniformBuffer;
+	Shared<UniformBuffer>		Render::m_sClippingUniformBuffer;
+	Shared<ShaderStorageBuffer> Render::m_sDirectLightsBuffer;
+	Shared<ShaderStorageBuffer> Render::m_sPointLightsBuffeer;
+	Shared<ShaderStorageBuffer> Render::m_sSpotLightsBuffer;
+
 }
 
 void shade::Render::Init()
@@ -35,9 +26,13 @@ void shade::Render::Init()
 		m_sIsInit = true;
 
 
-		m_sCameraUniformBuffer = UniformBuffer::Create(sizeof(Camera::Data), 0);
-		m_sClippingUniformBuffer = UniformBuffer::Create(sizeof(glm::vec4), 1);
-		m_sTestShaderStorageBuffer = ShaderStorageBuffer::Create(sizeof(LTest) * 2, 2);
+		m_sCameraUniformBuffer		= UniformBuffer::Create(sizeof(Camera::RenderData),	0);
+		m_sClippingUniformBuffer	= UniformBuffer::Create(sizeof(glm::vec4),			1);
+		m_sDirectLightsBuffer		= ShaderStorageBuffer::Create(0,  2);
+		m_sPointLightsBuffeer		= ShaderStorageBuffer::Create(0,  3);
+		m_sSpotLightsBuffer			= ShaderStorageBuffer::Create(0,  4);
+
+		
 	}
 	else
 		SHADE_CORE_WARNING("Render API has been already initialized!");
@@ -239,14 +234,41 @@ void shade::Render::SubmitInstanced(const Drawable* drawable, const glm::mat4& t
 void shade::Render::BeginScene(const Shared<Shader>& shader, const Shared<Camera>& camera, const Shared<Environment>* enviroments, const std::size_t& enviromentsCount, const glm::vec4& clipping)
 {
 	shader->Bind();
-	m_sCameraUniformBuffer->SetData(&camera->GetData(), sizeof(Camera::Data), 0);
-	m_sClippingUniformBuffer->SetData(glm::value_ptr(clipping), sizeof(glm::vec4), 0);
-	int test = 1+ rand() % 10;
+	m_sCameraUniformBuffer->SetData(&camera->GetData(), sizeof(Camera::RenderData), 0);
+	m_sClippingUniformBuffer->SetData(glm::value_ptr(clipping), sizeof(glm::vec4),  0);
 
-	LTest lTes[2];
-	lTes[1].Diffuse = glm::vec3(0, 0.5, 1);
-	m_sTestShaderStorageBuffer->SetData(lTes, sizeof(LTest) * 2, 0);
+
+	std::uint32_t dLightIndex = 0, pLighIndex = 0, sLightIndex = 0;
+
+	if (m_sDirectLightsBuffer->GetSize() != sizeof(DirectLight::RenderData) * DirectLight::GetTotalCount())
+		m_sDirectLightsBuffer->Resize(sizeof(DirectLight::RenderData) * DirectLight::GetTotalCount());
+	if (m_sPointLightsBuffeer->GetSize() != sizeof(PointLight::RenderData) * PointLight::GetTotalCount())
+		m_sPointLightsBuffeer->Resize(sizeof(PointLight::RenderData) * PointLight::GetTotalCount());
+	if (m_sSpotLightsBuffer->GetSize() != sizeof(SpotLight::RenderData) * SpotLight::GetTotalCount())
+		m_sSpotLightsBuffer->Resize(sizeof(SpotLight::RenderData) * SpotLight::GetTotalCount());
+
+	for (auto i = 0; i < enviromentsCount; i++)
+	{
+		switch (enviroments[i]->GetType())
+		{
+		case Environment::Type::DirectLight:
+			m_sDirectLightsBuffer->SetData(enviroments[i]->ReciveRenderData<DirectLight>(), sizeof(DirectLight::RenderData), sizeof(DirectLight::RenderData) * dLightIndex);
+			dLightIndex++;
+			break;
+		case Environment::Type::PointLight:
+			m_sPointLightsBuffeer->SetData(enviroments[i]->ReciveRenderData<PointLight>(), sizeof(PointLight::RenderData), sizeof(PointLight::RenderData) * pLighIndex);
+			pLighIndex++;
+			break;
+		case Environment::Type::SpotLight:
+			m_sSpotLightsBuffer->SetData(enviroments[i]->ReciveRenderData<SpotLight>(), sizeof(SpotLight::RenderData), sizeof(SpotLight::RenderData) * sLightIndex);
+			sLightIndex++;
+			break;
+		}
+		
+	}
+
 	m_sRenderAPI->BeginScene(shader, camera, enviroments, enviromentsCount);
+	shader->ExecuteSubrutines();
 }
 
 void shade::Render::EndScene(const Shared<Shader>& shader)

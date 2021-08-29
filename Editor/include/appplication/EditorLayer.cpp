@@ -25,7 +25,7 @@ void EditorLayer::OnCreate()
 
 	m_FrameBuffer = shade::FrameBuffer::Create(shade::FrameBuffer::Layout(100, 100, { shade::FrameBuffer::Texture::Format::RGBA8,shade::FrameBuffer::Texture::Format::DEPTH24STENCIL8 }));
 
-	m_InstancedShader = shade::ShadersLibrary::Get("Instanced");
+	m_InstancedShader = shade::ShadersLibrary::Get("General");
 	m_GridShader = shade::ShadersLibrary::Get("Grid");
 	m_FrustumShader = shade::ShadersLibrary::Get("Frustum");
 
@@ -187,6 +187,11 @@ void EditorLayer::OnEvent(const shade::Shared<shade::Scene>& scene, shade::Event
 			m_TestEditorCamera->SetPosition(m_TestEditorCamera->GetPosition().x, m_TestEditorCamera->GetPosition().y + 1, 0);
 		if (keyCode == shade::Key::Down)
 			m_TestEditorCamera->SetPosition(m_TestEditorCamera->GetPosition().x, m_TestEditorCamera->GetPosition().y - 1, 0);
+
+		if(keyCode == shade::Key::PageUp)
+			m_InstancedShader->SelectSubrutine("u_sLighting", "BillinPhong", shade::Shader::Type::Fragment);
+		if (keyCode == shade::Key::PageDown)
+			m_InstancedShader->SelectSubrutine("u_sLighting", "FlatColor", shade::Shader::Type::Fragment);
 
 	}
 }

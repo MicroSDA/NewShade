@@ -13,6 +13,10 @@ void Editor::OnCreate()
 	shade::ShadersLibrary::Create("Instanced",	"resources/shaders/BasicModel.glsl");
 	shade::ShadersLibrary::Create("Grid",		"resources/shaders/Grid.glsl");
 	shade::ShadersLibrary::Create("Frustum",	"resources/shaders/Frustum.glsl");
+	shade::ShadersLibrary::Create("General",	"resources/shaders/General/General.glsl");
+
+	shade::ShadersLibrary::Get("General")->SelectSubrutine("u_sLighting", "BillinPhong", shade::Shader::Type::Fragment);
+	//shade::ShadersLibrary::Get("General")->SelectSubrutine("myTest2", "notTest2", shade::Shader::Type::Vertex);
 	// Load assets data list
 	shade::AssetManager::LoadAssetDataListFromFile("resources/assets/Assets.xml");
 

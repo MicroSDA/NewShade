@@ -6,8 +6,21 @@ namespace shade
 	class SHADE_API PointLight : public shade::Light
 	{
 	public:
+		struct RenderData
+		{
+			alignas(16) glm::vec3	Position;
+			alignas(16) glm::vec3   AmbientColor;
+			alignas(16) glm::vec3   DiffuseColor;
+			alignas(16) glm::vec3   SpecularColor;
+			float					Constant;
+			float					Linear;
+			float					Qaudratic;
+		};
+	public:
 		PointLight();
 		virtual ~PointLight();
+		static std::uint32_t GetTotalCount();
+
 		void SetPosition(const float& x, const float& y, const float& z);
 		void SetPosition(const   glm::vec3& position);
 		void SetConstant(const float& constant);
@@ -23,15 +36,14 @@ namespace shade
 		const float& GetQaudratic() const;
 		float& GetQaudratic();
 
-		virtual void Process(const Shared<Shader>& shader) override;
-		static void  ResetId();
+		RenderData GetRenderData();
 	protected:
 		glm::vec3	m_Position;
 		float		m_Constant;
 		float		m_Linear;
 		float		m_Qaudratic;
-		static int  m_Id;
-		static int  m_Count;
+	private:
+		static std::uint32_t  m_TotalCount;
 	};
 }
 

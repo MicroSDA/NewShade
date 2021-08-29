@@ -3,6 +3,11 @@
 #include "shade/core/render/RenderAPI.h"
 #include "shade/platforms/renderapi/OpenGL/buffers/OpenGLShaderStorageBuffer.h"
 
+const std::uint32_t& shade::ShaderStorageBuffer::GetSize() const
+{
+	return m_Size;
+}
+
 shade::Shared<shade::ShaderStorageBuffer> shade::ShaderStorageBuffer::Create(const std::uint32_t& size, const std::uint32_t& bindng)
 {
 	switch (RenderAPI::GetAPI())

@@ -19,8 +19,12 @@ namespace shade
 		virtual const std::uint32_t& GetRenderID() const override;
 		virtual void Copy(const Shared<VertexBuffer>& other, const std::uint32_t& size, const std::uint32_t& readOffset, const std::uint32_t& writeOffset) override;
 		virtual void Resize(const std::uint32_t& size) override;
+
 	private:
 		std::uint32_t	m_RenderID;
 		Layout			m_Layout;
+
+		// Inherited via VertexBuffer
+		virtual std::uint32_t GetSize() const override;
 	};
 }

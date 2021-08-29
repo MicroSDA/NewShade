@@ -15,21 +15,27 @@ void shade::OpenGLTexture::Bind(const Shared<Shader>& shader, std::uint32_t bind
 {
 	if (strcmp(GetAssetData().Attribute("TextureType").as_string(), "Diffuse") == 0)
 	{
-		shader->SendInt("textures.Samplers[0].Sampler", binding);
-		glActiveTexture(GL_TEXTURE0 + static_cast<GLuint>(binding));
+		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, m_RenderID);
+		//shader->SendInt("textures.Samplers[0].Sampler", binding);
+		//glActiveTexture(GL_TEXTURE0 + static_cast<GLuint>(binding));
+		//glBindTexture(GL_TEXTURE_2D, m_RenderID);
 	}
 	else if (strcmp(GetAssetData().Attribute("TextureType").as_string(), "Specular") == 0)
 	{
-		shader->SendInt("textures.Samplers[1].Sampler", binding);
-		glActiveTexture(GL_TEXTURE0 + static_cast<GLuint>(binding));
+		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, m_RenderID);
+		//shader->SendInt("textures.Samplers[1].Sampler", binding);
+		//glActiveTexture(GL_TEXTURE0 + static_cast<GLuint>(binding));
+		//glBindTexture(GL_TEXTURE_2D, m_RenderID);
 	}
 	else if (strcmp(GetAssetData().Attribute("TextureType").as_string(), "Normal") == 0)
 	{
-		shader->SendInt("textures.Samplers[2].Sampler", binding);
-		glActiveTexture(GL_TEXTURE0 + static_cast<GLuint>(binding));
+		glActiveTexture(GL_TEXTURE2);
 		glBindTexture(GL_TEXTURE_2D, m_RenderID);
+		//shader->SendInt("textures.Samplers[2].Sampler", binding);
+		//glActiveTexture(GL_TEXTURE0 + static_cast<GLuint>(binding));
+		//glBindTexture(GL_TEXTURE_2D, m_RenderID);
 	}
 	else
 	{

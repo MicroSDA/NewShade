@@ -1,9 +1,19 @@
 #include "shade_pch.h"
 #include "DirectLight.h"
 
+std::uint32_t shade::DirectLight::m_TotalCount = 0;
+
 shade::DirectLight::DirectLight() : shade::Light(shade::Environment::Type::DirectLight),
 	m_Direction(0.0f, 0.0f, 1.0f)
 {
+	// Icnrease count
+	m_TotalCount++;
+}
+
+shade::DirectLight::~DirectLight()
+{
+	// Decrease light count
+	m_TotalCount--;
 }
 
 void shade::DirectLight::SetDirection(const float& x, const float& y, const float& z)
@@ -26,10 +36,12 @@ glm::fvec3& shade::DirectLight::GetDirection()
 	return const_cast<glm::fvec3&>(const_cast<const shade::DirectLight*>(this)->GetDirection());
 }
 
-void shade::DirectLight::Process(const Shared<Shader>& shader)
+shade::DirectLight::RenderData shade::DirectLight::GetRenderData()
 {
-	shader->SendFlaot3("u_Lighting._DirectLight.Direction", glm::value_ptr(glm::normalize(m_Direction)));
-	shader->SendFlaot3("u_Lighting._DirectLight.AmbientColor", glm::value_ptr(m_AmbientColor));
-	shader->SendFlaot3("u_Lighting._DirectLight.DiffuseColor", glm::value_ptr(m_DiffuseColor));
-	shader->SendFlaot3("u_Lighting._DirectLight.SpecularColor", glm::value_ptr(m_SpecularColor));
+	return RenderData{glm::normalize(m_Direction), m_AmbientColor, m_DiffuseColor, m_SpecularColor};
+}
+
+std::uint32_t shade::DirectLight::GetTotalCount()
+{
+	return m_TotalCount;
 }

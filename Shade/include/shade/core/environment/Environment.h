@@ -18,9 +18,15 @@ namespace shade
 		Environment(const Environment::Type& type);
 		virtual ~Environment() = default;
 		const Environment::Type& GetType() const;
-		virtual void Process(const Shared<Shader>& shader) = 0;
+		template<typename T>
+		void* ReciveRenderData();
 	protected:
 		const Environment::Type m_Type;
 	private:
 	};
+	template<typename T>
+	inline void* Environment::ReciveRenderData()
+	{
+		return (void*)&static_cast<T*>(this)->GetRenderData(); //  Upcast
+	}
 }

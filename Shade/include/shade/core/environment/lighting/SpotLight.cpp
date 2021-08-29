@@ -26,8 +26,8 @@
 
 	7,    1.0,     0.7,    1.8
 */
-int  shade::SpotLight::m_Id = 0;
-int  shade::SpotLight::m_Count = 0;
+std::uint32_t  shade::SpotLight::m_TotalCount = 0;
+
 shade::SpotLight::SpotLight() : shade::Light(shade::Environment::Type::SpotLight),
 	m_Direction(0.0, 0.0f, 1.0f),
 	m_Position(0.0f, 0.0f, 0.0f),
@@ -37,12 +37,14 @@ shade::SpotLight::SpotLight() : shade::Light(shade::Environment::Type::SpotLight
 	m_MinAngle(glm::cos(glm::radians(5.5f))),
 	m_MaxAngle(glm::cos(glm::radians(7.5f)))
 {
-	m_Count++;
+	// Icnrease count
+	m_TotalCount++;
 }
 
 shade::SpotLight::~SpotLight()
 {
-	m_Count--;
+	// Decrease light count
+	m_TotalCount--;
 }
 
  void shade::SpotLight::SetPosition(const float& x, const float& y, const float& z)
@@ -160,24 +162,23 @@ float& shade::SpotLight::GetQaudratic()
 	return const_cast<float&>(const_cast<const shade::SpotLight*>(this)->GetQaudratic());
 }
 
-void shade::SpotLight::Process(const Shared<Shader>& shader)
+shade::SpotLight::RenderData shade::SpotLight::GetRenderData() const
 {
-	std::string id = std::to_string(m_Id);
+	return RenderData { 
+		m_Position,
+		m_Direction,
+		m_AmbientColor,
+		m_DiffuseColor,
+		m_SpecularColor,
+		m_Constant,
+		m_Linear,
+		m_Qaudratic,
+		m_MinAngle,
+		m_MaxAngle
+	};
+}
 
-	shader->SendInt("u_Lighting._SpotLightsCount", m_Count);
-	shader->SendFlaot3("u_Lighting._SpotLights[" + id + "].Light.Light.AmbientColor",	glm::value_ptr(m_AmbientColor));
-	shader->SendFlaot3("u_Lighting._SpotLights[" + id + "].Light.Light.DiffuseColor",	glm::value_ptr(m_DiffuseColor));
-	shader->SendFlaot3("u_Lighting._SpotLights[" + id + "].Light.Light.SpecularColor",	glm::value_ptr(m_SpecularColor));
-	shader->SendFlaot3("u_Lighting._SpotLights[" + id + "].Light.Light.Direction",		glm::value_ptr(m_Direction));
-	shader->SendFlaot3("u_Lighting._SpotLights[" + id + "].Light.Position",				glm::value_ptr(m_Position));
-	shader->SendFlaot("u_Lighting._SpotLights[" + id + "].Light.Constant",               m_Constant);
-	shader->SendFlaot("u_Lighting._SpotLights[" + id + "].Light.Linear",                 m_Linear);
-	shader->SendFlaot("u_Lighting._SpotLights[" + id + "].Light.Qaudratic",              m_Qaudratic);
-	shader->SendFlaot("u_Lighting._SpotLights[" + id + "].MinAngle",                     m_MinAngle);
-	shader->SendFlaot("u_Lighting._SpotLights[" + id + "].MaxAngle",                     m_MaxAngle);
-
-	if (m_Id == m_Count - 1)
-		m_Id = 0;
-	else
-		m_Id++;
+std::uint32_t shade::SpotLight::GetTotalCount()
+{
+	return m_TotalCount;
 }

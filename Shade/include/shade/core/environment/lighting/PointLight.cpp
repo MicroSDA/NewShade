@@ -27,8 +27,7 @@
 	7,    1.0,     0.7,    1.8
 */
 
-int  shade::PointLight::m_Id      = 0;
-int  shade::PointLight::m_Count   = 0;
+std::uint32_t  shade::PointLight::m_TotalCount = 0;
 
 
 shade::PointLight::PointLight() : shade::Light(shade::Environment::Type::PointLight),
@@ -37,12 +36,14 @@ shade::PointLight::PointLight() : shade::Light(shade::Environment::Type::PointLi
 	m_Linear(0.7f),
 	m_Qaudratic(1.8f)
 {
-	m_Count++;
+	// Icnrease count
+	m_TotalCount++;
 }
 
 shade::PointLight::~PointLight()
 {
-	m_Count--;
+	// Decrease light count
+	m_TotalCount--;
 }
 
  void shade::PointLight::SetPosition(const float& x, const float& y, const float& z)
@@ -110,25 +111,12 @@ float& shade::PointLight::GetQaudratic()
 	return const_cast<float&>(const_cast<const shade::PointLight*>(this)->GetQaudratic());
 }
 
-void shade::PointLight::Process(const Shared<Shader>& shader)
+shade::PointLight::RenderData shade::PointLight::GetRenderData()
 {
-	std::string id = std::to_string(m_Id);
-
-	shader->SendInt("u_Lighting._PointLightsCount", m_Count);
-	shader->SendFlaot3("u_Lighting._PointLights[" + id + "].Light.AmbientColor",     glm::value_ptr(m_AmbientColor));
-	shader->SendFlaot3("u_Lighting._PointLights[" + id + "].Light.DiffuseColor",		glm::value_ptr(m_DiffuseColor));
-	shader->SendFlaot3("u_Lighting._PointLights[" + id + "].Light.SpecularColor",	glm::value_ptr(m_SpecularColor));
-	shader->SendFlaot3("u_Lighting._PointLights[" + id + "].Position",				glm::value_ptr(m_Position));
-	shader->SendFlaot("u_Lighting._PointLights[" + id + "].Constant",				m_Constant);
-	shader->SendFlaot("u_Lighting._PointLights[" + id + "].Linear",					m_Linear);
-	shader->SendFlaot("u_Lighting._PointLights[" + id + "].Qaudratic",				m_Qaudratic);
-	if (m_Id == m_Count - 1)
-		m_Id = 0;
-	else
-		m_Id++;
+	return RenderData{ m_Position, m_AmbientColor, m_DiffuseColor, m_SpecularColor, m_Constant, m_Linear, m_Qaudratic};
 }
 
-void shade::PointLight::ResetId()
+std::uint32_t shade::PointLight::GetTotalCount()
 {
-	m_Id = 0;
+	return m_TotalCount;
 }

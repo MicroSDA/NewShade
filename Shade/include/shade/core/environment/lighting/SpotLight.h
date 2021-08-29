@@ -6,8 +6,24 @@ namespace shade
 	class SHADE_API SpotLight :public shade::Light
 	{
 	public:
+		struct RenderData
+		{
+			alignas(16) glm::vec3	Position;
+			alignas(16) glm::vec3	Direction;
+			alignas(16) glm::vec3   AmbientColor;
+			alignas(16) glm::vec3   DiffuseColor;
+			alignas(16) glm::vec3   SpecularColor;
+			float					Constant;
+			float					Linear;
+			float					Qaudratic;
+			float					MinAngle;
+			float					MaxAngle;
+		};
+	public:
 		 SpotLight();
 		 virtual ~SpotLight();
+		 static std::uint32_t GetTotalCount();
+
 		 void SetPosition(const float& x, const float& y, const float& z);
 		 void SetPosition(const   glm::vec3& position);
 		 void SetDirection(const float& x, const float& y, const float& z);
@@ -35,7 +51,7 @@ namespace shade
 		 const float& GetQaudratic() const;
 		 float& GetQaudratic();
 
-		virtual void Process(const Shared<Shader>& shader) override;
+		 RenderData GetRenderData() const;
 	private:
 		glm::fvec3	m_Direction;
 		glm::fvec3	m_Position;
@@ -44,8 +60,8 @@ namespace shade
 		float		m_Qaudratic;
 		float		m_MinAngle;
 		float		m_MaxAngle;
-		static int  m_Id;
-		static int  m_Count;
+		static std::uint32_t  m_TotalCount;
+		
 	};
 
 }

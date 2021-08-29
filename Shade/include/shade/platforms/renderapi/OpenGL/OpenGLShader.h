@@ -9,9 +9,10 @@ namespace shade
 	public:
 		OpenGLShader(const std::string& filepath);
 		virtual ~OpenGLShader();
-		// Need to create recompile functional
+
 		virtual void Bind() const override;
 		virtual void UnBind() const override;
+		virtual std::uint32_t GetProgram() override;
 		virtual void SendInt(const std::string& name, const int& value) override;
 		virtual void SendInt2(const std::string& name, const int* value) override;
 		virtual void SendInt3(const std::string& name, const int* value) override;
@@ -22,6 +23,9 @@ namespace shade
 		virtual void SendFlaot4(const std::string& name, const float* value) override;
 		virtual void SendMat3(const std::string& name, const bool& isTransponse, const float* value) override;
 		virtual void SendMat4(const std::string& name, const bool& isTransponse, const float* value) override;
+		virtual void SelectSubrutine(const std::string& sUniformName, const std::string& subrutine, const Shader::Type& type) override;
+		virtual void ExecuteSubrutines() override;
+
 		virtual int GetUniformLocation(const std::string& name) const override;
 
 		virtual bool Serialize(std::ostream& stream) const override;

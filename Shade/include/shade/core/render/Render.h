@@ -70,6 +70,9 @@ namespace shade
 		static std::unordered_map<const Drawable*, Submited>		m_sSubmitedRender;
 		static Shared<UniformBuffer>								m_sCameraUniformBuffer;
 		static Shared<UniformBuffer>								m_sClippingUniformBuffer;
-		static Shared<ShaderStorageBuffer>							m_sTestShaderStorageBuffer;
+
+		static Shared<ShaderStorageBuffer>							m_sDirectLightsBuffer;
+		static Shared<ShaderStorageBuffer>							m_sPointLightsBuffeer;
+		static Shared<ShaderStorageBuffer>							m_sSpotLightsBuffer;
 	};
 }

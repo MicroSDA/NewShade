@@ -7,7 +7,6 @@ shade::OpenGLVertexBuffer::OpenGLVertexBuffer(const std::uint32_t& size, const B
 	glGenBuffers(1, &m_RenderID);
 	glBindBuffer(GL_ARRAY_BUFFER, m_RenderID);
 	glBufferData(GL_ARRAY_BUFFER, size, nullptr, static_cast<GLenum>(type));
-	m_Size = size;
 	m_Type = type;
 }
 
@@ -16,7 +15,6 @@ shade::OpenGLVertexBuffer::OpenGLVertexBuffer(const void* data, const std::uint3
 	glGenBuffers(1, &m_RenderID);
 	glBindBuffer(GL_ARRAY_BUFFER, m_RenderID);
 	glBufferData(GL_ARRAY_BUFFER, size, data, static_cast<GLenum>(type));
-	m_Size = size;
 	m_Type = type;
 }
 
@@ -70,5 +68,12 @@ void shade::OpenGLVertexBuffer::Resize(const std::uint32_t& size)
 {
 	Bind();
 	glBufferData(GL_ARRAY_BUFFER, size, nullptr, static_cast<GLenum>(m_Type));
-	m_Size = size;
+}
+
+std::uint32_t shade::OpenGLVertexBuffer::GetSize() const
+{
+	Bind();
+	GLint size = 0;
+		glGetBufferParameteriv(GL_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
+	return size;
 }

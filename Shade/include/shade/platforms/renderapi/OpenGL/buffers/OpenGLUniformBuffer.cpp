@@ -18,3 +18,10 @@ void shade::OpenGLUniformBuffer::SetData(const void* data, const std::uint32_t& 
 {
 	glNamedBufferSubData(m_RenderID, offset, size, data);
 }
+
+std::uint32_t shade::OpenGLUniformBuffer::GetSize()
+{
+	GLint size = 0;
+	 glGetNamedBufferParameteriv(m_RenderID, GL_BUFFER_SIZE, &size);
+	return size;
+}

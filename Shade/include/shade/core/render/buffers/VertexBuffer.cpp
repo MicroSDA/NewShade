@@ -105,11 +105,6 @@ const std::vector<shade::VertexBuffer::BufferElement>& shade::VertexBuffer::Layo
 	return m_Elements;
 }
 
-const std::uint32_t& shade::VertexBuffer::GetSize() const
-{
-	return m_Size;
-}
-
 shade::Shared<shade::VertexBuffer> shade::VertexBuffer::Create(const void* data, const uint32_t& size, const BufferType& type)
 {
 	switch (RenderAPI::GetAPI())

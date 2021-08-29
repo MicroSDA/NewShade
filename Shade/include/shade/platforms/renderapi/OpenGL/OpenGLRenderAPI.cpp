@@ -54,13 +54,13 @@ void shade::OpenGLRenderAPI::SetViewPort(std::uint32_t x, std::uint32_t y, std::
 
 void shade::OpenGLRenderAPI::BeginScene(const Shared<Shader>& shader, const Shared<Camera>& camera, const Shared<Environment>* enviroments, const std::size_t& enviromentsCount)
 {
-	if (enviroments != nullptr && enviromentsCount > 0)
+	/*if (enviroments != nullptr && enviromentsCount > 0)
 	{
 		for (auto i = 0; i < enviromentsCount; i++)
 		{
 			enviroments[i]->Process(shader);
 		}
-	}
+	}*/
 }
 
 void shade::OpenGLRenderAPI::EndScene(const Shared<Shader>& shader)

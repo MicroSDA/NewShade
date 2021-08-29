@@ -64,11 +64,10 @@ namespace shade
 		virtual void SetLayout(const Layout& layout)		= 0;
 		virtual const std::uint32_t& GetRenderID()  const = 0;
 		virtual const Layout& GetLayout()			const	= 0;
-		const std::uint32_t& GetSize() const;
+		virtual std::uint32_t GetSize() const = 0;
 		static Shared<VertexBuffer> Create(const void* data, const std::uint32_t& size, const BufferType& type = BufferType::Static);
 		static Shared<VertexBuffer> Create(const std::uint32_t& size, const BufferType& type = BufferType::Static);
 	protected:
-		std::uint32_t  m_Size = 0;
 		BufferType     m_Type;
 	};
 }
