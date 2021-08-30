@@ -16,12 +16,11 @@ EditorLayer::EditorLayer(const std::string& name) :
 
 EditorLayer::~EditorLayer()
 {
+
 }
 
 void EditorLayer::OnCreate()
 {
-
-
 
 	m_FrameBuffer = shade::FrameBuffer::Create(shade::FrameBuffer::Layout(100, 100, { shade::FrameBuffer::Texture::Format::RGBA8,shade::FrameBuffer::Texture::Format::DEPTH24STENCIL8 }));
 
@@ -62,7 +61,7 @@ void EditorLayer::OnUpdate(const shade::Shared<shade::Scene>& scene, const shade
 			for (auto& mesh : model->GetMeshes())
 			{
 				if (frustum.IsInFrustum(transform, mesh->GetMinHalfExt(), mesh->GetMaxHalfExt()))
-					shade::Render::SubmitInstanced(mesh.get(), transform.GetModelMatrix(), mesh->GetMaterial(), mesh->GetTextures());
+					shade::Render::SubmitInstance(m_InstancedShader, mesh, transform.GetModelMatrix());
 			}
 		});
 
@@ -70,8 +69,32 @@ void EditorLayer::OnUpdate(const shade::Shared<shade::Scene>& scene, const shade
 	//SHADE_TRACE("Frustum calculation time: {0}", std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count());
 }
 
-void EditorLayer::OnRender(const shade::Shared<shade::Scene>& scene)
+void EditorLayer::OnRender(const shade::Shared<shade::Scene>& scene, const shade::Timer& deltaTime)
 {
+	/* RUN AND SEE NICE BUG !!!!!!!!*/
+	/* ÏÎÕÎÄÓ ÏÎÒÌÎÓ ×ÒÎ ÌÀÒÅÐÈÀËÀ ÍÅÒÓ, ÒÅÊÑÒÓÐ ÒÎÆÅ, ÍÀ×ÈÍÀÞÒÑß ÏÐÈÊÎËÛ*/
+	{
+		auto environments = scene->GetEntities().view<shade::EnvironmentComponent>();
+		shade::Render::Begin(m_FrameBuffer);
+
+		shade::Render::BeginScene(m_GridShader, m_EditorCamera);
+		shade::Render::DrawSubmited(m_GridShader);
+		shade::Render::EndScene(m_GridShader);
+
+		shade::Render::BeginScene(m_InstancedShader, m_EditorCamera, environments.raw(), environments.size());
+		shade::Render::DrawInstances(m_InstancedShader);
+		//shade::Render::DrawInstanced(m_InstancedShader);
+		shade::Render::EndScene(m_InstancedShader);
+
+
+		m_FrustumShader->Bind();
+		m_FrustumShader->SendMat4("Transform", false, glm::value_ptr(glm::inverse(m_TestEditorCamera->GetViewProjection())));
+		shade::Render::BeginScene(m_FrustumShader, m_EditorCamera);
+		shade::Render::DrawIndexed(shade::Drawable::DrawMode::Lines, VAO, VAO->GetIndexBuffer());
+		shade::Render::EndScene(m_FrustumShader);
+
+		shade::Render::End(m_FrameBuffer);
+	}
 
 	if (ImGui::Begin("DockSpace", (bool*)(nullptr), m_WindowFlags))
 	{
@@ -93,27 +116,7 @@ void EditorLayer::OnRender(const shade::Shared<shade::Scene>& scene)
 		ShowDemoWindow();
 
 	} ImGui::End(); // Begin("DockSpace")
-	{
-		auto environments = scene->GetEntities().view<shade::EnvironmentComponent>();
-		shade::Render::Begin(m_FrameBuffer);
-
-		shade::Render::BeginScene(m_GridShader, m_EditorCamera);
-		shade::Render::DrawSubmited(m_GridShader);
-		shade::Render::EndScene(m_GridShader);
-
-		shade::Render::BeginScene(m_InstancedShader, m_EditorCamera, environments.raw(), environments.size());
-		shade::Render::DrawInstanced(m_InstancedShader);
-		shade::Render::EndScene(m_InstancedShader);
-
-
-		m_FrustumShader->Bind();
-		m_FrustumShader->SendMat4("CameraMatrix", false, glm::value_ptr(glm::inverse(m_TestEditorCamera->GetViewProjection())));
-		shade::Render::BeginScene(m_FrustumShader, m_EditorCamera);
-		shade::Render::DrawIndexed(shade::Drawable::DrawMode::Lines, VAO, VAO->GetIndexBuffer());
-		shade::Render::EndScene(m_FrustumShader);
-
-		shade::Render::End(m_FrameBuffer);
-	}
+	
 }
 
 void EditorLayer::OnDelete()
@@ -154,21 +157,12 @@ void EditorLayer::OnEvent(const shade::Shared<shade::Scene>& scene, shade::Event
 		}
 		else if (keyCode == shade::Key::F1)
 		{
-			for (auto i = 0; i < 100; i++)
+			for (auto i = 0; i < 1; i++)
 			{
 				shade::AssetManager::Hold<shade::Model3D>("Nanosuit",
 					shade::Asset::State::RemoveIfPosible, [&](auto& asset) mutable
 					{
 						auto entity = scene->CreateEntity("Nanosuit");
-						entity.AddComponent<shade::Model3DComponent>(shade::AssetManager::Receive<shade::Model3D>(asset));
-						float x = 1 + rand() % 550;
-						float z = 1 + rand() % 550;
-						entity.AddComponent<shade::Transform3DComponent>().SetPostition(x, 0, z);
-					});
-				shade::AssetManager::Hold<shade::Model3D>("Cube",
-					shade::Asset::State::RemoveIfPosible, [&](auto& asset) mutable
-					{
-						auto entity = scene->CreateEntity("Cube");
 						entity.AddComponent<shade::Model3DComponent>(shade::AssetManager::Receive<shade::Model3D>(asset));
 						float x = 1 + rand() % 550;
 						float z = 1 + rand() % 550;

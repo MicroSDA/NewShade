@@ -9,6 +9,7 @@ namespace shade
 	public:
 		struct RenderData
 		{
+			glm::mat4 ViewProjection;
 			glm::mat4 View;
 			glm::mat4 Projection;
 			glm::vec3 Position;
@@ -22,7 +23,7 @@ namespace shade
 			const float& zNear,
 			const float& zFar);
 		virtual ~Camera() = default;
-		inline RenderData GetData() const { return RenderData{ GetView(), GetProjection(), GetPosition(), GetForwardDirrection()}; }
+		inline RenderData GetData() const { return RenderData{ GetViewProjection(), GetView(), GetProjection(), GetPosition(), GetForwardDirrection()}; }
 		inline glm::mat4 GetView()                     const { return glm::lookAt(m_Position, m_Position + m_Forward, m_Up); };
 		inline glm::mat4 GetView() { return glm::lookAt(m_Position, m_Position + m_Forward, m_Up); };
 		inline const glm::mat4& GetProjection()        const { return m_Perpective; };

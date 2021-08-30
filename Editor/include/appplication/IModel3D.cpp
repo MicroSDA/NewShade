@@ -90,6 +90,7 @@ void IModel3D::ProcessModel3DMesh(const char* filePath, aiMesh* mesh, const aiSc
 		aiMaterial*  assimpMaterial = scene->mMaterials[mesh->mMaterialIndex];
 		aiString     texturePath;
 
+		
 		ProcessTexture(_mesh, filePath, assimpMaterial, aiTextureType_DIFFUSE);
 		ProcessTexture(_mesh, filePath, assimpMaterial, aiTextureType_SPECULAR);
 		ProcessTexture(_mesh, filePath, assimpMaterial, aiTextureType_HEIGHT);

@@ -28,9 +28,9 @@ layout(std140, binding = 1) uniform UClipDistance
 void main()
 {
 	// Set vertex position
-	gl_Position 		= u_Camera._Projection * u_Camera._View * a_Transform *  vec4(a_Position, 1.0);
+	gl_Position 		= u_Camera.ViewProjection * a_Transform *  vec4(a_Position, 1.0);
 	// Clip
-	gl_ClipDistance[0] 	= dot(u_Camera._View * vec4(a_Position, 1.0f), u_ClipDistance);
+	gl_ClipDistance[0] 	= dot(u_Camera.View * vec4(a_Position, 1.0f), u_ClipDistance);
 	// Pass other data to fragment shader
 	out_UV_Coordinates 	= a_UV_Coordinates;
 	out_Normal  		= normalize((a_Transform 	* vec4(a_Normal, 	0.0)).xyz);
@@ -77,6 +77,11 @@ uniform Material          u_Material;
 // Subroutines
 subroutine vec4 LightingCalculation(vec3 toCameraDirection);
 subroutine (LightingCalculation) 
+vec4 NoMaterial(vec3 toCameraDirection)
+{
+	return vec4(1,1,1,1);
+}
+subroutine (LightingCalculation) 
 vec4 FlatColor(vec3 toCameraDirection)
 {
 	// Without noremal map and textures
@@ -112,10 +117,11 @@ layout (location = 0) out vec4 FrameBuffer;
 // Main entry point
 void main()
 {
-	vec3 ToCameraDirection = normalize(u_Camera._Position - a_Vertex);
+	vec3 ToCameraDirection 	= normalize(u_Camera.Position - a_Vertex);
 
-	vec4 Color = u_sLighting(ToCameraDirection);
+	vec4 Color 				= u_sLighting(ToCameraDirection);
+	
+	FrameBuffer 			= vec4(pow(Color.rgb, vec3(0.6/1)), 1.0 ); // Gamma corection
 
-	FrameBuffer = vec4(pow(Color.rgb, vec3(0.50/1)), 1.0 ); // Gamma corection
 }
 // !End of fragment shader

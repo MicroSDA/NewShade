@@ -28,7 +28,7 @@ void shade::OpenGLShaderStorageBuffer::Resize(const std::uint32_t& size)
 	glBufferData(GL_SHADER_STORAGE_BUFFER, size, nullptr, GL_DYNAMIC_DRAW);
 }
 
-const std::uint32_t& shade::OpenGLShaderStorageBuffer::GetSize() const
+std::uint32_t shade::OpenGLShaderStorageBuffer::GetSize() const
 {
 	GLint size = 0;
 		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, m_Binding, m_RenderID);

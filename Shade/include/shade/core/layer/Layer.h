@@ -17,7 +17,7 @@ namespace shade
 		virtual void OnCreate()			= 0;
 		virtual void OnUpdate(const shade::Shared<Scene>& scene, const shade::Timer& deltaTime) = 0;
 		virtual void OnRenderBegin()	= 0;
-		virtual void OnRender(const shade::Shared<Scene>& scene) = 0;
+		virtual void OnRender(const shade::Shared<Scene>& scene, const shade::Timer& deltaTime) = 0;
 		virtual void OnRenderEnd()		= 0;
 		virtual void OnDelete()			= 0;
 		virtual void OnEvent(const shade::Shared<Scene>& scene, Event& event, const shade::Timer& deltaTime) = 0;

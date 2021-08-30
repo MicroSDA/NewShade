@@ -1,10 +1,11 @@
 
 struct Camera
 {
-	mat4 _View;
-	mat4 _Projection;
-	vec3 _Position;
-	vec3 _Forward;
+	mat4 ViewProjection;
+	mat4 View;
+	mat4 Projection;
+	vec3 Position;
+	vec3 Forward;
 };
 
 struct DirectLight

@@ -13,7 +13,6 @@
 #include "shade/core/mesh/Mesh.h"
 #include "shade/core/render/drawable/primitives/Grid.h"
 #include "shade/core/render/drawable/primitives/Box.h"
-
 #include "shade/core/render/buffers/UniformBuffer.h"
 #include "shade/core/render/buffers/ShaderStorageBuffer.h"
 
@@ -22,6 +21,20 @@ namespace shade
 	class SHADE_API Render
 	{
 	public:
+		struct Instance
+		{
+			Drawable::DrawMode          DrawMode;
+			std::uint32_t               Count = 0;
+			std::vector<glm::mat4>		Transforms;
+			Shared<VertexArray>         VAO;
+			Shared<VertexBuffer>		VBO;
+			Shared<VertexBuffer>		EBO;
+			Shared<IndexBuffer>			IBO;
+			bool						Expired = false;
+		};
+
+		using InstancePool = std::unordered_map<Shader* ,std::unordered_map<Drawable*, Instance>>;
+
 		struct InstancedRender
 		{
 			Drawable::DrawMode                  DrawMode;
@@ -30,6 +43,7 @@ namespace shade
 			const std::vector<Shared<Texture>>* Textures;
 			std::uint32_t						InstanceCount = 0;
 			std::vector<glm::mat4>				Transforms;
+			Shared<ShaderStorageBuffer>         TransformsTest;
 			bool                                IsExpired = true;
 		};
 		struct Submited
@@ -46,6 +60,10 @@ namespace shade
 		static void SetClearColor(const float& r, const float& g, const float& b,const float& a);
 		static void Clear();
 		static void DepthTest(const bool& enable);
+		// Without material for now
+		static void SubmitInstance(const Shared<Shader>& shader, const Shared<Drawable>& drawable, const glm::mat4& transform);
+		static void DrawInstances(const Shared<Shader>& shader);
+
 		static void SetViewPort(std::uint32_t x, std::uint32_t y, std::uint32_t width, std::uint32_t height);
 		static void Submit(const Drawable* drawable, const glm::mat4& transform, const Material* material = nullptr, const std::vector<Shared<Texture>>* textures = nullptr);
 		static void DrawSubmited(const Shared<Shader>& shader);
@@ -63,8 +81,14 @@ namespace shade
 		static void DrawIndexed(const Drawable::DrawMode& mode, const Shared<VertexArray>& VAO, const Shared<IndexBuffer>& IBO);
 		//Util
 	private:
+
+		static void _CreateInstance(const Shared<Shader>& shader, const Shared<Drawable>& drawable, const glm::mat4& transform);
+
+
 		static Unique<RenderAPI>	m_sRenderAPI;
 		static bool					m_sIsInit;
+
+		static Render::InstancePool   m_sInstancePool;
 
 		static std::unordered_map<const Drawable*, InstancedRender> m_sInstancedRender;
 		static std::unordered_map<const Drawable*, Submited>		m_sSubmitedRender;

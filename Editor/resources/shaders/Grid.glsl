@@ -1,41 +1,30 @@
 #type vertex
 #version 460 core
+#include "resources/shaders/General/Structures.glsl"
 
-struct Camera
-{
-	mat4 _View;
-	mat4 _Projection;
-	vec3 _Position;
-	vec3 _Forward;
-};
+layout (location = 0) in  vec3 Position;
+layout(location  = 1) out vec3 out_Near;
+layout(location  = 2) out vec3 out_Far;
+layout(location  = 3) out mat4 out_Veiw;
+layout(location  = 7) out mat4 out_Projection;
 
 layout(std140, binding = 0) uniform UniformCamera
 {
-	Camera u_Camera;
+    Camera u_Camera;
 };
-
-layout (location = 0) in  vec3 Position;
-
-layout(location = 1) out vec3 out_Near;
-layout(location = 2) out vec3 out_Far;
-layout(location = 3) out mat4 out_Veiw;
-layout(location = 7) out mat4 out_Projection;
-
 //uniform Camera u_Camera;
 
-vec3 UnprojectPoint(float x, float y, float z, mat4 view, mat4 projection) {
-    mat4 viewInv = inverse(view);
-    mat4 projInv = inverse(projection);
-    vec4 unprojectedPoint =  viewInv * projInv * vec4(x, y, z, 1.0);
+vec3 UnprojectPoint(float x, float y, float z, mat4 viewProjection) {
+    vec4 unprojectedPoint =  inverse(viewProjection) * vec4(x, y, z, 1.0);
     return unprojectedPoint.xyz / unprojectedPoint.w;
 }
 
 void main()
 {
-	out_Near 		= UnprojectPoint(Position.x, Position.y, 0.0, u_Camera._View, u_Camera._Projection).xyz; // unprojecting on the near plane
-	out_Far  		= UnprojectPoint(Position.x, Position.y, 1.0, u_Camera._View, u_Camera._Projection).xyz; // unprojecting on the far plane
-	out_Projection  = u_Camera._Projection;
-	out_Veiw  		= u_Camera._View;
+	out_Near 		= UnprojectPoint(Position.x, Position.y, 0.0, u_Camera.ViewProjection).xyz; // unprojecting on the near plane
+	out_Far  		= UnprojectPoint(Position.x, Position.y, 1.0, u_Camera.ViewProjection).xyz; // unprojecting on the far plane
+	out_Projection  = u_Camera.Projection;
+	out_Veiw  		= u_Camera.View;
 	gl_Position 	= vec4(Position, 1.0f);
 }
 

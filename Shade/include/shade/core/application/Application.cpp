@@ -71,7 +71,7 @@ void shade::Application::Start()
 				if (layer->IsRender())
 				{
 					layer->OnRenderBegin();
-					layer->OnRender((!m_CurrentScene) ? dummyScene : m_CurrentScene);
+					layer->OnRender((!m_CurrentScene) ? dummyScene : m_CurrentScene, m_DeltaTime);
 					layer->OnRenderEnd();
 				}
 			}
