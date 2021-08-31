@@ -134,7 +134,7 @@ void IModel3D::ProcessTexture(const shade::Shared<shade::Mesh>& mesh, const std:
 				SHADE_WARNING("");
 
 			texture->AssetInit();
-			mesh->AddTexture(texture);
+			//mesh->AddTexture(texture);
 		//}
 		
 	}
@@ -142,18 +142,18 @@ void IModel3D::ProcessTexture(const shade::Shared<shade::Mesh>& mesh, const std:
 
 void IModel3D::ProcessMaterial(const shade::Shared<shade::Mesh>& mesh, aiMaterial* material)
 {
-	aiColor3D color;
-	mesh->SetMaterial(shade::Material());
-	material->Get(AI_MATKEY_COLOR_AMBIENT, color); // Ka
-	mesh->GetMaterial().SetAmbientColor(color.r, color.g, color.b);
-	material->Get(AI_MATKEY_COLOR_DIFFUSE, color);// Kd
-	mesh->GetMaterial().SetDiffuseColor(color.r, color.g, color.b);
-	material->Get(AI_MATKEY_COLOR_SPECULAR, color);// Ks
-	mesh->GetMaterial().SetSpecularColor(color.r, color.g, color.b);
-	material->Get(AI_MATKEY_COLOR_TRANSPARENT, color);// Tf
-	mesh->GetMaterial().SetTransparentMask(color.r, color.g, color.b);
+	//aiColor3D color;
+	//mesh->SetMaterial(shade::Material());
+	//material->Get(AI_MATKEY_COLOR_AMBIENT, color); // Ka
+	//mesh->GetMaterial().SetAmbientColor(color.r, color.g, color.b);
+	//material->Get(AI_MATKEY_COLOR_DIFFUSE, color);// Kd
+	//mesh->GetMaterial().SetDiffuseColor(color.r, color.g, color.b);
+	//material->Get(AI_MATKEY_COLOR_SPECULAR, color);// Ks
+	//mesh->GetMaterial().SetSpecularColor(color.r, color.g, color.b);
+	//material->Get(AI_MATKEY_COLOR_TRANSPARENT, color);// Tf
+	//mesh->GetMaterial().SetTransparentMask(color.r, color.g, color.b);
 
-	float value;
-	material->Get(AI_MATKEY_SHININESS, value); // Ns
-	mesh->GetMaterial().SetShininess(value);
+	//float value;
+	//material->Get(AI_MATKEY_SHININESS, value); // Ns
+	//mesh->GetMaterial().SetShininess(value);
 }

@@ -1,7 +1,7 @@
 #pragma once
 #include "shade/config/API.h"
 #include "shade/core/render/buffers/VertexArray.h"
-#include "shade/core/mesh/Material.h"
+#include "shade/core/mesh/Material3D.h"
 #include "shade/core/image/Texture.h"
 namespace shade
 {
@@ -29,16 +29,15 @@ namespace shade
 		void AddIndices(Indices& indices);
 		void SetVertices(Vertices& vertices);
 		void SetIndices(Indices& indices);
-		void SetMaterial(const Material& material);
-		void AddTexture(const Shared<Texture>& texture); // TODO Remove or so
+		void SetMaterial(const Shared<Material3D>& material);
 
 		const Vertices& GetVertices() const;
 		const Indices& GetIndices()  const;
-		const Material& GetMaterial() const;
+		const Shared<Material3D>& GetMaterial() const;
 
 		Vertices&	GetVertices();
 		Indices&	GetIndices();
-		Material&	GetMaterial();
+		Shared<Material3D>&	GetMaterial();
 
 		void GenerateHalfExt();
 		const glm::vec3& GetMinHalfExt();
@@ -51,7 +50,7 @@ namespace shade
 		glm::vec3			 m_MinHalfExt;
 		glm::vec3			 m_MaxHalfExt;
 		Indices				 m_Indices;
-		Material			 m_Material;
+		Shared<Material3D>	 m_Material;
 	};
 
 }

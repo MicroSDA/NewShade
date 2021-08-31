@@ -45,7 +45,7 @@ namespace shade
 		void FpsOverlay(ImGuiViewport* viewport);
 		void DrawImage(const std::uint32_t& renderId, const float& width, const float& height, const bool& tooltip = false);
 		bool DrawVec3F(const char* title, float* data, const float& resetValue = 0.0f, const float& min = -FLT_MAX, const float& max = FLT_MAX, const float& colw1 = 80.0f);
-		bool DrawFlaot(const char* lable, float* data, const float& reset = 0.0f, const float& min = -FLT_MAX, const float& max = FLT_MAX, const float& cw1 = 80.0f, const float& cw2 = 0.0f);
+		bool DrawFlaot(const char* lable, float* data, const float& reset = 0.0f, const float& min = -FLT_MAX, const float& max = FLT_MAX, const float& cw1 = 140.0f, const float& cw2 = 0.0f);
 		bool DrawColor3(const char* title, float* data, const float& cw1 = 80.0f, const float& cw2 = 0);
 		bool DrawImGuizmo(glm::mat4& transform, const Shared<Camera>& camera, const ImGuizmo::OPERATION& operation, const float& x, const float& y, const float& width, const float& height);
 		/*template<typename T, typename ...Args, typename R = std::result_of<T(Args&&...)>::type>

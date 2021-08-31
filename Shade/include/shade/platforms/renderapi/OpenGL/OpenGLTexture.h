@@ -11,7 +11,7 @@ namespace shade
 		OpenGLTexture();
 		virtual ~OpenGLTexture();
 
-		virtual void Bind(const Shared<Shader>& shader, std::uint32_t binding = 0) const override;
+		virtual void Bind(std::uint32_t binding = 0) const override;
 		virtual std::uint32_t GetRenderID() override;
 		virtual void AssetInit() override;
 	private:

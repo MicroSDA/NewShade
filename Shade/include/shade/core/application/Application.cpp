@@ -81,6 +81,7 @@ void shade::Application::Start()
 		AssetManager::_Get()._DispatchAssets();
 	}
 
+	shade::Render::ShutDown();
 	shade::AssetManager::_Get()._Clear();
 }
 

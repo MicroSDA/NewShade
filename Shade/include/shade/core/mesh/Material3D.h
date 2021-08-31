@@ -1,38 +1,54 @@
 #pragma once
 #include "shade/config/API.h"
 #include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
 #include "shade/core/image/Texture.h"
+#include "shade/core/serializing/Serializable.h"
+#include "shade/core/assets/Asset.h"
 
 namespace shade
 {
-	struct Material
+	class SHADE_API Material3D : public Asset
 	{
-		enum class BlendingModel : std::uint32_t
+	public:
+		static Shared<Material3D> Create();
+		virtual ~Material3D() = default;
+	private:
+		Material3D() = default;
+	public:
+		struct Blending
 		{
-			None,
-			Test
+			enum class Factor : std::int32_t
+			{
+				/* OpenGl native values*/
+				None = -1, Zero = 0, One = 1,
+				SrcColor		= 0x0300, OneMinusSrcColor		= 0x0301, SrcAlpha		= 0x0302, OneMinusSrcAlpha		= 0x0303,
+				DstColor		= 0x0306, OneMinusDstColor		= 0x3007, DstAlpha		= 0x0304, OneMinusDstAlpha		= 0x0305,
+				ConstantColor	= 0x8001, OneMinusConstantColor = 0x8002, ConstantAlpha = 0x8003, OneMinusConstantAlpha = 0x8004
+			};
+
+			Factor SFactor, DFactor;
 		};
 		/* Base collors spec*/
-		glm::vec3		ColorAmbient;
-		glm::vec3		ColorDiffuse;
-		glm::vec3		ColorSpecular;
-		glm::vec3		ColorEmissive;
-		glm::vec3		ColorTransparent;
-		BlendingModel	Blending;
-		bool			WireFrame;
-	};
-	struct Material3D : Material
-	{
-		enum ShadingModel
+		glm::vec3				ColorAmbient		= glm::vec3(1.f);
+		glm::vec3				ColorDiffuse		= glm::vec3(1.f);
+		glm::vec3				ColorSpecular		= glm::vec3(1.f);
+		glm::vec3				ColorEmissive		= glm::vec3(1.f);
+		glm::vec3				ColorTransparent	= glm::vec3(-1.f); // Miuse one, so defualt transparent color doesnt exist
+
+		Material3D::Blending	Blend				= Material3D::Blending { Material3D::Blending::Factor::None, Material3D::Blending::Factor::None };
+		bool					WireFrame			= false;
+
+		enum class ShadingModel : std::uint32_t
 		{
-			Flat, Gouraud, Phong, Billin, Toon, OrenNayer, Minnaert, CookTorance, NonShading, Fresnel
+			NonShading, Flat, Gouraud, Phong, Billin, Toon, OrenNayer, Minnaert, CookTorance, Fresnel
 		};
 
 		float			Opacity				= 1.0f;
 		float			Shininess			= 1.0f;
 		float			ShininessStrength	= 1.0f;
 		float			Refracti			= 0.0f;
-		ShadingModel    Shading				= ShadingModel::Flat;
+		ShadingModel    Shading				= ShadingModel::NonShading;
 
 		Shared<Texture> TextureDiffuse;
 		Shared<Texture> TextureSpecular;
@@ -40,5 +56,17 @@ namespace shade
 		Shared<Texture> TextureRoughness;
 		Shared<Texture> TextureAlbedo;
 		Shared<Texture> TextureMetallic;
+
+		// Inherited via Serializable
+		virtual bool Serialize(std::ostream& stream) const override;
+		virtual bool Deserialize(std::istream& stream) override;
+		virtual bool Serialize() const override;
+		virtual bool Deserialize() override;
+		// Inherited via Asset
+		virtual void LoadFromAssetData(shade::AssetData& data, const shade::AssetData& bundle = AssetData());
+
+		// Inherited via Asset
+		// TODO: Recreate function and set as like PostLoadCallback
+		virtual void AssetInit() override;
 	};
 }

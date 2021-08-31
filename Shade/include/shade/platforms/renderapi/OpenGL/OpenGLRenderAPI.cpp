@@ -37,6 +37,10 @@ void shade::OpenGLRenderAPI::Init()
 	glEnable(GL_CLIP_DISTANCE1);
 }
 
+void shade::OpenGLRenderAPI::ShutDown()
+{
+}
+
 void shade::OpenGLRenderAPI::SetClearColor(const float& r, const float& g, const float& b, const float& a)
 {
 	glClearColor(r, g, b, a);
@@ -52,20 +56,14 @@ void shade::OpenGLRenderAPI::SetViewPort(std::uint32_t x, std::uint32_t y, std::
 	glViewport(x, y, width, height);
 }
 
-void shade::OpenGLRenderAPI::BeginScene(const Shared<Shader>& shader, const Shared<Camera>& camera, const Shared<Environment>* enviroments, const std::size_t& enviromentsCount)
+void shade::OpenGLRenderAPI::BeginScene(const Shared<Camera>& camera, const Shared<Environment>* env, const std::size_t& envCount)
 {
-	/*if (enviroments != nullptr && enviromentsCount > 0)
-	{
-		for (auto i = 0; i < enviromentsCount; i++)
-		{
-			enviroments[i]->Process(shader);
-		}
-	}*/
+
 }
 
-void shade::OpenGLRenderAPI::EndScene(const Shared<Shader>& shader)
+void shade::OpenGLRenderAPI::EndScene()
 {
-	shader->UnBind();
+	
 }
 
 void shade::OpenGLRenderAPI::DrawIndexed(const Drawable::DrawMode& mode, const Shared<VertexArray>& VAO, const Shared<IndexBuffer>& IBO) const

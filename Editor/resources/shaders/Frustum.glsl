@@ -9,11 +9,11 @@ layout(std140, binding = 0) uniform UniformCamera
 	Camera u_Camera;
 };
 // Has to be inversed
-uniform mat4 Transform;
+uniform mat4 u_Transform;
 
 void main()
 {
-    vec4 Position 	= Transform * vec4(a_Position.xyz, 1.0);
+    vec4 Position 	= u_Transform * vec4(a_Position.xyz, 1.0);
 	gl_Position 	= u_Camera.ViewProjection * vec4(Position.xyz / Position.w, 1.0);
 }
 

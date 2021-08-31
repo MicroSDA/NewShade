@@ -134,15 +134,6 @@ void shade::AssetManager::_ReadAssetDataList(pugi::xml_node node)
 		}
 	}
 
-
-	/*pugi::xml_document doc;
-	auto n = doc.append_child("assets");
-	for (auto asset : m_AssetsDataList)
-	{
-		n.append_copy(asset.second._Raw());
-	}
-
-	doc.save_file("Test.xml");*/
 }
 
 void shade::AssetManager::_DispatchAssets()
@@ -217,37 +208,4 @@ void shade::AssetManager::_Clear()
 	// Trying to evade recursive deleting
 	_Get().m_ImDestructing = true;
 	_Get().m_AssetReferences.clear();
-}
-
-std::tuple<std::string, std::string> shade::AssetManager::_IsBundle(const std::string& bundle)
-{
-	const char delim = '/';
-	size_t start = 0;
-	size_t end = bundle.find(delim);
-	std::vector<std::string> _bundle;
-	std::tuple<std::string, std::string> out;
-
-	if (end != std::string::npos)
-	{
-		while (end != std::string::npos)
-		{
-			_bundle.push_back(bundle.substr(start, end - start));
-			//std::cout << bundle.substr(start, end - start) << std::endl;
-			start = end + 1; // delim size
-			end = bundle.find(delim, start);
-		}
-
-		_bundle.push_back(bundle.substr(start, end - start));
- 		//std::cout << bundle.substr(start, end) << std::endl;
-	}
-	else
-	{
-		return { "",bundle };// single one
-		//_bundle.push_back(bundle); // single one
-	}
-	
-	return {"Cube/Mesh" ,_bundle.back()};
-
-	//if(start != std::string::npos && end != std::string::npos)
-	
 }

@@ -8,6 +8,8 @@ layout (location = 1) in vec2  a_UV_Coordinates;
 layout (location = 2) in vec3  a_Normal;
 layout (location = 3) in vec3  a_Tangent;
 layout (location = 4) in mat4  a_Transform;
+//uniform mat4 a_Transform; // For non istance render
+
 // Output attributes
 // 17 components total(64 min, 128 max on GTX950). One component is one value. vec3 = 3, vec4 = 4, mat4 = 4*4 = 16 components
 layout (location = 0) out vec2 out_UV_Coordinates;
@@ -76,11 +78,6 @@ layout (std430, binding = 4) restrict readonly buffer USpotlight
 uniform Material          u_Material;
 // Subroutines
 subroutine vec4 LightingCalculation(vec3 toCameraDirection);
-subroutine (LightingCalculation) 
-vec4 NoMaterial(vec3 toCameraDirection)
-{
-	return vec4(1,1,1,1);
-}
 subroutine (LightingCalculation) 
 vec4 FlatColor(vec3 toCameraDirection)
 {

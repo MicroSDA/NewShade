@@ -11,7 +11,7 @@ namespace shade
 		static Shared<Texture> Create();
 		virtual ~Texture();
 
-		virtual void Bind(const Shared<Shader>& shader, std::uint32_t binding = 0) const = 0;
+		virtual void Bind(std::uint32_t binding = 0) const = 0;
 		virtual std::uint32_t GetRenderID() = 0;
 		const ImageData& GetImageData() const;
 		ImageData& GetImageData();

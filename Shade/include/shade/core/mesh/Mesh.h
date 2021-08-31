@@ -2,7 +2,8 @@
 #include "shade/core/assets/Asset.h"
 #include "shade/core/vertex/Vertex3D.h"
 #include "shade/core/image/Texture.h"
-#include "shade/core/mesh/Material.h"
+#include "shade/core/mesh/Material3D.h"
+
 #include "shade/core/render/drawable/Drawable.h"
 namespace shade
 {
@@ -11,9 +12,6 @@ namespace shade
 	public:
 		static Shared<Mesh> Create();
 		virtual ~Mesh();
-		void AddTexture(const Shared<Texture>& texture);
-		const std::vector<Shared<Texture>>& GetTextures();
-
 		virtual void AssetInit() override;
 
 		virtual void LoadFromAssetData(shade::AssetData& data, const shade::AssetData& bundle = AssetData()) override;
@@ -22,6 +20,8 @@ namespace shade
 		virtual bool Serialize() const override;
 		virtual bool Deserialize() override;
 	private:
-		std::vector<Shared<Texture>>	m_Textures; // Need to move textures to material
+		//Shared<Material3D>				m_Material;
+	public:
+	
 	};
 }

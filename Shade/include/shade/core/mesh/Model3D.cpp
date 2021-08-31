@@ -32,7 +32,7 @@ void shade::Model3D::LoadFromAssetData(shade::AssetData& data, const shade::Asse
             AssetManager::Hold<Mesh>(id, Asset::State::RemoveIfPosible,
                 [this](auto& mesh) mutable
                 {
-                    m_Meshes.push_back(AssetManager::Receive<Mesh>(mesh));
+                   m_Meshes.push_back(AssetManager::Receive<Mesh>(mesh));
                 }, dependancy);
         }
     }

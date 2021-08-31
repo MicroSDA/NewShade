@@ -51,7 +51,7 @@ void EditorLayer::OnCreate()
 
 void EditorLayer::OnUpdate(const shade::Shared<shade::Scene>& scene, const shade::Timer& deltaTime)
 {
-	shade::Render::Submit(m_Grid.get(), glm::mat4(1));
+	shade::Render::Submit(m_GridShader, m_Grid, nullptr, glm::mat4(1));
 
 	auto start = std::chrono::steady_clock::now();
 
@@ -61,7 +61,7 @@ void EditorLayer::OnUpdate(const shade::Shared<shade::Scene>& scene, const shade
 			for (auto& mesh : model->GetMeshes())
 			{
 				if (frustum.IsInFrustum(transform, mesh->GetMinHalfExt(), mesh->GetMaxHalfExt()))
-					shade::Render::SubmitInstance(m_InstancedShader, mesh, transform.GetModelMatrix());
+					shade::Render::SubmitInstance(m_InstancedShader, mesh, mesh->GetMaterial(), transform.GetModelMatrix());
 			}
 		});
 
@@ -77,21 +77,21 @@ void EditorLayer::OnRender(const shade::Shared<shade::Scene>& scene, const shade
 		auto environments = scene->GetEntities().view<shade::EnvironmentComponent>();
 		shade::Render::Begin(m_FrameBuffer);
 
-		shade::Render::BeginScene(m_GridShader, m_EditorCamera);
+		shade::Render::BeginScene(m_EditorCamera);
 		shade::Render::DrawSubmited(m_GridShader);
-		shade::Render::EndScene(m_GridShader);
+		shade::Render::EndScene();
 
-		shade::Render::BeginScene(m_InstancedShader, m_EditorCamera, environments.raw(), environments.size());
+		shade::Render::BeginScene(m_EditorCamera, environments.raw(), environments.size());
 		shade::Render::DrawInstances(m_InstancedShader);
-		//shade::Render::DrawInstanced(m_InstancedShader);
-		shade::Render::EndScene(m_InstancedShader);
+		shade::Render::EndScene();
 
 
 		m_FrustumShader->Bind();
-		m_FrustumShader->SendMat4("Transform", false, glm::value_ptr(glm::inverse(m_TestEditorCamera->GetViewProjection())));
-		shade::Render::BeginScene(m_FrustumShader, m_EditorCamera);
+		m_FrustumShader->SendMat4("u_Transform", false, glm::value_ptr(glm::inverse(m_TestEditorCamera->GetViewProjection())));
+
+		shade::Render::BeginScene(m_EditorCamera);
 		shade::Render::DrawIndexed(shade::Drawable::DrawMode::Lines, VAO, VAO->GetIndexBuffer());
-		shade::Render::EndScene(m_FrustumShader);
+		shade::Render::EndScene();
 
 		shade::Render::End(m_FrameBuffer);
 	}
@@ -558,25 +558,32 @@ void EditorLayer::Model3dComponent(shade::Entity& entity)
 			DrawTreeNode(model->GetMeshes()[i]->GetAssetData().Attribute("Id").as_string(),
 				[&](const shade::Shared<shade::Mesh>& mesh)
 				{
-					DrawTreeNode("Material", [&](shade::Material& material)
+					DrawTreeNode("Material", [&](shade::Material3D* material)
 						{
-							DrawColor3("Ambinet", glm::value_ptr(material.GetAmbientColor()));
-							DrawColor3("Diffuse", glm::value_ptr(material.GetDiffuseColor()));
-							DrawColor3("Specular", glm::value_ptr(material.GetSpecularColor()));
-							DrawFlaot("Shininess", &material.GetShininess());
-							DrawFlaot("Shininess strength", &material.GetShininessStrength());
 
-						}, mesh->GetMaterial());
+							DrawColor3("Ambinet",			glm::value_ptr(material->ColorAmbient));
+							DrawColor3("Diffuse",			glm::value_ptr(material->ColorDiffuse));
+							DrawColor3("Specular",			glm::value_ptr(material->ColorSpecular));
+							DrawFlaot("Shininess",			&material->Shininess);
+							DrawFlaot("Shininess strength", &material->ShininessStrength);
+							DrawFlaot("Opacity",			&material->Opacity);
+							DrawFlaot("Refracti",			&material->Refracti);
+							ImGui::Text("Shading %d",		material->Shading);
+							ImGui::Checkbox("WireFrame",	&material->WireFrame);
 
-					DrawTreeNode("Textures", [&](const std::vector<shade::Shared<shade::Texture>>& textures)
+							if (ImGui::Button("Save")) { material->Serialize(); }
+
+						}, mesh->GetMaterial().get());
+
+					DrawTreeNode("Textures", [&](shade::Material3D* material)
 						{
-							for (auto texture : mesh->GetTextures())
-							{
-								ImGui::Text(texture->GetAssetData().Attribute("TextureType").as_string());
-								DrawImage(texture->GetRenderID(), 100, 100, true);
-							}
-						}, mesh->GetTextures());
+							DrawImage(material->TextureDiffuse->GetRenderID(), 100, 100, true);
+							DrawImage(material->TextureSpecular->GetRenderID(), 100, 100, true);
+							DrawImage(material->TextureNormals->GetRenderID(), 100, 100, true);
+							
+						}, mesh->GetMaterial().get());
 
+					if (ImGui::Button("Save")) mesh->Serialize();
 				}, model->GetMeshes()[i]);
 		}
 

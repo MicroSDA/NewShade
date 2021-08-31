@@ -94,7 +94,7 @@ void shade::Drawable::SetIndices(Indices& indices)
     m_Indices = std::move(indices);
 }
 
-void shade::Drawable::SetMaterial(const Material& material)
+void shade::Drawable::SetMaterial(const Shared<Material3D>& material)
 {
     m_Material = material;
 }
@@ -109,7 +109,7 @@ const shade::Indices& shade::Drawable::GetIndices() const
     return m_Indices;
 }
 
-const shade::Material& shade::Drawable::GetMaterial() const
+const shade::Shared<shade::Material3D>& shade::Drawable::GetMaterial() const
 {
     return m_Material;
 }
@@ -124,7 +124,7 @@ shade::Indices& shade::Drawable::GetIndices()
     return const_cast<Indices&>(const_cast<const shade::Drawable*>(this)->GetIndices());
 }
 
-shade::Material& shade::Drawable::GetMaterial()
+shade::Shared<shade::Material3D>& shade::Drawable::GetMaterial()
 {
-    return const_cast<Material&>(const_cast<const shade::Drawable*>(this)->GetMaterial());
+    return const_cast<Shared<Material3D>&>(const_cast<const shade::Drawable*>(this)->GetMaterial());
 }
