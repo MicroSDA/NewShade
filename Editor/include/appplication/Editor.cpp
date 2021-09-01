@@ -14,6 +14,7 @@ void Editor::OnCreate()
 	shade::ShadersLibrary::Create("Grid",		"resources/shaders/Grid.glsl");
 	shade::ShadersLibrary::Create("Frustum",	"resources/shaders/Frustum.glsl");
 	shade::ShadersLibrary::Create("General",	"resources/shaders/General/General.glsl");
+	shade::ShadersLibrary::Create("Bloom",		"resources/shaders/PostProcess/Bloom.glsl");
 
 	shade::ShadersLibrary::Get("General")->SelectSubrutine("u_sLighting", "BillinPhong", shade::Shader::Type::Fragment);
 	//shade::ShadersLibrary::Get("General")->SelectSubrutine("myTest2", "notTest2", shade::Shader::Type::Vertex);

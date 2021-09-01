@@ -8,7 +8,7 @@ shade::Shared<shade::Box> shade::Box::Create(const std::uint32_t& width, const s
 
 shade::Box::Box(const std::uint32_t& width, const std::uint32_t& height)
 {
-	SetDrawMode(Drawable::DrawMode::Points);
+	SetDrawMode(Drawable::DrawMode::Lines);
 
 	
 	Vertex3D vertex;

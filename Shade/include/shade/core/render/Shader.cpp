@@ -30,7 +30,7 @@ bool shade::Shader::Parse(const std::string& source)
 		size_t begin = pos + typeTokenLength + 1; //Start of shader type name (after "#type " keyword)
 		std::string type = source.substr(begin, eol - begin);
 		auto _type = GetTypeFromString(type);
-		if (_type == Type::Vertex || _type == Type::Fragment || _type == Type::Geometry)
+		if (_type == Type::Vertex || _type == Type::Fragment || _type == Type::Geometry || _type == Type::Compute)
 		{
 			size_t nextLinePos = source.find_first_not_of("\r\n", eol); //Start of shader code after shader type declaration line
 
@@ -64,6 +64,8 @@ shade::Shader::Type shade::Shader::GetTypeFromString(const std::string& type)
 		return Type::Fragment;
 	if (type == "geometry")
 		return Type::Geometry;
+	if (type == "compute")
+		return Type::Compute;
 
 	SHADE_CORE_WARNING("Undefined shader type!");
 	return Type::Undefined;
@@ -128,61 +130,6 @@ void shade::Shader::FindInclude(std::string& source)
 			}
 
 			start = source.find(includeToken, 0); // Start of shader include declaration line
-		}
-	}
-
-	return;
-
-	for (auto i = 0; i < includes.size(); i++)
-	{
-		size_t pos = std::get<0>(includes[i]);		// Start of shader include declaration line
-		size_t eol = std::get<1>(includes[i]);;		// End of shader include declaration line
-		if (eol != std::string::npos)
-		{
-			size_t begin = pos + includeTokenLength + 1; //Start of shader include path (after "#include " keyword)
-			std::string path = source.substr(begin, eol - begin);
-			source.erase(source.find(std::string(includeToken) + ' ' + path), path.size() + includeTokenLength + 1);// Remove #include with path
-			path.erase(0, 1);// Remove first "
-			path.erase(path.size() - 1);// Remove last "
-
-			std::ifstream include(path, std::ios::in | std::ios::binary);
-			if (include.is_open())
-			{
-				include.seekg(0, std::ios::end);
-				size_t size = include.tellg();
-				include.seekg(0, std::ios::beg);
-				if (size != -1)
-				{
-					std::string _source;
-					_source.resize(size);
-					util::Binarizer::Read(include, _source[0], size);
-
-					const char* versionToken = "#version";
-					size_t versionTokenLength = strlen(versionToken);
-					pos = source.find(versionToken, 0); //Start of shader version declaration line
-					eol = source.find_first_of("\r\n", pos); //End of shader version declaration 
-
-					if (eol != std::string::npos)
-					{
-						begin = pos + versionTokenLength; //Start of shader version (after "#version " keyword)
-						FindInclude(_source);
-						source.insert(eol, "\n" + _source);
-					}
-					else
-					{
-						FindInclude(_source);
-						source.insert(0, _source);
-					}
-				}
-				else
-				{
-					SHADE_CORE_WARNING("Failed to open source include file :'{0}'.", path);
-				}
-			}
-			else
-			{
-				SHADE_CORE_WARNING("Failed to open source include file :'{0}'.", path);
-			}
 		}
 	}
 }

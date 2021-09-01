@@ -2,7 +2,7 @@
 #include "Light.h"
 
 shade::Light::Light(const shade::Environment::Type& type) : shade::Environment(type),
-	m_AmbientColor(1.0, 1.0, 1.0),
+	m_AmbientColor(0.1f, 0.1f, 0.1f),
 	m_DiffuseColor(1.0f, 1.0f, 1.0f),
 	m_SpecularColor(1.0f, 1.0f, 1.0f)
 {

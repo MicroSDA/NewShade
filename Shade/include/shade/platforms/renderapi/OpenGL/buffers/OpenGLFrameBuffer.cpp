@@ -156,6 +156,12 @@ std::uint32_t shade::OpenGLFrameBuffer::GetAttachment(const std::uint32_t& index
 	}
 }
 
+void shade::OpenGLFrameBuffer::BindTextureAttachment(const std::uint32_t& index, const std::uint32_t& unit) const
+{
+	glActiveTexture(GL_TEXTURE0 + unit);
+	glBindTexture(GL_TEXTURE_2D, GetAttachment(index));
+}
+
 void shade::OpenGLFrameBuffer::_ClearAttachmentInt(const std::uint32_t& attachment, const std::int32_t& clearValue)
 {
 	if (attachment < 0 || attachment >= m_TextureAttacments.size())

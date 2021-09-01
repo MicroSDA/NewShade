@@ -45,7 +45,7 @@ void shade::Frustum::_CalculateFrustum(const glm::mat4& viewMatrix, const glm::m
 }
 
 void shade::Frustum::_Normalize(glm::vec4& side)
-{
+{	/* Only for x, y, z*/
 	float magnitude = (float)sqrt(side.x * side.x + side.y * side.y + side.z * side.z);
 	side.x /= magnitude;
 	side.y /= magnitude;

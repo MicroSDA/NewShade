@@ -14,7 +14,8 @@ namespace shade
 			Undefined,
 			Vertex,
 			Fragment,
-			Geometry
+			Geometry,
+			Compute
 		};
 	public:
 		virtual ~Shader() = default;
@@ -32,7 +33,7 @@ namespace shade
 		virtual void SendMat3(const std::string& name,		const bool& isTransponse, const float* value) = 0;
 		virtual void SendMat4(const std::string& name,		const bool& isTransponse, const float* value) = 0;
 		virtual void ExecuteSubrutines() = 0;
-
+		virtual void DispatchCompute(const std::uint32_t& x, const std::uint32_t& y, const std::uint32_t& z) = 0;
 		virtual void SelectSubrutine(const std::string& sUniformName, const std::string& subrutine, const Shader::Type& type) = 0;
 		virtual int GetUniformLocation(const std::string& name) const = 0;
 		static Shared<Shader> Create(const std::string& filePath);
@@ -45,7 +46,7 @@ namespace shade
 		void FindInclude(std::string& source);
 		std::string m_Path;
 		// Subrutines
-		std::vector<std::uint32_t> m_VertexSubrIndices, m_FragemntSubrIndices, m_GeometrySubrIndices;
+		std::vector<std::uint32_t> m_VertexSubrIndices, m_FragemntSubrIndices, m_GeometrySubrIndices, m_ComputeSubrIndices;
 	protected:
 	};
 

@@ -25,7 +25,7 @@ namespace shade
 		virtual void SendMat4(const std::string& name, const bool& isTransponse, const float* value) override;
 		virtual void SelectSubrutine(const std::string& sUniformName, const std::string& subrutine, const Shader::Type& type) override;
 		virtual void ExecuteSubrutines() override;
-
+		virtual void DispatchCompute(const std::uint32_t& x, const std::uint32_t& y, const std::uint32_t& z) override;
 		virtual int GetUniformLocation(const std::string& name) const override;
 
 		virtual bool Serialize(std::ostream& stream) const override;

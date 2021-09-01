@@ -19,5 +19,9 @@ namespace shade
 		virtual void Begin(Shared<FrameBuffer> framebuffer = nullptr) override;
 		virtual void End(Shared<FrameBuffer> framebuffer = nullptr) override;
 		virtual void DepthTest(const bool& enable) override;
+		// Post Process
+		virtual void Bloom(const Shared<FrameBuffer>& inputFrameBuffer, const Shared<FrameBuffer>& outFrameBuffer, const Shared<Shader>& bloomShader) override;
+	private:
+		Shared<FrameBuffer> m_BloomFrameBuffer;
 	};
 }

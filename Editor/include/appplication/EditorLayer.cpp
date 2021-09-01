@@ -16,46 +16,38 @@ EditorLayer::EditorLayer(const std::string& name) :
 
 EditorLayer::~EditorLayer()
 {
-
+	/* !NEED CREATE ASSET LAYOUT AND SEPARETE LAYPUT AND ASSETS*/
 }
 
 void EditorLayer::OnCreate()
 {
-
-	m_FrameBuffer = shade::FrameBuffer::Create(shade::FrameBuffer::Layout(100, 100, { shade::FrameBuffer::Texture::Format::RGBA8,shade::FrameBuffer::Texture::Format::DEPTH24STENCIL8 }));
-
-	m_InstancedShader = shade::ShadersLibrary::Get("General");
-	m_GridShader = shade::ShadersLibrary::Get("Grid");
-	m_FrustumShader = shade::ShadersLibrary::Get("Frustum");
-
-	m_Grid = shade::Grid::Create(0, 0, 0);
-	m_Box = shade::Box::Create(0, 0);
-
 	shade::Application::Get().GetEntities().view<shade::CameraComponent>().each([&](auto entity, auto& camera) { m_EditorCamera = camera; });
-
 	m_TestEditorCamera = shade::CreateShared<shade::Camera>();
 	m_TestEditorCamera->SetFar(500);
 
-	VAO = shade::VertexArray::Create();
-	VBO = shade::VertexBuffer::Create(m_Box->GetVertices().data(), sizeof(shade::Vertex3D) * m_Box->GetVertices().size(), shade::VertexBuffer::BufferType::Dynamic);
-	VBO->SetLayout({ {shade::VertexBuffer::ElementType::Float3, "Position"},
-					 {shade::VertexBuffer::ElementType::Float2, "UV_Coords"},
-					 {shade::VertexBuffer::ElementType::Float3, "Normal"},
-					 {shade::VertexBuffer::ElementType::Float3, "Tangent"} });
+	m_FrameBuffer = shade::FrameBuffer::Create(shade::FrameBuffer::Layout(100, 100, { shade::FrameBuffer::Texture::Format::RGBA8, shade::FrameBuffer::Texture::Format::RGBA8, shade::FrameBuffer::Texture::Format::DEPTH24STENCIL8 }));
+	m_InstancedShader = shade::ShadersLibrary::Get("General");
+	m_GridShader = shade::ShadersLibrary::Get("Grid");
+	m_FrustumShader = shade::ShadersLibrary::Get("Frustum");
+	m_BloomShader = shade::ShadersLibrary::Get("Bloom");
+	m_Grid = shade::Grid::Create(0, 0, 0);
+	m_Box = shade::Box::Create(0, 0);
 
-	EBO = shade::IndexBuffer::Create(m_Box->GetIndices().data(), m_Box->GetIndices().size());
+	m_PPBloom = shade::PPBloom::Create();
 
-	VAO->AddVertexBuffer(VBO);
-	VAO->SetIndexBuffer(EBO);
+	m_PPBloom->SetInOutTargets(m_FrameBuffer, m_FrameBuffer, m_BloomShader);
 }
 
 void EditorLayer::OnUpdate(const shade::Shared<shade::Scene>& scene, const shade::Timer& deltaTime)
 {
-	shade::Render::Submit(m_GridShader, m_Grid, nullptr, glm::mat4(1));
-
-	auto start = std::chrono::steady_clock::now();
 
 	auto frustum = m_TestEditorCamera->GetFrustum();
+
+											/* Materials always nullptr for this*/
+	shade::Render::Submit(m_GridShader,    m_Grid,   m_Grid->GetMaterial(), glm::mat4(1));
+	shade::Render::Submit(m_FrustumShader, m_Box,    m_Box->GetMaterial(),  glm::inverse(m_TestEditorCamera->GetViewProjection()));
+
+
 	scene->GetEntities().view<shade::Model3DComponent, shade::Transform3DComponent>().each([&](auto& entity, shade::Model3DComponent& model, shade::Transform3DComponent& transform)
 		{
 			for (auto& mesh : model->GetMeshes())
@@ -64,33 +56,27 @@ void EditorLayer::OnUpdate(const shade::Shared<shade::Scene>& scene, const shade
 					shade::Render::SubmitInstance(m_InstancedShader, mesh, mesh->GetMaterial(), transform.GetModelMatrix());
 			}
 		});
-
-	auto end = std::chrono::steady_clock::now();
-	//SHADE_TRACE("Frustum calculation time: {0}", std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count());
 }
 
 void EditorLayer::OnRender(const shade::Shared<shade::Scene>& scene, const shade::Timer& deltaTime)
 {
+	
 	/* RUN AND SEE NICE BUG !!!!!!!!*/
 	/* ÏÎÕÎÄÓ ÏÎÒÌÎÓ ×ÒÎ ÌÀÒÅÐÈÀËÀ ÍÅÒÓ, ÒÅÊÑÒÓÐ ÒÎÆÅ, ÍÀ×ÈÍÀÞÒÑß ÏÐÈÊÎËÛ*/
 	{
 		auto environments = scene->GetEntities().view<shade::EnvironmentComponent>();
 		shade::Render::Begin(m_FrameBuffer);
 
-		shade::Render::BeginScene(m_EditorCamera);
-		shade::Render::DrawSubmited(m_GridShader);
-		shade::Render::EndScene();
 
 		shade::Render::BeginScene(m_EditorCamera, environments.raw(), environments.size());
 		shade::Render::DrawInstances(m_InstancedShader);
 		shade::Render::EndScene();
-
-
-		m_FrustumShader->Bind();
-		m_FrustumShader->SendMat4("u_Transform", false, glm::value_ptr(glm::inverse(m_TestEditorCamera->GetViewProjection())));
-
+		
+		shade::Render::PProcess::Process(m_PPBloom);
+		
 		shade::Render::BeginScene(m_EditorCamera);
-		shade::Render::DrawIndexed(shade::Drawable::DrawMode::Lines, VAO, VAO->GetIndexBuffer());
+		shade::Render::DrawSubmited(m_GridShader);
+		shade::Render::DrawSubmited(m_FrustumShader);
 		shade::Render::EndScene();
 
 		shade::Render::End(m_FrameBuffer);
@@ -154,6 +140,7 @@ void EditorLayer::OnEvent(const shade::Shared<shade::Scene>& scene, shade::Event
 		{
 			m_InstancedShader->Recompile();
 			m_GridShader->Recompile();
+			m_BloomShader->Recompile();
 		}
 		else if (keyCode == shade::Key::F1)
 		{

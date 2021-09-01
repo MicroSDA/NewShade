@@ -16,6 +16,12 @@ namespace shade
 	Shared<ShaderStorageBuffer> Render::m_sDirectLightsBuffer;
 	Shared<ShaderStorageBuffer> Render::m_sPointLightsBuffeer;
 	Shared<ShaderStorageBuffer> Render::m_sSpotLightsBuffer;
+
+}
+
+void shade::Render::PProcess::Process(const Shared<PostProcess>& pp)
+{
+	pp->Process();
 }
 
 void shade::Render::Init()
@@ -66,6 +72,7 @@ void shade::Render::SetViewPort(std::uint32_t x, std::uint32_t y, std::uint32_t 
 
 void shade::Render::Begin(Shared<FrameBuffer> framebuffer)
 {
+	
 	m_sRenderAPI->Begin(framebuffer);
 	/* Instances */
 	for (auto shader = m_sInstancePool.begin(); shader != m_sInstancePool.end();)
@@ -227,7 +234,7 @@ void shade::Render::Submit(const Shared<Shader>& shader, const Shared<Drawable>&
 		{
 			// Update existing 
 			m_sSubmitedPool[shader.get()][drawable.get()].Expired = false;
-			m_sSubmitedPool[shader.get()][drawable.get()].MaterialTransforms.push_back(std::make_tuple(transform,material));
+			m_sSubmitedPool[shader.get()][drawable.get()].MaterialTransforms.push_back(std::make_tuple(transform, material));
 		}
 	}
 }
@@ -292,7 +299,7 @@ void shade::Render::DrawSubmited(const Shared<Shader>& shader)
 		{
 			for (auto i = 0; i < instance.second.MaterialTransforms.size(); i++)
 			{
-				shader->SendMat4("a_Transform", false, glm::value_ptr(std::get<0>(instance.second.MaterialTransforms[i])));
+				shader->SendMat4("u_Transform", false, glm::value_ptr(std::get<0>(instance.second.MaterialTransforms[i])));
 			
 				auto material = std::get<1>(instance.second.MaterialTransforms[i]).get();
 				/* If material exist */
@@ -300,14 +307,14 @@ void shade::Render::DrawSubmited(const Shared<Shader>& shader)
 				{
 					
 					/* Send material */
-					shader->SendFlaot3("u_Material.AmbientColor", glm::value_ptr(material->ColorAmbient));
-					shader->SendFlaot3("u_Material.DiffuseColor", glm::value_ptr(material->ColorDiffuse));
-					shader->SendFlaot3("u_Material.SpecularColor", glm::value_ptr(material->ColorSpecular));
-					shader->SendFlaot3("u_Material.TransparentColor", glm::value_ptr(material->ColorTransparent));
-					shader->SendFlaot("u_Material.Shinines", material->Shininess);
-					shader->SendFlaot("u_Material.ShininesStrength", material->ShininessStrength);
-					shader->SendFlaot("u_Material.Opacity", material->Opacity);
-					shader->SendFlaot("u_Material.Refracti", material->Refracti);
+					shader->SendFlaot3("u_Material.AmbientColor",		glm::value_ptr(material->ColorAmbient));
+					shader->SendFlaot3("u_Material.DiffuseColor",		glm::value_ptr(material->ColorDiffuse));
+					shader->SendFlaot3("u_Material.SpecularColor",		glm::value_ptr(material->ColorSpecular));
+					shader->SendFlaot3("u_Material.TransparentColor",	glm::value_ptr(material->ColorTransparent));
+					shader->SendFlaot("u_Material.Shinines",			material->Shininess);
+					shader->SendFlaot("u_Material.ShininesStrength",	material->ShininessStrength);
+					shader->SendFlaot("u_Material.Opacity",				material->Opacity);
+					shader->SendFlaot("u_Material.Refracti",			material->Refracti);
 
 					/*TODO select subrutine depends on materail*/
 
@@ -385,3 +392,7 @@ void shade::Render::_CreateInstances(const Shared<Shader>& shader, const Shared<
 	m_sInstancePool[shader.get()][drawable.get()] = instance;
 }
 
+//void shade::Render::Bloom(const Shared<FrameBuffer>& inputFrameBuffer, const Shared<FrameBuffer>& outFrameBuffer, const Shared<Shader>& bloomShader)
+//{
+//	m_sRenderAPI->Bloom(inputFrameBuffer, outFrameBuffer, bloomShader);
+//}

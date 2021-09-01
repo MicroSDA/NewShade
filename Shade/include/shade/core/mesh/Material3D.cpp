@@ -97,6 +97,7 @@ bool shade::Material3D::Deserialize()
 void shade::Material3D::LoadFromAssetData(shade::AssetData& data, const shade::AssetData& bundle)
 {
 	SetAssetData(data);
+
 	for (auto& dependency : bundle.Dependencies())
 	{
 		const std::string id = dependency.Attribute("Id").as_string();

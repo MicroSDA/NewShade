@@ -59,6 +59,7 @@ namespace shade
 		virtual void Resize(const std::uint32_t& width, const std::uint32_t& height) = 0;
 		virtual Texture::Data GetData(const std::uint32_t& attachment, const std::uint32_t& x, const std::uint32_t& y) const = 0;
 		virtual std::uint32_t GetAttachment(const std::uint32_t& index) const = 0;
+		virtual void BindTextureAttachment(const std::uint32_t& index, const std::uint32_t& unit) const = 0;
 		template<typename T>
 		void ClearAttachment(const std::uint32_t& index, const T& clearValue);
 		virtual const Layout& GetLayout() const = 0;

@@ -35,6 +35,11 @@ void shade::OpenGLRenderAPI::Init()
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CLIP_DISTANCE0);
 	glEnable(GL_CLIP_DISTANCE1);
+
+	m_BloomFrameBuffer = shade::FrameBuffer::Create(shade::FrameBuffer::Layout(1, 1,
+		{ shade::FrameBuffer::Texture::Format::RGBA8,
+		  shade::FrameBuffer::Texture::Format::RGBA8, 
+		}));
 }
 
 void shade::OpenGLRenderAPI::ShutDown()
@@ -99,4 +104,53 @@ void shade::OpenGLRenderAPI::End(Shared<FrameBuffer> framebuffer)
 void shade::OpenGLRenderAPI::DepthTest(const bool& enable)
 {
 	(enable) ? glEnable(GL_DEPTH_TEST): glDisable(GL_DEPTH_TEST);
+}
+
+void shade::OpenGLRenderAPI::Bloom(const Shared<FrameBuffer>& inputFrameBuffer, const Shared<FrameBuffer>& outFrameBuffer, const Shared<Shader>& bloomShader)
+{
+
+	//Shared<FrameBuffer> Ping = shade::FrameBuffer::Create(shade::FrameBuffer::Layout(outFrameBuffer->GetLayout().Width, outFrameBuffer->GetLayout().Height, { shade::FrameBuffer::Texture::Format::RGBA8}));
+	if (m_BloomFrameBuffer->GetLayout().Width != inputFrameBuffer->GetLayout().Width ||
+		m_BloomFrameBuffer->GetLayout().Height != inputFrameBuffer->GetLayout().Height)
+	{
+		m_BloomFrameBuffer->Resize(inputFrameBuffer->GetLayout().Width, inputFrameBuffer->GetLayout().Height);
+	}
+			
+
+	//glMemoryBarrier(GL_ALL_BARRIER_BITS);
+	//glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+
+	std::uint32_t w = ceil((float)inputFrameBuffer->GetLayout().Width / 16.0f);
+	std::uint32_t h = ceil((float)inputFrameBuffer->GetLayout().Height / 16.0f);
+
+	bloomShader->Bind();
+	bloomShader->SelectSubrutine("u_Blur",  "Horizontal", shade::Shader::Type::Compute);
+	bloomShader->SelectSubrutine("u_Stage", "GetHDR", shade::Shader::Type::Compute);
+	bloomShader->ExecuteSubrutines();
+	//PingPong->Bind();
+	glBindImageTexture(0, inputFrameBuffer->GetAttachment(0), 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA8);
+	glBindImageTexture(1, m_BloomFrameBuffer->GetAttachment(0), 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA8);
+	bloomShader->DispatchCompute(w, h, 1);
+
+	bloomShader->SelectSubrutine("u_Blur",  "Horizontal", shade::Shader::Type::Compute);
+	bloomShader->SelectSubrutine("u_Stage", "ProcessBlur", shade::Shader::Type::Compute);
+	bloomShader->ExecuteSubrutines();
+	glBindImageTexture(0, m_BloomFrameBuffer->GetAttachment(0), 0, GL_FALSE, 0, GL_READ_ONLY,  GL_RGBA8);
+	glBindImageTexture(1, m_BloomFrameBuffer->GetAttachment(1), 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA8);
+	bloomShader->DispatchCompute(w, h, 1);
+
+	bloomShader->SelectSubrutine("u_Blur",  "Vertical",    shade::Shader::Type::Compute);
+	bloomShader->SelectSubrutine("u_Stage", "ProcessBlur", shade::Shader::Type::Compute);
+	bloomShader->ExecuteSubrutines();
+	glBindImageTexture(0, m_BloomFrameBuffer->GetAttachment(1), 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA8);
+	glBindImageTexture(1, m_BloomFrameBuffer->GetAttachment(0), 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA8);
+	bloomShader->DispatchCompute(w, h, 1);
+
+	// Combine stage
+	bloomShader->SelectSubrutine("u_Blur",  "Vertical", shade::Shader::Type::Compute);
+	bloomShader->SelectSubrutine("u_Stage", "Combine", shade::Shader::Type::Compute);
+	bloomShader->ExecuteSubrutines();
+	glBindImageTexture(0, m_BloomFrameBuffer->GetAttachment(0), 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA8);
+	glBindImageTexture(1, inputFrameBuffer->GetAttachment(0), 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA8);
+	bloomShader->DispatchCompute(w, h, 1);
 }

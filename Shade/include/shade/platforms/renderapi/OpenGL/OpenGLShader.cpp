@@ -108,6 +108,7 @@ void shade::OpenGLShader::SelectSubrutine(const std::string& sUniformName, const
 			case Shader::Type::Vertex:   if (uniformIndex < m_VertexSubrIndices.size())   m_VertexSubrIndices[uniformIndex]		= subrutineIndex; break;
 			case Shader::Type::Fragment: if (uniformIndex < m_FragemntSubrIndices.size()) m_FragemntSubrIndices[uniformIndex]	= subrutineIndex; break;
 			case Shader::Type::Geometry: if (uniformIndex < m_GeometrySubrIndices.size()) m_GeometrySubrIndices[uniformIndex]	= subrutineIndex; break;
+			case Shader::Type::Compute:  if (uniformIndex < m_ComputeSubrIndices.size())  m_ComputeSubrIndices[uniformIndex]	= subrutineIndex; break;
 			default: SHADE_CORE_WARNING("Undefined shader type for subrutine selection! Type: '{0}.'", (std::uint32_t)type) break;
 			}
 		}
@@ -124,6 +125,13 @@ void shade::OpenGLShader::ExecuteSubrutines()
 	if (m_VertexSubrIndices.size())		glUniformSubroutinesuiv(GL_VERTEX_SHADER,   m_VertexSubrIndices.size(),   m_VertexSubrIndices.data());
 	if (m_FragemntSubrIndices.size())	glUniformSubroutinesuiv(GL_FRAGMENT_SHADER, m_FragemntSubrIndices.size(), m_FragemntSubrIndices.data());
 	if (m_GeometrySubrIndices.size())	glUniformSubroutinesuiv(GL_GEOMETRY_SHADER, m_GeometrySubrIndices.size(), m_GeometrySubrIndices.data());
+	if (m_ComputeSubrIndices.size())	glUniformSubroutinesuiv(GL_COMPUTE_SHADER, m_ComputeSubrIndices.size(), m_ComputeSubrIndices.data());
+}
+
+void shade::OpenGLShader::DispatchCompute(const std::uint32_t& x, const std::uint32_t& y, const std::uint32_t& z)
+{
+	// TODO memory barier
+	glDispatchCompute(x, y, z);
 }
 
 GLuint shade::OpenGLShader::CreateProgram()
@@ -144,15 +152,16 @@ GLuint shade::OpenGLShader::CreateProgram()
 
 
 	// Getting active subrutines;
-	GLint vS_Count = 0, fS_Count = 0, gS_Count = 0;
-	glGetProgramStageiv(program, GL_VERTEX_SHADER, GL_ACTIVE_SUBROUTINE_UNIFORMS, &vS_Count);
+	GLint vS_Count = 0, fS_Count = 0, gS_Count = 0, cS_Count = 0;
+	glGetProgramStageiv(program, GL_VERTEX_SHADER,   GL_ACTIVE_SUBROUTINE_UNIFORMS, &vS_Count);
 	glGetProgramStageiv(program, GL_FRAGMENT_SHADER, GL_ACTIVE_SUBROUTINE_UNIFORMS, &fS_Count);
 	glGetProgramStageiv(program, GL_GEOMETRY_SHADER, GL_ACTIVE_SUBROUTINE_UNIFORMS, &gS_Count);
+	glGetProgramStageiv(program, GL_COMPUTE_SHADER,  GL_ACTIVE_SUBROUTINE_UNIFORMS, &cS_Count);
 
 	m_VertexSubrIndices.resize(vS_Count);
 	m_FragemntSubrIndices.resize(fS_Count);
 	m_GeometrySubrIndices.resize(gS_Count);
-
+	m_ComputeSubrIndices.resize(cS_Count);
 
 	return program;
 }
@@ -217,6 +226,7 @@ GLenum shade::OpenGLShader::ToOpenGLShaderType(const Type& type)
 	case Type::Vertex:		return GL_VERTEX_SHADER;
 	case Type::Fragment:	return GL_FRAGMENT_SHADER;
 	case Type::Geometry:	return GL_GEOMETRY_SHADER;
+	case Type::Compute:	    return GL_COMPUTE_SHADER;
 	default:
 		SHADE_CORE_WARNING("Undefined shader type!"); return -1;
 	}

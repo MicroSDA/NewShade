@@ -15,13 +15,13 @@
 #include "shade/core/render/drawable/primitives/Box.h"
 #include "shade/core/render/buffers/UniformBuffer.h"
 #include "shade/core/render/buffers/ShaderStorageBuffer.h"
+#include "shade/core/render/postprocess/PPBloom.h"
 
 namespace shade
 {
 	class SHADE_API Render
 	{
 	public:
-		
 		struct Instance
 		{
 			Drawable::DrawMode				DrawMode;
@@ -43,9 +43,14 @@ namespace shade
 			Shared<IndexBuffer>			IBO;
 			bool						Expired = false;
 		};
-
 		using InstancePool = std::unordered_map<Shader* ,std::unordered_map<Drawable*, Instances>>;
 		using SubmitedPool = std::unordered_map<Shader* ,std::unordered_map<Drawable*, Instance>>;
+	public:
+		class SHADE_API PProcess
+		{
+		public:
+			static void Process(const Shared<PostProcess>& pp);
+		};
 	public:
 		static void Init();
 		static void ShutDown();
@@ -68,25 +73,24 @@ namespace shade
 
 		static void DrawNotIndexed(const Drawable::DrawMode& mode, const Shared<VertexArray>& VAO, const std::uint32_t& count);
 		static void DrawIndexed(const Drawable::DrawMode& mode, const Shared<VertexArray>& VAO, const Shared<IndexBuffer>& IBO);
-		//Util
+
 	private:
-
-		static void _CreateInstance(const Shared<Shader>& shader, const Shared<Drawable>& drawable, const Shared<Material3D>& material, const glm::mat4& transform);
-		static void _CreateInstances(const Shared<Shader>& shader, const Shared<Drawable>& drawable, const Shared<Material3D>& material, const glm::mat4& transform);
 		
-
-
-		static Unique<RenderAPI>	m_sRenderAPI;
-		static bool					m_sIsInit;
+		static Unique<RenderAPI> m_sRenderAPI;
+		static bool				m_sIsInit;
 
 		static Render::InstancePool   m_sInstancePool;
 		static Render::SubmitedPool   m_sSubmitedPool;
 
-		static Shared<UniformBuffer>								m_sCameraUniformBuffer;
-		static Shared<UniformBuffer>								m_sClippingUniformBuffer;
+		static Shared<UniformBuffer> m_sCameraUniformBuffer;
+		static Shared<UniformBuffer> m_sClippingUniformBuffer;
 
-		static Shared<ShaderStorageBuffer>							m_sDirectLightsBuffer;
-		static Shared<ShaderStorageBuffer>							m_sPointLightsBuffeer;
-		static Shared<ShaderStorageBuffer>							m_sSpotLightsBuffer;
+		static Shared<ShaderStorageBuffer>	m_sDirectLightsBuffer;
+		static Shared<ShaderStorageBuffer>	m_sPointLightsBuffeer;
+		static Shared<ShaderStorageBuffer>	m_sSpotLightsBuffer;
+		//Util
+		static void _CreateInstance(const Shared<Shader>& shader, const Shared<Drawable>& drawable, const Shared<Material3D>& material, const glm::mat4& transform);
+		static void _CreateInstances(const Shared<Shader>& shader, const Shared<Drawable>& drawable, const Shared<Material3D>& material, const glm::mat4& transform);
+
 	};
 }
