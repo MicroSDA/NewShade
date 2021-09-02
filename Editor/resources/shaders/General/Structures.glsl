@@ -46,6 +46,7 @@ struct Material
 	vec3  AmbientColor;
 	vec3  DiffuseColor;
 	vec3  SpecularColor;
+	vec3  EmissiveColor;
 	vec3  TransparentColor;
 	float Shinines;
 	float ShininesStrength;

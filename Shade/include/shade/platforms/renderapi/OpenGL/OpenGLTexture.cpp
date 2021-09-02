@@ -34,19 +34,19 @@ void shade::OpenGLTexture::_Init()
 		GLint  format = 0;
 		GLuint blockSize = 0;
 
-		std::string texture_type = GetAssetData().Attribute("texture_type").as_string();
+		std::string texture_type = GetAssetData().Attribute("TextureType").as_string();
 		switch (m_ImageData.Compression)
 		{
 		case ImageData::DXTCompression::DXT1:
-			format = (texture_type == "normal_map") ? GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT1_EXT : GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT1_EXT; // noramal in srgb for nanosuit only
+			format = (texture_type == "Normal") ? GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT1_EXT : GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT1_EXT; // noramal in srgb for nanosuit only
 			blockSize = 8;
 			break;
 		case ImageData::DXTCompression::DXT3:
-			format = (texture_type == "normal_map") ? GL_COMPRESSED_RGBA_S3TC_DXT3_EXT : GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT3_EXT;
+			format = (texture_type == "Normal") ? GL_COMPRESSED_RGBA_S3TC_DXT3_EXT : GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT3_EXT;
 			blockSize = 16;
 			break;
 		case ImageData::DXTCompression::DXT5:
-			format = (texture_type == "normal_map") ? GL_COMPRESSED_RGBA_S3TC_DXT5_EXT : GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT5_EXT;
+			format = (texture_type == "Normal") ? GL_COMPRESSED_RGBA_S3TC_DXT5_EXT : GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT5_EXT;
 			blockSize = 16;
 			break;
 		default:

@@ -7,9 +7,8 @@ layout (rgba8, binding = 1) uniform image2D u_OutputColor;
 
 struct GaussianData
 {
-	int				Radius;
-	float			Sigma;
-	float			Coefficient[7 + 1];
+	vec4			Kernels[2];
+	ivec2			Radius;
 };
 
 layout (std140, binding = 2) uniform UGaussianData
@@ -19,27 +18,48 @@ layout (std140, binding = 2) uniform UGaussianData
 
 vec4 CalculateBlur(vec4 color, bool isHorizontal)
 {
+	/*float weight[5] = float[] (0.227027, 0.1945946, 0.1216216, 0.054054, 0.016216);
 
-    float weight[7] = float[] (0.327027, 0.2945946, 0.2216216, 0.064054, 0.026216, 0.016216, 0.000216);
-    //float weight[5] = float[] (0.06136, 0.24477, 0.38774, 0.24477,0.06136);
-    vec3 result = color.rgb * weight[0];// current fragment's contribution
+	vec3 result = color.rgb * weight[0];
 
 	if(isHorizontal)
-    {
-        for(int i = 1; i < 7; ++i)
-        {
-            result += imageLoad(u_InputColor, ivec2(gl_GlobalInvocationID.xy) + ivec2(i, 0)).rgb * weight[i];
-            result += imageLoad(u_InputColor, ivec2(gl_GlobalInvocationID.xy) - ivec2(i, 0)).rgb * weight[i];
-        }
-    }
-    else
-    {
- 		for(int i = 1; i < 7; ++i)
-        {
-            result += imageLoad(u_InputColor, ivec2(gl_GlobalInvocationID.xy) + ivec2(0, i)).rgb * weight[i];
-            result += imageLoad(u_InputColor, ivec2(gl_GlobalInvocationID.xy) - ivec2(0, i)).rgb * weight[i];
-        }
-    }
+	{
+		for(int j = 1; j < 5; j++)
+		{
+			result += imageLoad(u_InputColor, ivec2(gl_GlobalInvocationID.xy) + ivec2(j, 0)).rgb * weight[j];
+		    result += imageLoad(u_InputColor, ivec2(gl_GlobalInvocationID.xy) - ivec2(j, 0)).rgb * weight[j];
+		}
+	}
+	else
+	{
+	 	for(int j = 1; j < 5; j++)
+		{
+			result += imageLoad(u_InputColor, ivec2(gl_GlobalInvocationID.xy) + ivec2(0, j)).rgb * weight[j];
+		   	result += imageLoad(u_InputColor, ivec2(gl_GlobalInvocationID.xy) - ivec2(0, j)).rgb * weight[j];
+		}
+	}*/
+
+	vec3 result = color.rgb * u_Gaussian.Kernels[0][0];
+
+	for(int i = 0; i < 2 ; i++)
+	{
+		if(isHorizontal)
+    	{
+			 for(int j = 1; j < u_Gaussian.Radius[0] - 4; j++)
+			 {
+			 	 result += imageLoad(u_InputColor, ivec2(gl_GlobalInvocationID.xy) + ivec2(i + j, 0)).rgb * u_Gaussian.Kernels[i][j];
+	        	 result += imageLoad(u_InputColor, ivec2(gl_GlobalInvocationID.xy) - ivec2(i + j, 0)).rgb * u_Gaussian.Kernels[i][j];
+			 }
+		}
+		else
+		{
+ 			 for(int j = 1; j < u_Gaussian.Radius[0] - 4; j++)
+			 {
+			 	 result += imageLoad(u_InputColor, ivec2(gl_GlobalInvocationID.xy) + ivec2(0, i + j)).rgb * u_Gaussian.Kernels[i][j];
+	        	 result += imageLoad(u_InputColor, ivec2(gl_GlobalInvocationID.xy) - ivec2(0, i + j)).rgb * u_Gaussian.Kernels[i][j];
+			 }
+		}	 
+	}
 
     return vec4(result, color.a);
 };
@@ -80,7 +100,7 @@ vec4 Combine(vec4 color)
 	vec4 first  = color;
 	vec4 second = imageLoad(u_OutputColor, ivec2(gl_GlobalInvocationID.xy)).rgba;
 	return vec4(second + first);
-	//return vec4(second);
+	return vec4(first);
 };
 
 subroutine uniform Stage u_Stage;

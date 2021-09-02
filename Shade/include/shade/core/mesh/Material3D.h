@@ -33,7 +33,7 @@ namespace shade
 		glm::vec3				ColorAmbient		= glm::vec3(1.f);
 		glm::vec3				ColorDiffuse		= glm::vec3(1.f);
 		glm::vec3				ColorSpecular		= glm::vec3(1.f);
-		glm::vec3				ColorEmissive		= glm::vec3(1.f);
+		glm::vec3				ColorEmissive		= glm::vec3(0.f);
 		glm::vec3				ColorTransparent	= glm::vec3(-1.f); // Miuse one, so defualt transparent color doesnt exist
 
 		Material3D::Blending	Blend				= Material3D::Blending { Material3D::Blending::Factor::None, Material3D::Blending::Factor::None };

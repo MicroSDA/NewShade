@@ -78,7 +78,7 @@ void shade::Render::Begin(Shared<FrameBuffer> framebuffer)
 	for (auto shader = m_sInstancePool.begin(); shader != m_sInstancePool.end();)
 	{
 		auto& instancesPool = shader->second.begin();
-		while (instancesPool != shader->second.end())
+		while (instancesPool != shader->second.end()) // Wrong iteration, second elemts leaving need iterate thour for
 		{
 			if (instancesPool->second.Expired)
 				instancesPool = shader->second.erase(instancesPool++);
@@ -205,7 +205,7 @@ void shade::Render::SubmitInstance(const Shared<Shader>& shader, const Shared<Dr
 		else
 		{
 			// Update existing 
-			m_sInstancePool[shader.get()][drawable.get()].Expired = false;
+			m_sInstancePool[shader.get()][drawable.get()].Expired = false; 
 			m_sInstancePool[shader.get()][drawable.get()].Count++;
 			m_sInstancePool[shader.get()][drawable.get()].Material = material;
 			m_sInstancePool[shader.get()][drawable.get()].Transforms.push_back(transform);
@@ -263,6 +263,7 @@ void shade::Render::DrawInstances(const Shared<Shader>& shader)
 				shader->SendFlaot3("u_Material.AmbientColor", glm::value_ptr(instance.second.Material->ColorAmbient));
 				shader->SendFlaot3("u_Material.DiffuseColor", glm::value_ptr(instance.second.Material->ColorDiffuse));
 				shader->SendFlaot3("u_Material.SpecularColor", glm::value_ptr(instance.second.Material->ColorSpecular));
+				shader->SendFlaot3("u_Material.EmissiveColor", glm::value_ptr(instance.second.Material->ColorEmissive));
 				shader->SendFlaot3("u_Material.TransparentColor", glm::value_ptr(instance.second.Material->ColorTransparent));
 				shader->SendFlaot("u_Material.Shinines", instance.second.Material->Shininess);
 				shader->SendFlaot("u_Material.ShininesStrength", instance.second.Material->ShininessStrength);
@@ -310,6 +311,7 @@ void shade::Render::DrawSubmited(const Shared<Shader>& shader)
 					shader->SendFlaot3("u_Material.AmbientColor",		glm::value_ptr(material->ColorAmbient));
 					shader->SendFlaot3("u_Material.DiffuseColor",		glm::value_ptr(material->ColorDiffuse));
 					shader->SendFlaot3("u_Material.SpecularColor",		glm::value_ptr(material->ColorSpecular));
+					shader->SendFlaot3("u_Material.EmissiveColor",     glm::value_ptr(material->ColorEmissive));
 					shader->SendFlaot3("u_Material.TransparentColor",	glm::value_ptr(material->ColorTransparent));
 					shader->SendFlaot("u_Material.Shinines",			material->Shininess);
 					shader->SendFlaot("u_Material.ShininesStrength",	material->ShininessStrength);

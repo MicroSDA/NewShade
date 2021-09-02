@@ -99,7 +99,7 @@ void EditorLayer::OnRender(const shade::Shared<shade::Scene>& scene, const shade
 		ShowWindowBar("File explorer", &EditorLayer::FileExplorer, this, "");
 		ShowWindowBar("Asset explorer", &EditorLayer::AssetsExplorer, this, shade::AssetManager::GetAssetsDataList());
 		ShowWindowBar("Logs", &EditorLayer::LogsExplorer, this);
-		ShowDemoWindow();
+		//ShowDemoWindow();
 
 	} ImGui::End(); // Begin("DockSpace")
 	
@@ -283,6 +283,7 @@ void EditorLayer::Inspector(shade::Entity& entity)
 
 void EditorLayer::Scene(shade::Scene* scene)
 {
+	
 	if (m_SceneViewPort.x != ImGui::GetContentRegionAvail().x || m_SceneViewPort.y != ImGui::GetContentRegionAvail().y)
 	{
 		m_SceneViewPort = ImGui::GetContentRegionAvail();
@@ -551,6 +552,7 @@ void EditorLayer::Model3dComponent(shade::Entity& entity)
 							DrawColor3("Ambinet",			glm::value_ptr(material->ColorAmbient));
 							DrawColor3("Diffuse",			glm::value_ptr(material->ColorDiffuse));
 							DrawColor3("Specular",			glm::value_ptr(material->ColorSpecular));
+							DrawColor3("Emissive",			glm::value_ptr(material->ColorEmissive));
 							DrawFlaot("Shininess",			&material->Shininess);
 							DrawFlaot("Shininess strength", &material->ShininessStrength);
 							DrawFlaot("Opacity",			&material->Opacity);
@@ -569,6 +571,20 @@ void EditorLayer::Model3dComponent(shade::Entity& entity)
 							DrawImage(material->TextureNormals->GetRenderID(), 100, 100, true);
 							
 						}, mesh->GetMaterial().get());
+
+					DrawTreeNode("Vertices", [&](shade::Vertex3D* vertices, uint32_t count)
+						{
+							for (auto i = 0; i < count; i++)
+							{
+								
+
+								DrawVec3F(std::string("P##" + std::to_string(i)).c_str(),   glm::value_ptr(vertices[i].Position), 100, 100, true);
+								DrawVec3F(std::string("N##" + std::to_string(i)).c_str(),   glm::value_ptr(vertices[i].Normal), 100, 100, true);
+								DrawVec3F(std::string("T##" + std::to_string(i)).c_str(),   glm::value_ptr(vertices[i].Tangent), 100, 100, true);
+								ImGui::Separator();
+
+							}
+						}, mesh->GetVertices().data(), mesh->GetVertices().size());
 
 					if (ImGui::Button("Save")) mesh->Serialize();
 				}, model->GetMeshes()[i]);
