@@ -20,7 +20,7 @@ namespace shade
 		{
 			glBindTexture(TextureTarget(isMultiSampled), id);
 		}
-		static void AttachTexture(const std::uint32_t& id, const std::int32_t& samples, const GLenum& internalFormat, const GLenum& format, const std::uint32_t& width, const std::uint32_t& height, const std::uint32_t& index)
+		static void AttachTexture(int buffer, const std::uint32_t& id, const std::int32_t& samples, const GLenum& internalFormat, const GLenum& format, const std::uint32_t& width, const std::uint32_t& height, const std::uint32_t& index)
 		{
 			bool multisampled = samples > 1;
 			if (multisampled)
@@ -29,13 +29,22 @@ namespace shade
 			}
 			else
 			{
-				glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, format, GL_UNSIGNED_BYTE, nullptr);
+				if(internalFormat == GL_RGBA16F)
+					glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, format, GL_FLOAT, nullptr);
+				else
+					glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, format, GL_UNSIGNED_BYTE, nullptr);
 
-				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+				glGenerateMipmap(GL_TEXTURE_2D);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL,  6);
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+				
+				//glTexImage2D(GL_TEXTURE_2D, 1, internalFormat, width, height, 0, format, GL_UNSIGNED_BYTE, nullptr);
+				
 			}
 
 			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + index, TextureTarget(multisampled), id, 0);
@@ -76,6 +85,8 @@ namespace shade
 			{
 			case FrameBuffer::Texture::Format::RGBA8:       return GL_RGBA8;
 			case FrameBuffer::Texture::Format::RED_INT:		return GL_RED_INTEGER;
+			case FrameBuffer::Texture::Format::RGBA10:		return GL_RGB10_A2;
+			case FrameBuffer::Texture::Format::RGBA16F:		return GL_RGBA16F;
 			default: return 0;
 			}
 		}
@@ -216,10 +227,16 @@ void shade::OpenGLFrameBuffer::Invalidate()
 			switch (m_AttachmentSpec[i].TextureFormat)
 			{
 			case Texture::Format::RGBA8:
-				util::AttachTexture(m_TextureAttacments[i], m_Layout.Samples, GL_RGBA8, GL_RGBA, m_Layout.Width, m_Layout.Height, i);
+				util::AttachTexture(m_RenderId,m_TextureAttacments[i], m_Layout.Samples, GL_RGBA8, GL_RGBA, m_Layout.Width, m_Layout.Height, i);
+				break;
+			case Texture::Format::RGBA10:
+				util::AttachTexture(m_RenderId, m_TextureAttacments[i], m_Layout.Samples, GL_RGB10_A2, GL_RGBA, m_Layout.Width, m_Layout.Height, i);
+				break;
+			case Texture::Format::RGBA16F:
+				util::AttachTexture(m_RenderId, m_TextureAttacments[i], m_Layout.Samples, GL_RGBA16F, GL_RGBA, m_Layout.Width, m_Layout.Height, i);
 				break;
 			case Texture::Format::RED_INT:
-				util::AttachTexture(m_TextureAttacments[i], m_Layout.Samples, GL_R32I, GL_RED_INTEGER, m_Layout.Width, m_Layout.Height, i);
+				util::AttachTexture(m_RenderId,m_TextureAttacments[i], m_Layout.Samples, GL_R32I, GL_RED_INTEGER, m_Layout.Width, m_Layout.Height, i);
 				break;
 			}
 		}

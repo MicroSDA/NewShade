@@ -83,11 +83,11 @@ subroutine (Stage)
 vec4 GetHDR(vec4 color)
 {
 	float brightness = dot(color.rgb, vec3(0.2126, 0.7152, 0.0722));
-	//return vec4(color.rgb * brightness, 1.0);
+	//return vec4(1, 1, 1, 1.0);
 
-  	if(brightness < 0.7)
+  	if(brightness < 0.8)
     	return vec4(0.0, 0.0, 0.0, color.a);
-    else return vec4(color.rgb * brightness, color.a);
+    else return vec4(color.rgb, color.a);
 };
 subroutine (Stage) 
 vec4 ProcessBlur(vec4 color)
@@ -99,13 +99,14 @@ vec4 Combine(vec4 color)
 {	
 	vec4 first  = color;
 	vec4 second = imageLoad(u_OutputColor, ivec2(gl_GlobalInvocationID.xy)).rgba;
-	return vec4(second + first);
+	return vec4(first + second);
 	return vec4(first);
 };
 
 subroutine uniform Stage u_Stage;
 void main()
 {
+  ivec2 samplePos  = ivec2(gl_WorkGroupID.xy) * ivec2(16, 16) + ivec2(gl_LocalInvocationID.xy);
 
   ivec2 Coordinates = ivec2(gl_GlobalInvocationID.xy);
   vec4  Data        = imageLoad(u_InputColor, Coordinates).rgba;

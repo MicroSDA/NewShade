@@ -15,6 +15,7 @@ void Editor::OnCreate()
 	shade::ShadersLibrary::Create("Frustum",	"resources/shaders/Frustum.glsl");
 	shade::ShadersLibrary::Create("General",	"resources/shaders/General/General.glsl");
 	shade::ShadersLibrary::Create("Bloom",		"resources/shaders/PostProcess/Bloom.glsl");
+	shade::ShadersLibrary::Create("AdvancedBloom",		"resources/shaders/PostProcess/AdvancedBloom.glsl");
 
 	shade::ShadersLibrary::Get("General")->SelectSubrutine("u_sLighting", "BillinPhong", shade::Shader::Type::Fragment);
 	//shade::ShadersLibrary::Get("General")->SelectSubrutine("myTest2", "notTest2", shade::Shader::Type::Vertex);
@@ -47,6 +48,7 @@ void Editor::OnCreate()
 
 
 	auto layer = this->CreateLayer<EditorLayer>("EditorLayer");
+
 }
 
 void Editor::OnUpdate(const shade::Timer& timer)

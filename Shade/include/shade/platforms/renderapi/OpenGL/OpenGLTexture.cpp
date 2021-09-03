@@ -57,10 +57,12 @@ void shade::OpenGLTexture::_Init()
 		glGenTextures(1, &m_RenderID);
 		glBindTexture(GL_TEXTURE_2D, m_RenderID);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
-		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL,  m_ImageData.MipMapCount - 1);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
-		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL,  m_ImageData.MipMapCount - 1);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+		/* Downscaling value = when higer then low resolution mipmap grows faster*/
+		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_LOD_BIAS,  -0.4f); /* When mipmapin will start*/
+
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 

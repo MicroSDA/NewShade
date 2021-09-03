@@ -30,12 +30,17 @@ void EditorLayer::OnCreate()
 	m_GridShader = shade::ShadersLibrary::Get("Grid");
 	m_FrustumShader = shade::ShadersLibrary::Get("Frustum");
 	m_BloomShader = shade::ShadersLibrary::Get("Bloom");
+	m_AdvancedBloomShader = shade::ShadersLibrary::Get("AdvancedBloom");
 	m_Grid = shade::Grid::Create(0, 0, 0);
 	m_Box = shade::Box::Create(0, 0);
 
-	m_PPBloom = shade::PPBloom::Create();
+	m_PPBloom			= shade::PPBloom::Create();
+	m_PPAdvancedBloom	= shade::PPAdvancedBloom::Create();
 
 	m_PPBloom->SetInOutTargets(m_FrameBuffer, m_FrameBuffer, m_BloomShader);
+	m_PPAdvancedBloom->SetInOutTargets(m_FrameBuffer, m_FrameBuffer, m_AdvancedBloomShader);
+
+	
 }
 
 void EditorLayer::OnUpdate(const shade::Shared<shade::Scene>& scene, const shade::Timer& deltaTime)
@@ -72,7 +77,7 @@ void EditorLayer::OnRender(const shade::Shared<shade::Scene>& scene, const shade
 		shade::Render::DrawInstances(m_InstancedShader);
 		shade::Render::EndScene();
 		
-		shade::Render::PProcess::Process(m_PPBloom);
+		shade::Render::PProcess::Process(m_PPAdvancedBloom);
 		
 		shade::Render::BeginScene(m_EditorCamera);
 		shade::Render::DrawSubmited(m_GridShader);
@@ -141,6 +146,7 @@ void EditorLayer::OnEvent(const shade::Shared<shade::Scene>& scene, shade::Event
 			m_InstancedShader->Recompile();
 			m_GridShader->Recompile();
 			m_BloomShader->Recompile();
+			m_AdvancedBloomShader->Recompile();
 		}
 		else if (keyCode == shade::Key::F1)
 		{
@@ -153,7 +159,7 @@ void EditorLayer::OnEvent(const shade::Shared<shade::Scene>& scene, shade::Event
 						entity.AddComponent<shade::Model3DComponent>(shade::AssetManager::Receive<shade::Model3D>(asset));
 						float x = 1 + rand() % 550;
 						float z = 1 + rand() % 550;
-						entity.AddComponent<shade::Transform3DComponent>().SetPostition(x, 0, z);
+						entity.AddComponent<shade::Transform3DComponent>();
 					});
 			}
 

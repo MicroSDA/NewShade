@@ -14,6 +14,8 @@ namespace shade
 			{
 				None = 0,
 				RGBA8,
+				RGBA10,
+				RGBA16F,
 				RED_INT,
 				DEPTH24STENCIL8
 			};

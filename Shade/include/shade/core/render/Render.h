@@ -16,6 +16,7 @@
 #include "shade/core/render/buffers/UniformBuffer.h"
 #include "shade/core/render/buffers/ShaderStorageBuffer.h"
 #include "shade/core/render/postprocess/PPBloom.h"
+#include "shade/core/render/postprocess/PPAdvancedBloom.h"
 
 namespace shade
 {
