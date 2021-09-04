@@ -111,6 +111,7 @@ vec4 BillinPhong(vec3 toCameraDirection)
 subroutine uniform LightingCalculation u_sLighting;
 // Output buffer
 layout (location = 0) out vec4 FrameBuffer;
+layout (location = 1) out vec4 FrameBuffer2;
 //layout (location = 1) out vec4 BrighthessBuffer;
 // Main entry point
 void main()
@@ -129,5 +130,6 @@ void main()
 	Color.rgb  = pow(Color.rgb, vec3(1.0 / Gamma));
 	
 	FrameBuffer 		= vec4(u_Material.EmissiveColor + Color.rgb, 1.0);
+	FrameBuffer2 = vec4(0,0,0,1);
 }
 // !End of fragment shader

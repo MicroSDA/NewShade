@@ -104,6 +104,13 @@ void EditorLayer::OnRender(const shade::Shared<shade::Scene>& scene, const shade
 		ShowWindowBar("File explorer", &EditorLayer::FileExplorer, this, "");
 		ShowWindowBar("Asset explorer", &EditorLayer::AssetsExplorer, this, shade::AssetManager::GetAssetsDataList());
 		ShowWindowBar("Logs", &EditorLayer::LogsExplorer, this);
+		ShowWindowBar("Out", [&]() 
+			{
+
+				ImGui::Image(reinterpret_cast<void*>(m_FrameBuffer->GetAttachment(1)),
+					m_SceneViewPort, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
+			
+			});
 		//ShowDemoWindow();
 
 	} ImGui::End(); // Begin("DockSpace")
@@ -301,6 +308,7 @@ void EditorLayer::Scene(shade::Scene* scene)
 
 		ImGui::Image(reinterpret_cast<void*>(m_FrameBuffer->GetAttachment(0)),
 			m_SceneViewPort, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
+		
 
 		FpsOverlay(ImGui::GetWindowViewport());
 
