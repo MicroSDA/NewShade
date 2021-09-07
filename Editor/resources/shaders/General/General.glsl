@@ -130,6 +130,6 @@ void main()
 	Color.rgb  = pow(Color.rgb, vec3(1.0 / Gamma));
 	
 	FrameBuffer 		= vec4(u_Material.EmissiveColor + Color.rgb, 1.0);
-	FrameBuffer2 = vec4(0,0,0,1);
+	FrameBuffer2 = vec4(1,0,0,0);
 }
 // !End of fragment shader

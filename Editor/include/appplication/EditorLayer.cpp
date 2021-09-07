@@ -25,7 +25,11 @@ void EditorLayer::OnCreate()
 	m_TestEditorCamera = shade::CreateShared<shade::Camera>();
 	m_TestEditorCamera->SetFar(500);
 
-	m_FrameBuffer = shade::FrameBuffer::Create(shade::FrameBuffer::Layout(100, 100, { shade::FrameBuffer::Texture::Format::RGBA8, shade::FrameBuffer::Texture::Format::RGBA8, shade::FrameBuffer::Texture::Format::DEPTH24STENCIL8 }));
+	m_FrameBuffer = shade::FrameBuffer::Create(shade::FrameBuffer::Layout(100, 100, { 
+		shade::FrameBuffer::Texture::Format::RGBA16F, 
+		shade::FrameBuffer::Texture::Format::RGBA16F,
+		shade::FrameBuffer::Texture::Format::RGBA16F,
+		shade::FrameBuffer::Texture::Format::DEPTH24STENCIL8 }));
 	m_InstancedShader = shade::ShadersLibrary::Get("General");
 	m_GridShader = shade::ShadersLibrary::Get("Grid");
 	m_FrustumShader = shade::ShadersLibrary::Get("Frustum");
@@ -159,10 +163,10 @@ void EditorLayer::OnEvent(const shade::Shared<shade::Scene>& scene, shade::Event
 		{
 			for (auto i = 0; i < 1; i++)
 			{
-				shade::AssetManager::Hold<shade::Model3D>("Nanosuit",
+				shade::AssetManager::Hold<shade::Model3D>("Cube",
 					shade::Asset::State::RemoveIfPosible, [&](auto& asset) mutable
 					{
-						auto entity = scene->CreateEntity("Nanosuit");
+						auto entity = scene->CreateEntity("Cube");
 						entity.AddComponent<shade::Model3DComponent>(shade::AssetManager::Receive<shade::Model3D>(asset));
 						float x = 1 + rand() % 550;
 						float z = 1 + rand() % 550;

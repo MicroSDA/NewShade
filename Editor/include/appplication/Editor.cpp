@@ -10,12 +10,12 @@ void Editor::OnCreate()
 	//Should be first before tuching opengl functions
 	auto& widnow = CreateWindow();
 	// Create shaders 
-	shade::ShadersLibrary::Create("Instanced",	"resources/shaders/BasicModel.glsl");
-	shade::ShadersLibrary::Create("Grid",		"resources/shaders/Grid.glsl");
-	shade::ShadersLibrary::Create("Frustum",	"resources/shaders/Frustum.glsl");
-	shade::ShadersLibrary::Create("General",	"resources/shaders/General/General.glsl");
-	shade::ShadersLibrary::Create("Bloom",		"resources/shaders/PostProcess/Bloom.glsl");
-	shade::ShadersLibrary::Create("AdvancedBloom",		"resources/shaders/PostProcess/AdvancedBloom.glsl");
+	shade::ShadersLibrary::Create("Instanced",			"resources/shaders/BasicModel.glsl");
+	shade::ShadersLibrary::Create("Grid",				"resources/shaders/Grid.glsl");
+	shade::ShadersLibrary::Create("Frustum",			"resources/shaders/Frustum.glsl");
+	shade::ShadersLibrary::Create("General",			"resources/shaders/General/General.glsl");
+	shade::ShadersLibrary::Create("Bloom",				"resources/shaders/PostProcess/Bloom.glsl");
+	shade::ShadersLibrary::Create("AdvancedBloom",		"resources/shaders/PostProcess/Bloom/Test.glsl");
 
 	shade::ShadersLibrary::Get("General")->SelectSubrutine("u_sLighting", "BillinPhong", shade::Shader::Type::Fragment);
 	//shade::ShadersLibrary::Get("General")->SelectSubrutine("myTest2", "notTest2", shade::Shader::Type::Vertex);

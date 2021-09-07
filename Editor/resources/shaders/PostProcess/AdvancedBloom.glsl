@@ -5,6 +5,9 @@ layout(local_size_x = 16, local_size_y = 16) in;
 layout (rgba8,     binding = 0) uniform coherent  image2D u_InputColor;
 layout (rgba8,     binding = 1) uniform coherent  image2D u_OutputColor;
 
+layout (binding        = 2) uniform sampler2D u_sInputColor;
+layout (rgba8, binding = 3) uniform image2D   u_sOutputColor;
+
 //layout (binding = 2) uniform sampler2D u_InputColorS;
 //layout (binding = 3) uniform sampler2D u_OutputColorS;
 //layout (rgba8,     binding = 2) uniform coherent  image2D u_OutputColorI;
@@ -67,24 +70,25 @@ vec4 DownsemplingBox4(ivec2 inputCoord)
 // . . I . J . .
 // . K . L . M .
 // . . . . . . .
-vec4 DownsampleBox13(ivec2 inputCoord)
+vec4 DownBox13(vec2 uv, vec2 size, float lod)
 {
+	vec2 textlSize = 1.0 / size.xy;
 
-	vec4 A = imageLoad(u_InputColor, inputCoord + ivec2(-2, -2));
-    vec4 B = imageLoad(u_InputColor, inputCoord + ivec2( 0, -2));
-    vec4 C = imageLoad(u_InputColor, inputCoord + ivec2( 2, -2));
-    vec4 D = imageLoad(u_InputColor, inputCoord + ivec2(-1, -1));
-    vec4 E = imageLoad(u_InputColor, inputCoord + ivec2( 1, -1));
-    vec4 F = imageLoad(u_InputColor, inputCoord + ivec2(-2,  0));
+	vec4 A = textureLod(u_sInputColor, uv + textlSize * vec2(-1.0, -1.0), lod);
+    vec4 B = textureLod(u_sInputColor, uv + textlSize * vec2( 0.0,  0.0), lod);
+    vec4 C = textureLod(u_sInputColor, uv + textlSize * vec2( 1.0, -1.0), lod);
+    vec4 D = textureLod(u_sInputColor, uv + textlSize * vec2(-0.5, -0.5), lod);
+    vec4 E = textureLod(u_sInputColor, uv + textlSize * vec2( 0.5, -0.5), lod);
+    vec4 F = textureLod(u_sInputColor, uv + textlSize * vec2(-1.0,  0.0), lod);
 
-    vec4 G = imageLoad(u_InputColor, inputCoord				   );
+    vec4 G = textureLod(u_sInputColor, uv, lod				   	             );
 
-    vec4 H = imageLoad(u_InputColor, inputCoord + ivec2( 2,  0));
-    vec4 I = imageLoad(u_InputColor, inputCoord + ivec2(-1, -1));
-    vec4 J = imageLoad(u_InputColor, inputCoord + ivec2( 1,  1));
-    vec4 K = imageLoad(u_InputColor, inputCoord + ivec2(-2,  2));
-    vec4 L = imageLoad(u_InputColor, inputCoord + ivec2( 0,  2));
-    vec4 M = imageLoad(u_InputColor, inputCoord + ivec2( 2,  2));
+    vec4 H = textureLod(u_sInputColor, uv + textlSize * vec2( 1.0,  0.0), lod);
+    vec4 I = textureLod(u_sInputColor, uv + textlSize * vec2(-0.5,  0.5), lod);
+    vec4 J = textureLod(u_sInputColor, uv + textlSize * vec2( 0.5,  0.5), lod);
+    vec4 K = textureLod(u_sInputColor, uv + textlSize * vec2(-1.0,  1.0), lod);
+    vec4 L = textureLod(u_sInputColor, uv + textlSize * vec2( 0.0,  1.0), lod);
+    vec4 M = textureLod(u_sInputColor, uv + textlSize * vec2( 1.0,  1.0), lod);
 
     vec2 div = (1.0 / 4.0) * vec2(0.5, 0.125);
 
@@ -171,7 +175,7 @@ void PreF13()
     ivec2 inputCoord   = ivec2(gl_GlobalInvocationID.xy);
 	ivec2 outputCoords = inputCoord / 2;
 
-	imageStore(u_OutputColor, outputCoords,  Hdr(DownsampleBox13(inputCoord)));
+	//imageStore(u_OutputColor, outputCoords,  Hdr(DownsampleBox13(inputCoord)));
 };
 subroutine (Stage) 
 void PreF4()
@@ -187,7 +191,7 @@ void DownSample13()
  	ivec2 inputCoord   = ivec2(gl_GlobalInvocationID.xy);
 	ivec2 outputCoords = inputCoord / 2;
 
-	imageStore(u_OutputColor, outputCoords,  DownsampleBox13(inputCoord));
+	//imageStore(u_OutputColor, outputCoords,  DownsampleBox13(inputCoord));
 };
 subroutine (Stage) 
 void DownBox()
@@ -237,6 +241,35 @@ subroutine (Stage)
 void BH()
 {
 	BlurH();
+};
+// . . . . . . .
+// . A . B . C .
+// . . D . E . .
+// . F . G . H .
+// . . I . J . .
+// . K . L . M .
+// . . . . . . .
+vec4 DownBox(vec2 uv, vec2 size, float lod)
+{
+	vec4 offset = (1.0 / size.xyxy) * vec4(-1.0, -1.0, 1.0, 1.0);
+
+    vec4 color;
+    color =  textureLod(u_sInputColor, uv + offset.xy, lod);
+    color += textureLod(u_sInputColor, uv + offset.zy, lod);
+    color += textureLod(u_sInputColor, uv + offset.xw, lod);
+    color += textureLod(u_sInputColor, uv + offset.zw, lod);
+
+    return  color * (1.0 / 4.0);
+ 	//imageStore(u_OutputColor, outputCoords,  s * (1.0 / 4.0));
+};
+subroutine (Stage) 
+void Test()
+{
+	ivec2 samplerPos 	= ivec2(gl_GlobalInvocationID.xy) / int(pow(2.0, 5.0)); // 2 в степени 5
+	vec2 uv 			= (samplerPos + 0.5) / vec2(textureSize(u_sInputColor, 5));
+	
+	//imageStore(u_sOutputColor,  ivec2(gl_GlobalInvocationID.xy), DownBox(uv, textureSize(u_sInputColor, 5).xy, 5.0));
+	imageStore(u_sOutputColor,  ivec2(gl_GlobalInvocationID.xy),   DownBox13(uv, textureSize(u_sInputColor, 5).xy, 5.0));
 };
 subroutine uniform Stage s_Stage;
 

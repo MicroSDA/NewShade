@@ -33,21 +33,21 @@ namespace shade
 					glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, format, GL_FLOAT, nullptr);
 				else
 					glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, format, GL_UNSIGNED_BYTE, nullptr);
-
-				glGenerateMipmap(GL_TEXTURE_2D);
+				
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
-				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL,  6);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL,  7);
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-				
+				glGenerateTextureMipmap(id);
 				//glTexImage2D(GL_TEXTURE_2D, 1, internalFormat, width, height, 0, format, GL_UNSIGNED_BYTE, nullptr);
 				
 			}
 
 			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + index, TextureTarget(multisampled), id, 0);
+			
 		}
 
 		static void AttachDepthTexture(const std::uint32_t& id, const std::int32_t& samples, const GLenum& format, const GLenum& attachmentType, const std::uint32_t& width, const std::uint32_t& height)
