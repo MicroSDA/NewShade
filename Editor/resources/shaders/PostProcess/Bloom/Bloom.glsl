@@ -1,186 +1,118 @@
 #type compute
 #version 460 core
+
 layout(local_size_x = 16, local_size_y = 16) in;
-/* Input data*/
-layout (		    binding = 0) uniform sampler2D u_sInputF;
-layout (		    binding = 1) uniform sampler2D u_sInputS;
 
-layout (rgba16f,	binding = 2) uniform restrict image2D  u_Input;
-layout (rgba16f, 	binding = 3) uniform restrict image2D  u_Output; 
+layout (            binding = 0) uniform          sampler2D  u_InputSampler;
+layout (rgba16f,	binding = 1) uniform restrict image2D    u_InputImage;
+layout (rgba16f, 	binding = 2) uniform restrict image2D    u_OutputImage;
 
+#define MAX_GAUSSIAN_RADIUS 8
 
-#define EPSILON 1.0e-4
-
-vec4 DownsampleBox4(vec2 uv, vec2 texelSize, float lod)
+struct Data
 {
-	vec4 offset  = texelSize.xyxy * vec4(-1.0, -1.0, 1.0, 1.0);
-	
-    vec4 color 	 = textureLod(u_sInputF, uv + offset.xy, lod);
-    color 		+= textureLod(u_sInputF, uv + offset.zy, lod);
-    color 		+= textureLod(u_sInputF, uv + offset.xw, lod);
-    color 		+= textureLod(u_sInputF, uv + offset.zw, lod);
+	vec3  Curve;
+	float Threshold;
+	int   BlurRadius;
+	float Kernels[MAX_GAUSSIAN_RADIUS];
+};
 
-    return  color * (1.0 / 4.0);
-}
+uniform Data u_Data;
+// Include our filters
+#include "resources/shaders/PostProcess/Bloom/Filters.glsl"
 
-vec4 DownsampleBox13(vec2 uv, vec2 texelSize, float lod)
+ /* Geting uv coordinates */
+vec2 GetUV(sampler2D texture, ivec2 position, int lod)
 {
-	
-	vec4 A = textureLod(u_sInputF, uv + texelSize * vec2(-1.0, -1.0), lod);
-    vec4 B = textureLod(u_sInputF, uv + texelSize * vec2( 0.0,  0.0), lod);
-    vec4 C = textureLod(u_sInputF, uv + texelSize * vec2( 1.0, -1.0), lod);
-    vec4 D = textureLod(u_sInputF, uv + texelSize * vec2(-0.5, -0.5), lod);
-    vec4 E = textureLod(u_sInputF, uv + texelSize * vec2( 0.5, -0.5), lod);
-    vec4 F = textureLod(u_sInputF, uv + texelSize * vec2(-1.0,  0.0), lod);
-
-    vec4 G = textureLod(u_sInputF, uv, lod				   	             );
-
-    vec4 H = textureLod(u_sInputF, uv + texelSize * vec2( 1.0,  0.0), lod);
-    vec4 I = textureLod(u_sInputF, uv + texelSize * vec2(-0.5,  0.5), lod);
-    vec4 J = textureLod(u_sInputF, uv + texelSize * vec2( 0.5,  0.5), lod);
-    vec4 K = textureLod(u_sInputF, uv + texelSize * vec2(-1.0,  1.0), lod);
-    vec4 L = textureLod(u_sInputF, uv + texelSize * vec2( 0.0,  1.0), lod);
-    vec4 M = textureLod(u_sInputF, uv + texelSize * vec2( 1.0,  1.0), lod);
-
-    vec2 div = (1.0 / 4.0) * vec2(0.5, 0.125);
-
-    vec4 color  = (D + E + I + J) * div.x;
-		 color += (A + B + G + F) * div.y;
-    	 color += (B + C + H + G) * div.y;
-    	 color += (F + G + L + K) * div.y;
-    	 color += (G + H + M + L) * div.y;
-
-    return color;
+     // 0.5 is offset
+     return vec2(vec2(vec2(position.xy) + 0.5) / vec2(textureSize(texture, lod).xy));
 }
-
-vec4 UpsampleBox4(vec2 uv, vec2 texelSize, float lod, vec4 scale)
+/* Basic gaussian blur */
+vec4 BlurH_V(sampler2D texture, vec2 uv, vec2 texel, int lod)
 {
-	vec4 offset  = texelSize.xyxy * vec4(-1.0, -1.0, 1.0, 1.0) * (scale * 0.5);
-	
-    vec4 color 	 = textureLod(u_sInputF, uv + offset.xy, lod);
-    color 		+= textureLod(u_sInputF, uv + offset.zy, lod);
-    color 		+= textureLod(u_sInputF, uv + offset.xw, lod);
-    color 		+= textureLod(u_sInputF, uv + offset.zw, lod);
+    //float weight[5] = float[] (0.227027, 0.1945946, 0.1216216, 0.054054, 0.016216);
+    vec4 result = textureLod(texture, uv, lod);
+	result.rgb = result.rgb * u_Data.Kernels[0];
 
-    return  color * (1.0 / 4.0);
+    if(lod % 2 == 0)
+    {	
+		// Horizontal
+        for(int i = 1; i < u_Data.BlurRadius; i++)
+		{
+			result.rgb += textureLod(texture, uv + vec2(texel.x * i, 0.0), lod).rgb * u_Data.Kernels[i];
+		    result.rgb += textureLod(texture, uv - vec2(texel.x * i, 0.0), lod).rgb * u_Data.Kernels[i];
+		}
+    }
+    else
+    {
+		// Vertical
+       for(int i = 1; i < u_Data.BlurRadius; i++)
+		{
+			result.rgb += textureLod(texture, uv + vec2(0.0, texel.y * i), lod).rgb * u_Data.Kernels[i];
+		    result.rgb += textureLod(texture, uv - vec2(0.0, texel.y * i), lod).rgb * u_Data.Kernels[i];
+		}  
+    }
+
+    return vec4(result.rgb, result.a);
 }
-
-vec4 UpsampleTent(vec2 uv, vec2 texelSize, float lod, vec4 scale)
-{
-	vec4 offset  = texelSize.xyxy * vec4(1.0, 1.0, -1.0, 1.0) * scale;
-	
-	vec4 color   = textureLod(u_sInputF, uv - offset.xy, lod);
-	color 		+= textureLod(u_sInputF, uv - offset.wy, lod) * 2.0;
-    color 		+= textureLod(u_sInputF, uv - offset.zy, lod);
-	
-    color 		+= textureLod(u_sInputF, uv + offset.zw, lod) * 2.0;
-	color 		+= textureLod(u_sInputF, uv 		   , lod) * 4.0;
-	color 		+= textureLod(u_sInputF, uv + offset.xw, lod) * 2.0;
-		
-	color 		+= textureLod(u_sInputF, uv + offset.zy, lod);
-	color 		+= textureLod(u_sInputF, uv + offset.wy, lod) * 2.0;
-	color 		+= textureLod(u_sInputF, uv + offset.xy, lod);
-	
-	return color * (1.0 / 16.0);
-}
-
-vec4 QThreshold(vec4 color, vec3 curve, float threshold, float exposure)
-{
-	color *= exposure;
-	float br =  max(max(color.r, color.g), color.b);
-    // Under-threshold part: quadratic curve
-    float rq = clamp(br - curve.x, 0.0, curve.y);
-    rq = curve.z * rq * rq;
-    // Combine and apply the brightness response curve.
-    color *= max(rq, br - threshold) / max(br, EPSILON);
-
-    return color;
-}
-
-
-subroutine void Stage(int scale);
+/* Subroutines declaration */
+subroutine void Stage(int lod);
 subroutine (Stage)
-void HDR(int scale)
-{
-	// Если прибовляем 1 к скейлу то уменьшается на 1 от оригинала
-	// если не прибавлять 1 то растянеть уменьшеную копию
-	// + 0.5 к семплер пос сохраняет позицию после рескйейла так что нужно!
-	// пока что не понятно gl_GlobalInvocationID.xy от чего оно зависит, скорой всего от бинда картинки и вседа реферит на оригинальный сайз но это не точно
-	// если хотим записать в мип мап ниже то + 1 к скейлу в обоих вариантах
-	ivec2 samplerPos = ivec2(gl_GlobalInvocationID.xy) / int(pow(1.0, scale + 1)); // если + 1 то уменьшаяем, скейл по фпктическому разммеру, ели -1 то увеличиваем
-	vec2 uv 		 = (samplerPos + 0.5) / vec2(textureSize(u_sInputF, scale + 1));// если + 1 то уменьшаяем, скейл по дате, ели -1 то увеличиваем
-	vec2 texelSize   = 1.0 / textureSize(u_sInputF, scale).xy; // тут вроде прибовлять не надо иначе качество падает
-	//vec4 color       = textureLod(u_sInputF, uv, scale);
-	vec4 color       = DownsampleBox4(uv, texelSize.xy, scale);
-	color 		     = QThreshold(color, vec3(0.2126, 0.7152, 0.0722), 0.2, 1.0);
-	
-	/* не забудь про мемори бариер, без него мерцание !*/
-	/*vec4 texelValue= texelFetch(texture2D, ivec2(gl_FragCoord.xy), 0);*/ // можно еще попрбовать это
-	
-	imageStore(u_Output, samplerPos, color);
+void HDR(int lod)
+{ 
+   ivec2 position = ivec2(gl_GlobalInvocationID.xy);
+   // Getting hdr color
+   vec4 color     = QThreshold(imageLoad(u_InputImage, position), u_Data.Curve, u_Data.Threshold, 1.0);
+
+   imageStore(u_OutputImage, position, color);
 };
 subroutine (Stage)
-void DBox4(int scale)
+void Downsample(int lod)
 {
-	ivec2 samplerPos = ivec2(gl_GlobalInvocationID.xy) / int(pow(1.0, scale + 1));
-	vec2 uv 		 = (samplerPos + 0.5) / vec2(textureSize(u_sInputF, scale + 1));
-	vec2 texelSize   = 1.0 / textureSize(u_sInputF, scale).xy;
-	vec4 color       = DownsampleBox4(uv, texelSize.xy, scale);
-	
-	imageStore(u_Output, samplerPos, vec4(color.rgb,1.0));
+   ivec2 position  = ivec2(gl_GlobalInvocationID.xy);
+   vec2  uv        = GetUV(u_InputSampler, position, lod);
+   vec2  texel     = 1.0 / textureSize(u_InputSampler, lod).xy;
+   vec4  color     = DownsampleBox4(u_InputSampler, uv, texel, lod);
+   // position / 2 is size of next mip level
+   imageStore(u_OutputImage, position / 2, color);
 };
 subroutine (Stage)
-void DBox13(int scale)
+void Upsample(int lod)
 {
-	ivec2 samplerPos = ivec2(gl_GlobalInvocationID.xy) / int(pow(2.0, scale));
-	vec2 uv 		 = (samplerPos  + 0.5) / vec2(textureSize(u_sInputF, scale));
-	vec2 texelSize   = 1.0 / textureSize(u_sInputF, scale).xy;
-	vec4 color       = DownsampleBox13(uv, texelSize.xy, scale);
-	
-	imageStore(u_Output, samplerPos, vec4(color.rgb,1.0));
+   ivec2 position     = ivec2(gl_GlobalInvocationID.xy);
+   vec2  uv           = GetUV(u_InputSampler, position, lod - 1); // lod above current
+   vec2  uv2          = GetUV(u_InputSampler, position / 2, lod);
+   vec2  texel        = 1.0 / textureSize(u_InputSampler, lod).xy;
+
+   vec4 first         = UpsampleBox4(u_InputSampler, uv, texel, lod);
+   vec4 second        = textureLod(u_InputSampler,   uv,        lod- 1); 
+
+   imageStore(u_OutputImage, position, first + second);
+  
 };
 subroutine (Stage)
-void UBox4(int scale)
+void Blur(int lod)
 {
-	// Вот шас вроде работает как есть, если там + 1 на уменьшение то тут - 1 на увеличение и вроде работает, искажений нету
-	// Тут меняли
-// Старнно что не вытягивает имейдж из дода ниже, как будно прошлая запись ушла в не куда а там нету не чего 
-// присутствует только лод -1 который  выше, а тикущего по скейлу 1 нету
-	ivec2 samplerPos = ivec2(gl_GlobalInvocationID.xy) / int(pow(2.0,   scale-1)); // - 1 важно
-	vec2 uv 		 = (samplerPos + 0.5) / vec2(textureSize(u_sInputF, scale-1));// - 1 важно
-	vec2 texelSize   = 1.0 / textureSize(u_sInputF, scale).xy;
-	vec4 first       = UpsampleBox4(uv, texelSize, scale, vec4(1)); // если увеличивать тут то изображение буде раздваиватся
-	vec4 second      = textureLod(u_sInputF, uv, scale-1); // тут скейлы оставлять, и выше тоже, грузим имейдж потому что там бинд имейдаж
-	//vec4 second      = imageLoad(u_Output,   samplerPos); // тут скейлы оставлять, и выше тоже, грузим имейдж потому что там бинд имейдаж+
-	//vec4 first       = textureLod(u_sInputF, uv, scale);
-	// Тут комбинируется размазанная + нет версии с одного мипа
-	imageStore(u_Output, samplerPos, first+ second); // не пытайся взять тут нулевой мип, его нету просто, это второй атачмент и внем по 0 пусто, потому что мы писали сразу в 1 мип
-	
-	// last combine staдия должна быть другой
+   ivec2 position  = ivec2(gl_GlobalInvocationID.xy);
+   vec2  uv        = GetUV(u_InputSampler, position,   lod);
+   vec2  texel     = 1.0 / textureSize(u_InputSampler, lod).xy;
+   imageStore(u_OutputImage, position / 2,  BlurH_V(u_InputSampler, uv, texel, lod));
 };
 subroutine (Stage)
-void UTent(int scale)
+void Combine(int lod)
 {
-	ivec2 samplerPos = ivec2(gl_GlobalInvocationID.xy) / int(pow(2.0,   scale -1));
-	vec2 texelSize   = 1.0 / textureSize(u_sInputF, scale).xy;
-	vec2 uv 		 = (samplerPos + 0.5) / vec2(textureSize(u_sInputF, scale));
-	
-	vec4 first       = UpsampleTent(uv, texelSize,  scale, vec4(1));
-	vec4 second      = textureLod(u_sInputF, uv, scale);
-	imageStore(u_Output, samplerPos, first + second);
-};
-subroutine (Stage)
-void Combine(int scale)
-{
-	ivec2 samplerPos = ivec2(gl_GlobalInvocationID.xy);
-	vec4 first  	 = imageLoad(u_Input,  samplerPos);
-	vec4 second 	 = imageLoad(u_Output, samplerPos);
-	imageStore(u_Output, samplerPos, first + second);
+     ivec2 position = ivec2(gl_GlobalInvocationID.xy);
+     vec4 first     = imageLoad(u_InputImage, position);
+     vec4 second    = imageLoad(u_OutputImage,position);
+
+     imageStore(u_OutputImage, position, first + second);
 };
 
 subroutine uniform Stage s_Stage;
-uniform int	u_Scale;
+/* Texture mip level */
+uniform int	u_Lod;
+
 void main()
 {
-	s_Stage(u_Scale);
+	s_Stage(u_Lod);
 }

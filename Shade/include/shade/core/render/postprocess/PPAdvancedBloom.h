@@ -24,15 +24,16 @@ namespace shade
 		PPAdvancedBloom();
 		void SetInOutTargets(const Shared<FrameBuffer>& input, const Shared<FrameBuffer>& output, const Shared<Shader>& shader);
 		void SetSigma(const float& sigma);
+		void SetScaling(const std::uint32_t& scaling);
 	protected:
 		Shared<FrameBuffer>   m_BloomFrameBuffer;
-		Shared<FrameBuffer>	  m_BloomFrameBuffer2;
 		Shared<FrameBuffer>   m_InputFrameBuffer;
 		Shared<FrameBuffer>   m_OutputFrameBuffer;
 		Shared<Shader>		  m_BloomShader;
 		Shared<UniformBuffer> m_GaussianUniformBuffer;
 		float				  m_Sigma = 15.0f;
 		PPAdvancedBloom::ShaderData   m_Data;
+		std::uint32_t         m_Scaling = 8; // no more than 8
 
 		void _CalculateKernels(PPAdvancedBloom::ShaderData& data);
 	};

@@ -38,7 +38,7 @@ void shade::OpenGLTexture::_Init()
 		switch (m_ImageData.Compression)
 		{
 		case ImageData::DXTCompression::DXT1:
-			format = (texture_type == "Normal") ? GL_COMPRESSED_RGBA_S3TC_DXT1_EXT : GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT1_EXT; // noramal in srgb for nanosuit only
+			format = (texture_type == "Normal") ? GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT1_EXT : GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT1_EXT; // noramal in srgb for nanosuit only
 			blockSize = 8;
 			break;
 		case ImageData::DXTCompression::DXT3:

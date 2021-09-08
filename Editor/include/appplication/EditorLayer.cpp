@@ -27,24 +27,19 @@ void EditorLayer::OnCreate()
 
 	m_FrameBuffer = shade::FrameBuffer::Create(shade::FrameBuffer::Layout(100, 100, { 
 		shade::FrameBuffer::Texture::Format::RGBA16F, 
-		shade::FrameBuffer::Texture::Format::RGBA16F,
-		shade::FrameBuffer::Texture::Format::RGBA16F,
-		shade::FrameBuffer::Texture::Format::DEPTH24STENCIL8 }));
+		shade::FrameBuffer::Texture::Format::DEPTH24STENCIL8 })); 
+
 	m_InstancedShader = shade::ShadersLibrary::Get("General");
 	m_GridShader = shade::ShadersLibrary::Get("Grid");
 	m_FrustumShader = shade::ShadersLibrary::Get("Frustum");
 	m_BloomShader = shade::ShadersLibrary::Get("Bloom");
-	m_AdvancedBloomShader = shade::ShadersLibrary::Get("AdvancedBloom");
+
 	m_Grid = shade::Grid::Create(0, 0, 0);
 	m_Box = shade::Box::Create(0, 0);
 
 	m_PPBloom			= shade::PPBloom::Create();
-	m_PPAdvancedBloom	= shade::PPAdvancedBloom::Create();
-
 	m_PPBloom->SetInOutTargets(m_FrameBuffer, m_FrameBuffer, m_BloomShader);
-	m_PPAdvancedBloom->SetInOutTargets(m_FrameBuffer, m_FrameBuffer, m_AdvancedBloomShader);
 
-	
 }
 
 void EditorLayer::OnUpdate(const shade::Shared<shade::Scene>& scene, const shade::Timer& deltaTime)
@@ -81,7 +76,7 @@ void EditorLayer::OnRender(const shade::Shared<shade::Scene>& scene, const shade
 		shade::Render::DrawInstances(m_InstancedShader);
 		shade::Render::EndScene();
 		
-		shade::Render::PProcess::Process(m_PPAdvancedBloom);
+		shade::Render::PProcess::Process(m_PPBloom);
 		
 		shade::Render::BeginScene(m_EditorCamera);
 		shade::Render::DrawSubmited(m_GridShader);
@@ -108,12 +103,20 @@ void EditorLayer::OnRender(const shade::Shared<shade::Scene>& scene, const shade
 		ShowWindowBar("File explorer", &EditorLayer::FileExplorer, this, "");
 		ShowWindowBar("Asset explorer", &EditorLayer::AssetsExplorer, this, shade::AssetManager::GetAssetsDataList());
 		ShowWindowBar("Logs", &EditorLayer::LogsExplorer, this);
-		ShowWindowBar("Out", [&]() 
+		ShowWindowBar("Bloom", [&]() 
 			{
+				static glm::vec3 curve = m_PPBloom->GetCurve();
+				static int scaling     = m_PPBloom->GetScaling();
+				static int radius	   = m_PPBloom->GetRadius();
 
-				ImGui::Image(reinterpret_cast<void*>(m_FrameBuffer->GetAttachment(1)),
-					m_SceneViewPort, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
-			
+				if (DrawColor3("Curve", glm::value_ptr(curve)))
+					m_PPBloom->SetCurve(curve);
+				if (ImGui::DragInt("Radius", &radius))
+					m_PPBloom->SetRadius(radius);
+				if (ImGui::DragInt("Scaling", &scaling))
+					m_PPBloom->SetScaling(scaling);
+				ImGui::DragFloat("Threshold", &m_PPBloom->GetThreshold(), 0.001f);
+				
 			});
 		//ShowDemoWindow();
 
@@ -157,7 +160,6 @@ void EditorLayer::OnEvent(const shade::Shared<shade::Scene>& scene, shade::Event
 			m_InstancedShader->Recompile();
 			m_GridShader->Recompile();
 			m_BloomShader->Recompile();
-			m_AdvancedBloomShader->Recompile();
 		}
 		else if (keyCode == shade::Key::F1)
 		{

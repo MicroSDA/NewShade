@@ -7,7 +7,6 @@ layout (            binding = 0) uniform          sampler2D  u_InputSampler;
 layout (rgba16f,	binding = 1) uniform restrict image2D    u_InputImage;
 layout (rgba16f, 	binding = 2) uniform restrict image2D    u_OutputImage; 
 
-
 #define EPSILON 1.0e-4
 vec4 QThreshold(vec4 color, vec3 curve, float threshold, float exposure)
 {
@@ -17,7 +16,7 @@ vec4 QThreshold(vec4 color, vec3 curve, float threshold, float exposure)
     float rq = clamp(br - curve.x, 0.0, curve.y);
     rq = curve.z * rq * rq;
     // Combine and apply the brightness response curve.
-    color *= max(rq, br - threshold) / max(br, EPSILON);
+    color.rgb *= max(rq, br - threshold) / max(br, EPSILON);
 
     return color;
 }
@@ -25,7 +24,7 @@ vec4 QThreshold(vec4 color, vec3 curve, float threshold, float exposure)
 
 vec4 DownsampleBox4(sampler2D texture, vec2 uv, vec2 texelSize, float lod)
 {
-	vec4 offset  = texelSize.xyxy * vec4(-1.0, -1.0, 1.0, 1.0);
+	vec4 offset  = texelSize.xyxy * vec4(-1.0, -1.0, 1.0, 1.0) ;
 	
     vec4 color 	 = textureLod(texture, uv + offset.xy, lod);
     color 		+= textureLod(texture, uv + offset.zy, lod);
@@ -33,6 +32,36 @@ vec4 DownsampleBox4(sampler2D texture, vec2 uv, vec2 texelSize, float lod)
     color 		+= textureLod(texture, uv + offset.zw, lod);
 
     return  color * (1.0 / 4.0);
+}
+
+vec4 DownsampleBox13(sampler2D texture, vec2 uv, vec2 texelSize, float lod)
+{
+	
+	vec4 A = textureLod(texture, uv + texelSize * vec2(-1.0, -1.0), lod);
+    vec4 B = textureLod(texture, uv + texelSize * vec2( 0.0,  0.0), lod);
+    vec4 C = textureLod(texture, uv + texelSize * vec2( 1.0, -1.0), lod);
+    vec4 D = textureLod(texture, uv + texelSize * vec2(-0.5, -0.5), lod);
+    vec4 E = textureLod(texture, uv + texelSize * vec2( 0.5, -0.5), lod);
+    vec4 F = textureLod(texture, uv + texelSize * vec2(-1.0,  0.0), lod);
+
+    vec4 G = textureLod(texture, uv, lod				   	             );
+
+    vec4 H = textureLod(texture, uv + texelSize * vec2( 1.0,  0.0), lod);
+    vec4 I = textureLod(texture, uv + texelSize * vec2(-0.5,  0.5), lod);
+    vec4 J = textureLod(texture, uv + texelSize * vec2( 0.5,  0.5), lod);
+    vec4 K = textureLod(texture, uv + texelSize * vec2(-1.0,  1.0), lod);
+    vec4 L = textureLod(texture, uv + texelSize * vec2( 0.0,  1.0), lod);
+    vec4 M = textureLod(texture, uv + texelSize * vec2( 1.0,  1.0), lod);
+
+    vec2 div = (1.0 / 4.0) * vec2(0.5, 0.125);
+
+    vec4 color  = (D + E + I + J) * div.x;
+		 color += (A + B + G + F) * div.y;
+    	 color += (B + C + H + G) * div.y;
+    	 color += (F + G + L + K) * div.y;
+    	 color += (G + H + M + L) * div.y;
+
+    return color;
 }
 
 vec4 UpsampleBox4(sampler2D texture, vec2 uv, vec2 texelSize, float lod)
@@ -49,7 +78,7 @@ vec4 UpsampleBox4(sampler2D texture, vec2 uv, vec2 texelSize, float lod)
 
 vec4 UpsampleTent(sampler2D texture, vec2 uv, vec2 texelSize, float lod)
 {
-	vec4 offset  = texelSize.xyxy * vec4(1.0, 1.0, -1.0, 1.0) * (1);
+	vec4 offset  = texelSize.xyxy * vec4(1.0, 1.0, -1.0, 1.0) * -(1);
 	
 	vec4 color   = textureLod(texture, uv - offset.xy, lod);
 	color 		+= textureLod(texture, uv - offset.wy, lod) * 2.0;
@@ -100,7 +129,7 @@ subroutine (Stage)
 void HDR(int lod)
 {                   // Related to x, y component execution
    ivec2 position = ivec2(gl_GlobalInvocationID.xy);
-   vec4 color     = QThreshold(imageLoad(u_InputImage, position), vec3(0.2126, 0.7152, 0.0722), 0.5, 2.0);
+   vec4 color     = QThreshold(imageLoad(u_InputImage, position), vec3(0.2126, 0.7152, 0.0722), 0.5, 3.0);
 
    imageStore(u_OutputImage, position, color);
 }
@@ -138,7 +167,7 @@ void Blur(int lod)
    vec2  uv        = GetUV(u_InputSampler, position,   lod);
    vec2  texel     = 1.0 / textureSize(u_InputSampler, lod).xy;
    //vec4  color     = textureLod(u_InputSampler, uv, lod);
-   imageStore(u_OutputImage, position,  vec4(BlurHV(u_InputSampler, uv, texel, lod), 1.0));
+   imageStore(u_OutputImage, position / 2,  vec4(BlurHV(u_InputSampler, uv, texel, lod), 1.0));
 }
 subroutine (Stage)
 void Combine(int lod)

@@ -1,6 +1,6 @@
 #type compute
 #version 460 core
-layout(local_size_x = 16, local_size_y = 16) in;
+layout(local_size_x = 32 local_size_y = 32) in;
 
 layout (rgba8,     binding = 0) uniform coherent  image2D u_InputColor;
 layout (rgba8,     binding = 1) uniform coherent  image2D u_OutputColor;

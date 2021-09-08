@@ -18,13 +18,15 @@ shade::Shared<shade::PPAdvancedBloom> shade::PPAdvancedBloom::Create()
 
 shade::PPAdvancedBloom::PPAdvancedBloom()
 {
-	//m_GaussianUniformBuffer = UniformBuffer::Create(sizeof(PPAdvancedBloom::ShaderData), 2);
+	m_BloomFrameBuffer = shade::FrameBuffer::Create(shade::FrameBuffer::Layout(1, 1,
+		{ shade::FrameBuffer::Texture::Format::RGBA16F,
+		}, m_Scaling));
 	_CalculateKernels(m_Data);
 }
 
 void shade::PPAdvancedBloom::SetInOutTargets(const Shared<FrameBuffer>& input, const Shared<FrameBuffer>& output, const Shared<Shader>& shader)
 {
-	m_InputFrameBuffer = input;
+	m_InputFrameBuffer  = input;
 	m_OutputFrameBuffer = output;
 	m_BloomShader = shader;
 }
@@ -33,6 +35,11 @@ void shade::PPAdvancedBloom::SetSigma(const float& sigma)
 {
 	m_Sigma = sigma;
 	_CalculateKernels(m_Data);
+}
+
+void shade::PPAdvancedBloom::SetScaling(const std::uint32_t& scaling)
+{
+	m_Scaling = scaling;
 }
 
 void shade::PPAdvancedBloom::_CalculateKernels(PPAdvancedBloom::ShaderData& data)

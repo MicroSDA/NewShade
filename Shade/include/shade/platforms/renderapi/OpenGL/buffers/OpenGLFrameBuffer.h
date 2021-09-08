@@ -16,7 +16,8 @@ namespace shade
 		virtual void Resize(const std::uint32_t& width, const std::uint32_t& height) override;
 		virtual Texture::Data GetData(const std::uint32_t& attachment, const std::uint32_t& x, const std::uint32_t& y) const override;
 		virtual std::uint32_t GetAttachment(const std::uint32_t& index) const override;
-		virtual void BindTextureAttachment(const std::uint32_t& index, const std::uint32_t& unit) const override;
+		virtual void BindAsTexture(const std::uint32_t& attachment, const std::uint32_t& unit) const override;
+		virtual void BindAsImage(const std::uint32_t& attachment, const std::uint32_t& binding, const std::uint32_t& mip, const Texture::Format& format, const Texture::Access& access) override;
 	private:
 		virtual void _ClearAttachmentInt(const std::uint32_t& attachment,   const std::int32_t& clearValue = 0) override;
 		virtual void _ClearAttachmentFloat(const std::uint32_t& attachment, const float& clearValue = 0.0f) override;
@@ -31,5 +32,7 @@ namespace shade
 		// Inherited via FrameBuffer
 		virtual const Layout& GetLayout() const override;
 
+
+		// Inherited via FrameBuffer
 	};
 }

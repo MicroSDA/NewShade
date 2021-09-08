@@ -19,6 +19,12 @@ namespace shade
 				RED_INT,
 				DEPTH24STENCIL8
 			};
+			enum class Access : std::uint32_t
+			{
+				Read		= 0x88B8,
+				Write		= 0x88B9,
+				ReadWrite   = 0x88BA
+			};
 			struct Data
 			{
 				Data():
@@ -46,13 +52,14 @@ namespace shade
 		};
 		struct Layout
 		{
-			Layout(const std::uint32_t& width, const std::uint32_t& height, const Attachment& attachments, const bool& swapChainTarget = false):
-				Width(width), Height(height),Attachments(attachments), IsSwapChainTarget(swapChainTarget)
+			Layout(const std::uint32_t& width, const std::uint32_t& height, const Attachment& attachments, const std::uint32_t& mipsCount = 0, const bool& swapChainTarget = false):
+				Width(width), Height(height),Attachments(attachments), MipsCount(mipsCount), IsSwapChainTarget(swapChainTarget)
 			{}
 			std::uint32_t Width = 0, Height = 0;
 			Attachment Attachments;
 			std::uint32_t Samples		= 1;
 			bool IsSwapChainTarget		= false;
+			std::uint32_t				MipsCount = 0;
 		};
 	public:
 		virtual ~FrameBuffer() = default;
@@ -61,7 +68,8 @@ namespace shade
 		virtual void Resize(const std::uint32_t& width, const std::uint32_t& height) = 0;
 		virtual Texture::Data GetData(const std::uint32_t& attachment, const std::uint32_t& x, const std::uint32_t& y) const = 0;
 		virtual std::uint32_t GetAttachment(const std::uint32_t& index) const = 0;
-		virtual void BindTextureAttachment(const std::uint32_t& index, const std::uint32_t& unit) const = 0;
+		virtual void BindAsTexture(const std::uint32_t& attachment, const std::uint32_t& unit) const = 0;
+		virtual void BindAsImage(const std::uint32_t& attachment, const std::uint32_t& binding, const std::uint32_t& mip, const Texture::Format& format, const Texture::Access& access) = 0;
 		template<typename T>
 		void ClearAttachment(const std::uint32_t& index, const T& clearValue);
 		virtual const Layout& GetLayout() const = 0;

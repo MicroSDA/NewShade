@@ -123,13 +123,12 @@ void main()
 	vec4 Color 				= u_sLighting(ToCameraDirection);
 	
 	const float Exposure   = 1.0 * 10;
-	const float Gamma      = 1.0;
+	const float Gamma      = 0.7;
 	// Exposure
 	Color.rgb  = vec3(1.0) - exp(-Color.rgb * Exposure);
 	// Gamma
 	Color.rgb  = pow(Color.rgb, vec3(1.0 / Gamma));
 	
 	FrameBuffer 		= vec4(u_Material.EmissiveColor + Color.rgb, 1.0);
-	FrameBuffer2 = vec4(1,0,0,0);
 }
 // !End of fragment shader

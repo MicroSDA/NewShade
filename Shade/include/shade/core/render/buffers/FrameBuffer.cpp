@@ -14,3 +14,4 @@ shade::Shared<shade::FrameBuffer> shade::FrameBuffer::Create(const Layout& layou
 		SHADE_CORE_ERROR("Undefined render API!"); return nullptr;
 	}
 }
+
