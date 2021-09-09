@@ -62,7 +62,7 @@ void HDR(int lod)
 { 
    ivec2 position = ivec2(gl_GlobalInvocationID.xy);
    // Getting hdr color
-   vec4 color     = QThreshold(imageLoad(u_InputImage, position), u_Data.Curve, u_Data.Threshold, 1.0);
+   vec4 color     = QThreshold(imageLoad(u_InputImage, position), u_Data.Curve, u_Data.Threshold, 5.0);
 
    imageStore(u_OutputImage, position, color);
 };
@@ -70,7 +70,7 @@ subroutine (Stage)
 void Downsample(int lod)
 {
    ivec2 position  = ivec2(gl_GlobalInvocationID.xy);
-   vec2  uv        = GetUV(u_InputSampler, position, lod);
+   vec2  uv       = GetUV(u_InputSampler, position / 2, lod + 1);
    vec2  texel     = 1.0 / textureSize(u_InputSampler, lod).xy;
    vec4  color     = DownsampleBox4(u_InputSampler, uv, texel, lod);
    // position / 2 is size of next mip level
@@ -87,7 +87,8 @@ void Upsample(int lod)
    vec4 first         = UpsampleBox4(u_InputSampler, uv, texel, lod);
    vec4 second        = textureLod(u_InputSampler,   uv,        lod- 1); 
 
-   imageStore(u_OutputImage, position, first + second);
+   
+   imageStore(u_OutputImage, position, vec4(first.rgb + second.rgb, first.a));
   
 };
 subroutine (Stage)
@@ -98,6 +99,18 @@ void Blur(int lod)
    vec2  texel     = 1.0 / textureSize(u_InputSampler, lod).xy;
    imageStore(u_OutputImage, position / 2,  BlurH_V(u_InputSampler, uv, texel, lod));
 };
+
+vec3 ACES(vec3 x)
+ {
+  const float a = 2.51;
+  const float b = 0.03;
+  const float c = 2.43;
+  const float d = 0.59;
+  const float e = 0.14;
+  return clamp((x * (a * x + b)) / (x * (c * x + d) + e), 0.0, 1.0);
+  //return x;
+}
+
 subroutine (Stage)
 void Combine(int lod)
 {
@@ -105,7 +118,7 @@ void Combine(int lod)
      vec4 first     = imageLoad(u_InputImage, position);
      vec4 second    = imageLoad(u_OutputImage,position);
 
-     imageStore(u_OutputImage, position, first + second);
+     imageStore(u_OutputImage, position, vec4(ACES(first.rgb + second.rgb), first.a));
 };
 
 subroutine uniform Stage s_Stage;

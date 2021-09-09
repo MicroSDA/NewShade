@@ -33,7 +33,6 @@ namespace shade
 		glm::vec3				ColorAmbient		= glm::vec3(1.f);
 		glm::vec3				ColorDiffuse		= glm::vec3(1.f);
 		glm::vec3				ColorSpecular		= glm::vec3(1.f);
-		glm::vec3				ColorEmissive		= glm::vec3(0.f);
 		glm::vec3				ColorTransparent	= glm::vec3(-1.f); // Miuse one, so defualt transparent color doesnt exist
 
 		Material3D::Blending	Blend				= Material3D::Blending { Material3D::Blending::Factor::None, Material3D::Blending::Factor::None };
@@ -44,6 +43,7 @@ namespace shade
 			NonShading, Flat, Gouraud, Phong, Billin, Toon, OrenNayer, Minnaert, CookTorance, Fresnel
 		};
 
+		float			Emmisive			= 0.0f;
 		float			Opacity				= 1.0f;
 		float			Shininess			= 1.0f;
 		float			ShininessStrength	= 1.0f;

@@ -187,7 +187,6 @@ void shade::Render::EndScene()
 
 void shade::Render::SubmitInstance(const Shared<Shader>& shader, const Shared<Drawable>& drawable, const Shared<Material3D>& material, const glm::mat4& transform)
 {
-	// WE CAN USE m_sInstancePool[shader.get()] and didnt use find for shader only!!!!!!!!!
 	auto& _shaderPool = m_sInstancePool.find(shader.get());
 	// If new shader encounter
 	if(_shaderPool == m_sInstancePool.end())
@@ -263,8 +262,8 @@ void shade::Render::DrawInstances(const Shared<Shader>& shader)
 				shader->SendFlaot3("u_Material.AmbientColor", glm::value_ptr(instance.second.Material->ColorAmbient));
 				shader->SendFlaot3("u_Material.DiffuseColor", glm::value_ptr(instance.second.Material->ColorDiffuse));
 				shader->SendFlaot3("u_Material.SpecularColor", glm::value_ptr(instance.second.Material->ColorSpecular));
-				shader->SendFlaot3("u_Material.EmissiveColor", glm::value_ptr(instance.second.Material->ColorEmissive));
 				shader->SendFlaot3("u_Material.TransparentColor", glm::value_ptr(instance.second.Material->ColorTransparent));
+				shader->SendFlaot("u_Material.Emissive", instance.second.Material->Emmisive);
 				shader->SendFlaot("u_Material.Shinines", instance.second.Material->Shininess);
 				shader->SendFlaot("u_Material.ShininesStrength", instance.second.Material->ShininessStrength);
 				shader->SendFlaot("u_Material.Opacity", instance.second.Material->Opacity);
@@ -311,8 +310,8 @@ void shade::Render::DrawSubmited(const Shared<Shader>& shader)
 					shader->SendFlaot3("u_Material.AmbientColor",		glm::value_ptr(material->ColorAmbient));
 					shader->SendFlaot3("u_Material.DiffuseColor",		glm::value_ptr(material->ColorDiffuse));
 					shader->SendFlaot3("u_Material.SpecularColor",		glm::value_ptr(material->ColorSpecular));
-					shader->SendFlaot3("u_Material.EmissiveColor",     glm::value_ptr(material->ColorEmissive));
 					shader->SendFlaot3("u_Material.TransparentColor",	glm::value_ptr(material->ColorTransparent));
+					shader->SendFlaot("u_Material.Emissiv",			    material->Emmisive);
 					shader->SendFlaot("u_Material.Shinines",			material->Shininess);
 					shader->SendFlaot("u_Material.ShininesStrength",	material->ShininessStrength);
 					shader->SendFlaot("u_Material.Opacity",				material->Opacity);

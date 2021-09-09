@@ -1,6 +1,7 @@
 #pragma once
 #include "shade/core/layer/Layer.h"
 #include "shade/core/layer/ImGui/ImGuiThemeEditor.h"
+
 #include <ImGui/imgui.h>
 #include <ImGuizmo/ImGuizmo.h>
 
@@ -48,6 +49,8 @@ namespace shade
 		bool DrawFlaot(const char* lable, float* data, const float& reset = 0.0f, const float& min = -FLT_MAX, const float& max = FLT_MAX, const float& cw1 = 140.0f, const float& cw2 = 0.0f);
 		bool DrawColor3(const char* title, float* data, const float& cw1 = 80.0f, const float& cw2 = 0);
 		bool DrawImGuizmo(glm::mat4& transform, const Shared<Camera>& camera, const ImGuizmo::OPERATION& operation, const float& x, const float& y, const float& width, const float& height);
+		int DrawCurve(const char* label, float* values, int points_count, const ImVec2& editor_size, ImU32 flags,
+			int* new_count);
 		/*template<typename T, typename ...Args, typename R = std::result_of<T(Args&&...)>::type>
 		auto ShowWindowBar(const char* title, T callback, Args&& ...args)
 		{

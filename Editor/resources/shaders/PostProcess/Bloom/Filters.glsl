@@ -13,16 +13,17 @@ vec4 QThreshold(vec4 color, vec3 curve, float threshold, float exposure)
     color.rgb *= max(rq, br - threshold) / max(br, EPSILON);
     return color *= exposure;
 };
+
 vec4 DownsampleBox4(sampler2D texture, vec2 uv, vec2 texelSize, float lod)
 {
 	vec4 offset  = texelSize.xyxy * vec4(-1.0, -1.0, 1.0, 1.0);
 	
     vec4 color 	 = textureLod(texture, uv + offset.xy, lod);
-    color 		+= textureLod(texture, uv + offset.zy, lod);
-    color 		+= textureLod(texture, uv + offset.xw, lod);
-    color 		+= textureLod(texture, uv + offset.zw, lod);
+    color.rgb 	+= textureLod(texture, uv + offset.zy, lod).rgb;
+    color.rgb	+= textureLod(texture, uv + offset.xw, lod).rgb;
+    color.rgb 	+= textureLod(texture, uv + offset.zw, lod).rgb;
 
-    return  color * (1.0 / 4.0);
+    return  vec4(color.rgb * (1.0 / 4.0), color.a);
 };
 vec4 DownsampleBox13(sampler2D texture, vec2 uv, vec2 texelSize, float lod)
 {
@@ -55,14 +56,14 @@ vec4 DownsampleBox13(sampler2D texture, vec2 uv, vec2 texelSize, float lod)
 };
 vec4 UpsampleBox4(sampler2D texture, vec2 uv, vec2 texelSize, float lod)
 {
-	vec4 offset  = texelSize.xyxy * vec4(-1.0, -1.0, 1.0, 1.0) * (2.0 * 0.5);
+	vec4 offset  = texelSize.xyxy * vec4(-1.0, -1.0, 1.0, 1.0) * (1.0 * 0.5);
 	
     vec4 color 	 = textureLod(texture, uv + offset.xy, lod);
-    color 		+= textureLod(texture, uv + offset.zy, lod);
-    color 		+= textureLod(texture, uv + offset.xw, lod);
-    color 		+= textureLod(texture, uv + offset.zw, lod);
+    color.rgb 	+= textureLod(texture, uv + offset.zy, lod).rgb;
+    color.rgb	+= textureLod(texture, uv + offset.xw, lod).rgb;
+    color.rgb 	+= textureLod(texture, uv + offset.zw, lod).rgb;
 
-    return  color * (1.0 / 4.0);
+    return  vec4(color.rgb * (1.0 / 4.0), color.a);
 };
 vec4 UpsampleTent(sampler2D texture, vec2 uv, vec2 texelSize, float lod)
 {

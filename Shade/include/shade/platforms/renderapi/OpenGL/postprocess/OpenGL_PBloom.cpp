@@ -53,12 +53,12 @@ void shade::OpenGL_PBloom::Process()
 		m_BloomShader->DispatchCompute(ceil(groups[0] / (i + 1.f)), ceil(groups[1] / (i + 1.f)), 1);
 		glMemoryBarrier(GL_ALL_BARRIER_BITS);
 		/* Blur */
-		m_BloomFrameBuffer->BindAsTexture(0, 0);
+		/*m_BloomFrameBuffer->BindAsTexture(0, 0);
 		m_BloomFrameBuffer->BindAsImage(0, 2, i + 1, FrameBuffer::Texture::Format::RGBA16F, FrameBuffer::Texture::Access::Write);
 		m_BloomShader->SelectSubrutine("s_Stage", "Blur", Shader::Type::Compute);
 		m_BloomShader->ExecuteSubrutines();
 		m_BloomShader->DispatchCompute(ceil(groups[0] / (i + 1.f)), ceil(groups[1] / (i + 1.f)), 1);
-		glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+		glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);*/
 	}
 	/* Upsampling */
 	for (auto i = m_Scaling; i > 0; i--)

@@ -5,7 +5,7 @@
 #include <ImGui/imgui_internal.h>
 #include <ImGui/backends/imgui_impl_glfw.h>
 #include <ImGui/backends/imgui_impl_opengl3.h>
-
+//#include "shade/core/layer/ImGui/ImGuiCurve.hpp"
 #include <GLFW/glfw3.h>
 #include <glad/glad.h>
 
@@ -15,7 +15,7 @@ shade::ImGuiLayer::ImGuiLayer(const std::string& name) :
 	auto context = ImGui::CreateContext();
 	ImGui::SetCurrentContext(context);
 	//SetupImGuiStyle(true, false);
-
+	
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
 	io.DisplaySize = ImVec2((float)shade::Application::Get().GetWindow()->GetWidth(), (float)shade::Application::Get().GetWindow()->GetHeight());
 	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;       // Enable Keyboard Controls
@@ -251,4 +251,10 @@ bool shade::ImGuiLayer::DrawImGuizmo(glm::mat4& transform, const Shared<Camera>&
 		return true;
 	else
 		return false;
+}
+
+int shade::ImGuiLayer::DrawCurve(const char* label, float* values, int points_count, const ImVec2& editor_size, ImU32 flags, int* new_count)
+{
+	//return ImGui::CurveEditor(label, values, points_count, editor_size, flags, new_count);
+	return 0;
 }

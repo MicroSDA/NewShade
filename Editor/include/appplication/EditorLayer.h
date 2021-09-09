@@ -34,11 +34,11 @@ private:
 	shade::Shared<shade::Shader> m_GridShader;
 	shade::Shared<shade::Shader> m_FrustumShader;
 	shade::Shared<shade::Shader> m_BloomShader;
-	shade::Shared<shade::Shader> m_AdvancedBloomShader;
+
 
 	/*Post process*/
 	shade::Shared<shade::PPBloom> m_PPBloom;
-	shade::Shared<shade::PPAdvancedBloom> m_PPAdvancedBloom;
+
 
 	shade::Shared<shade::Grid>   m_Grid;
 	shade::Shared<shade::Box>    m_Box;

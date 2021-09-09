@@ -41,11 +41,11 @@ bool shade::Material3D::Serialize() const
 		shade::util::Binarizer::Write(file, *glm::value_ptr(ColorAmbient),		3); // RGB;
 		shade::util::Binarizer::Write(file, *glm::value_ptr(ColorDiffuse),		3); // RGB;
 		shade::util::Binarizer::Write(file, *glm::value_ptr(ColorSpecular),		3); // RGB;
-		shade::util::Binarizer::Write(file, *glm::value_ptr(ColorEmissive),		3); // RGB;
 		shade::util::Binarizer::Write(file, *glm::value_ptr(ColorTransparent),	3); // RGB;
 
 		shade::util::Binarizer::Write(file, Blend); // Probably need cast to uint32 directly
 		shade::util::Binarizer::Write(file, WireFrame); 
+		shade::util::Binarizer::Write(file, Emmisive);
 		shade::util::Binarizer::Write(file, Opacity); 
 		shade::util::Binarizer::Write(file, Shininess);
 		shade::util::Binarizer::Write(file, ShininessStrength);
@@ -76,11 +76,11 @@ bool shade::Material3D::Deserialize()
 			shade::util::Binarizer::Read(file, *glm::value_ptr(ColorAmbient),		3); // RGB;
 			shade::util::Binarizer::Read(file, *glm::value_ptr(ColorDiffuse),		3); // RGB;
 			shade::util::Binarizer::Read(file, *glm::value_ptr(ColorSpecular),		3); // RGB;
-			shade::util::Binarizer::Read(file, *glm::value_ptr(ColorEmissive),		3); // RGB;
 			shade::util::Binarizer::Read(file, *glm::value_ptr(ColorTransparent),	3); // RGB;
 
 			shade::util::Binarizer::Read(file, Blend); // Probably need cast to uint32 directly
 			shade::util::Binarizer::Read(file, WireFrame);
+			shade::util::Binarizer::Read(file, Emmisive);
 			shade::util::Binarizer::Read(file, Opacity);
 			shade::util::Binarizer::Read(file, Shininess);
 			shade::util::Binarizer::Read(file, ShininessStrength);

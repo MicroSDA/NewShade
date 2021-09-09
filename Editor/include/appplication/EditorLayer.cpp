@@ -65,6 +65,7 @@ void EditorLayer::OnUpdate(const shade::Shared<shade::Scene>& scene, const shade
 void EditorLayer::OnRender(const shade::Shared<shade::Scene>& scene, const shade::Timer& deltaTime)
 {
 	
+	
 	/* RUN AND SEE NICE BUG !!!!!!!!*/
 	/* онундс онрлнс врн люрепхюкю мерс, рейярсп рнфе, мювхмючряъ опхйнкш*/
 	{
@@ -105,12 +106,13 @@ void EditorLayer::OnRender(const shade::Shared<shade::Scene>& scene, const shade
 		ShowWindowBar("Logs", &EditorLayer::LogsExplorer, this);
 		ShowWindowBar("Bloom", [&]() 
 			{
+
+				DrawCurve("Curve", glm::value_ptr(m_PPBloom->GetCurve()), 0, { 0.5, 0.5 }, 0, nullptr);
 				static glm::vec3 curve = m_PPBloom->GetCurve();
 				static int scaling     = m_PPBloom->GetScaling();
 				static int radius	   = m_PPBloom->GetRadius();
 
-				if (DrawColor3("Curve", glm::value_ptr(curve)))
-					m_PPBloom->SetCurve(curve);
+				
 				if (ImGui::DragInt("Radius", &radius))
 					m_PPBloom->SetRadius(radius);
 				if (ImGui::DragInt("Scaling", &scaling))
@@ -568,11 +570,11 @@ void EditorLayer::Model3dComponent(shade::Entity& entity)
 				{
 					DrawTreeNode("Material", [&](shade::Material3D* material)
 						{
-
+							// TODO FIX FLAOT!!
 							DrawColor3("Ambinet",			glm::value_ptr(material->ColorAmbient));
 							DrawColor3("Diffuse",			glm::value_ptr(material->ColorDiffuse));
 							DrawColor3("Specular",			glm::value_ptr(material->ColorSpecular));
-							DrawColor3("Emissive",			glm::value_ptr(material->ColorEmissive));
+							DrawFlaot("Emissive",			&material->Emmisive);
 							DrawFlaot("Shininess",			&material->Shininess);
 							DrawFlaot("Shininess strength", &material->ShininessStrength);
 							DrawFlaot("Opacity",			&material->Opacity);

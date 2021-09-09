@@ -40,7 +40,7 @@ void shade::PPBloom::SetSigma(const float& sigma)
 
 void shade::PPBloom::SetScaling(const std::uint32_t& scaling)
 {
-	if (scaling <= 8)
+	if (scaling <= 10)
 		m_Scaling = scaling;
 	else
 		SHADE_CORE_WARNING("Wrong scaling value, max: 8, provided: {0}.", scaling);
