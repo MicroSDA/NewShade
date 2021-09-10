@@ -4,14 +4,14 @@
 /* Quadratic threshold */
 vec4 QThreshold(vec4 color, vec3 curve, float threshold, float exposure)
 {
-	//color *= exposure;
+	color.rgb;
 	float br =  max(max(color.r, color.g), color.b);
     // Under-threshold part: quadratic curve
     float rq = clamp(br - curve.x, 0.0, curve.y);
-    rq = curve.z * rq * rq;
+    rq = curve.z * (rq * rq);
     // Combine and apply the brightness response curve.
     color.rgb *= max(rq, br - threshold) / max(br, EPSILON);
-    return color *= exposure;
+    return color;
 };
 
 vec4 DownsampleBox4(sampler2D texture, vec2 uv, vec2 texelSize, float lod)
@@ -27,7 +27,7 @@ vec4 DownsampleBox4(sampler2D texture, vec2 uv, vec2 texelSize, float lod)
 };
 vec4 DownsampleBox13(sampler2D texture, vec2 uv, vec2 texelSize, float lod)
 {
-	
+	//texelSize *= vec2(1.0, -1.0) * (50.5);
 	vec4 A = textureLod(texture, uv + texelSize * vec2(-1.0, -1.0), lod);
     vec4 B = textureLod(texture, uv + texelSize * vec2( 0.0,  0.0), lod);
     vec4 C = textureLod(texture, uv + texelSize * vec2( 1.0, -1.0), lod);
@@ -67,7 +67,7 @@ vec4 UpsampleBox4(sampler2D texture, vec2 uv, vec2 texelSize, float lod)
 };
 vec4 UpsampleTent(sampler2D texture, vec2 uv, vec2 texelSize, float lod)
 {
-	vec4 offset  = texelSize.xyxy * vec4(1.0, 1.0, -1.0, 1.0) * (2);
+	vec4 offset  = texelSize.xyxy * vec4(1.0, 1.0, -1.0, 0.0) * (1);
 	
 	vec4 color   = textureLod(texture, uv - offset.xy, lod);
 	color 		+= textureLod(texture, uv - offset.wy, lod) * 2.0;
@@ -82,4 +82,13 @@ vec4 UpsampleTent(sampler2D texture, vec2 uv, vec2 texelSize, float lod)
 	color 		+= textureLod(texture, uv + offset.xy, lod);
 	
 	return color * (1.0 / 16.0);
+};
+vec3 ACES(vec3 x)
+{
+  const float a = 2.51;
+  const float b = 0.03;
+  const float c = 2.43;
+  const float d = 0.59;
+  const float e = 0.14;
+  return clamp((x * (a * x + b)) / (x * (c * x + d) + e), 0.0, 1.0);
 };

@@ -66,7 +66,7 @@ namespace shade
 			colors[ImGuiCol_FrameBgHovered] = Hovered(colors[ImGuiCol_FrameBg]);
 			colors[ImGuiCol_FrameBgActive] = Active(colors[ImGuiCol_FrameBg]);
 			colors[ImGuiCol_TitleBg] = GetColor(BackGroundColor, Alpha80);
-			colors[ImGuiCol_TitleBgActive] = Active(colors[ImGuiCol_TitleBg]);
+			colors[ImGuiCol_TitleBgActive] = GetColor(BackGroundColor, Alpha80);
 			colors[ImGuiCol_TitleBgCollapsed] = Collapsed(colors[ImGuiCol_TitleBg]);
 			colors[ImGuiCol_MenuBarBg] = Darken(GetColor(BackGroundColor), 0.2f);
 			colors[ImGuiCol_ScrollbarBg] = Lighten(GetColor(BackGroundColor, Alpha50), 0.4f);
@@ -112,10 +112,10 @@ namespace shade
 			style.WindowRounding = 6.0f;
 			style.FramePadding = ImVec2(5, 2);
 			style.FrameRounding = 3.0f;
-			style.ItemSpacing = ImVec2(7, 1);
+			style.ItemSpacing = ImVec2(4, 2);
 			style.ItemInnerSpacing = ImVec2(1, 1);
 			style.TouchExtraPadding = ImVec2(0, 0);
-			style.IndentSpacing = 6.0f;
+			style.IndentSpacing = 1.0f;
 			style.ScrollbarSize = 12.0f;
 			style.ScrollbarRounding = 16.0f;
 			style.GrabMinSize = 20.0f;
@@ -123,6 +123,8 @@ namespace shade
 			style.WindowTitleAlign.x = 0.50f;
 			style.FrameBorderSize = 0.0f;
 			style.WindowBorderSize = 1.0f;
+			style.TabRounding = 3.0f;
+			style.WindowMenuButtonPosition = ImGuiDir_None;
 		}
 
 	};

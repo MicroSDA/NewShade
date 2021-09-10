@@ -11,7 +11,7 @@ void shade::OpenGL_PBloom::Process()
 
 	if (m_BloomFrameBuffer->GetLayout().Width != m_InputFrameBuffer->GetLayout().Width ||
 		m_BloomFrameBuffer->GetLayout().Height != m_InputFrameBuffer->GetLayout().Height ||
-		m_BloomFrameBuffer->GetLayout().MipsCount != m_Scaling)
+		m_BloomFrameBuffer->GetLayout().MipsCount != m_Samples)
 	{
 		m_BloomFrameBuffer = shade::FrameBuffer::Create(shade::FrameBuffer::Layout(
 			m_InputFrameBuffer->GetLayout().Width,
@@ -19,18 +19,14 @@ void shade::OpenGL_PBloom::Process()
 			{
 				shade::FrameBuffer::Texture::Format::RGBA16F,
 			},
-			m_Scaling));
+			m_Samples));
 	}
 
 
 	m_BloomShader->Bind();
 
-	m_BloomShader->SendFlaot3("u_Data.Curve",    glm::value_ptr(m_Curve));
-	m_BloomShader->SendFlaot("u_Data.Threshold", m_Threshold);
-	m_BloomShader->SendInt("u_Data.BlurRadius",  m_Radius);
-	for (auto i = 0u; i < m_Radius; i++)
-		m_BloomShader->SendFlaot("u_Data.Kernels[" + std::to_string(i) + "]", m_Kernesl[i]);
-	glMemoryBarrier(GL_ALL_BARRIER_BITS);
+	m_BloomShader->SendFlaot3("u_Data.Curve",     glm::value_ptr(GetCurve()));
+	m_BloomShader->SendFlaot( "u_Data.Threshold", m_Threshold);
 
 	/* Getting hdr picture */
 	m_InputFrameBuffer->BindAsImage(0, 1, 0, FrameBuffer::Texture::Format::RGBA16F, FrameBuffer::Texture::Access::Read);
@@ -42,7 +38,7 @@ void shade::OpenGL_PBloom::Process()
 	///////////////////////////////////////
 
 	/* Downsampling */
-	for (auto i = 0; i < m_Scaling; i++)
+	for (auto i = 0; i < m_Samples; i++)
 	{
 		/* Downsample */
 		m_BloomShader->SendInt("u_Lod", i);
@@ -52,16 +48,9 @@ void shade::OpenGL_PBloom::Process()
 		m_BloomShader->ExecuteSubrutines();
 		m_BloomShader->DispatchCompute(ceil(groups[0] / (i + 1.f)), ceil(groups[1] / (i + 1.f)), 1);
 		glMemoryBarrier(GL_ALL_BARRIER_BITS);
-		/* Blur */
-		/*m_BloomFrameBuffer->BindAsTexture(0, 0);
-		m_BloomFrameBuffer->BindAsImage(0, 2, i + 1, FrameBuffer::Texture::Format::RGBA16F, FrameBuffer::Texture::Access::Write);
-		m_BloomShader->SelectSubrutine("s_Stage", "Blur", Shader::Type::Compute);
-		m_BloomShader->ExecuteSubrutines();
-		m_BloomShader->DispatchCompute(ceil(groups[0] / (i + 1.f)), ceil(groups[1] / (i + 1.f)), 1);
-		glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);*/
 	}
 	/* Upsampling */
-	for (auto i = m_Scaling; i > 0; i--)
+	for (auto i = m_Samples; i > 0; i--)
 	{
 		m_BloomShader->SendInt("u_Lod", i);
 		m_BloomFrameBuffer->BindAsTexture(0, 0);

@@ -9,8 +9,8 @@ EditorLayer::EditorLayer(const std::string& name) :
 	shade::ImGuiLayer(name)
 {
 	//shade::ImGuiThemeEditor::SetColors(0x21272977, 0xFDFFFCFF, 0x621234FF, 0x13534CFF, 0x621234FF);
-	shade::ImGuiThemeEditor::SetColors(0x121612FF, 0xFDFFFCFF, 0x96223FFF, 0x13534CFF, 0x621234FF);
-	//shade::ImGuiThemeEditor::SetFont("resources/font/Roboto-Regular.ttf", 16.0);
+	shade::ImGuiThemeEditor::SetColors(0x202020FF, 0xFAFFFDFF, 0x464646FF, 0x9C1938CC, 0xFFC307B1);
+	shade::ImGuiThemeEditor::SetFont("resources/font/Roboto-Medium.ttf", 14.5);
 	shade::ImGuiThemeEditor::ApplyTheme();
 }
 
@@ -65,28 +65,6 @@ void EditorLayer::OnUpdate(const shade::Shared<shade::Scene>& scene, const shade
 void EditorLayer::OnRender(const shade::Shared<shade::Scene>& scene, const shade::Timer& deltaTime)
 {
 	
-	
-	/* RUN AND SEE NICE BUG !!!!!!!!*/
-	/* ÏÎÕÎÄÓ ÏÎÒÌÎÓ ×ÒÎ ÌÀÒÅÐÈÀËÀ ÍÅÒÓ, ÒÅÊÑÒÓÐ ÒÎÆÅ, ÍÀ×ÈÍÀÞÒÑß ÏÐÈÊÎËÛ*/
-	{
-		auto environments = scene->GetEntities().view<shade::EnvironmentComponent>();
-		shade::Render::Begin(m_FrameBuffer);
-
-
-		shade::Render::BeginScene(m_EditorCamera, environments.raw(), environments.size());
-		shade::Render::DrawInstances(m_InstancedShader);
-		shade::Render::EndScene();
-		
-		shade::Render::PProcess::Process(m_PPBloom);
-		
-		shade::Render::BeginScene(m_EditorCamera);
-		shade::Render::DrawSubmited(m_GridShader);
-		shade::Render::DrawSubmited(m_FrustumShader);
-		shade::Render::EndScene();
-
-		shade::Render::End(m_FrameBuffer);
-	}
-
 	if (ImGui::Begin("DockSpace", (bool*)(nullptr), m_WindowFlags))
 	{
 		//ImGui::PopStyleVar();
@@ -104,26 +82,30 @@ void EditorLayer::OnRender(const shade::Shared<shade::Scene>& scene, const shade
 		ShowWindowBar("File explorer", &EditorLayer::FileExplorer, this, "");
 		ShowWindowBar("Asset explorer", &EditorLayer::AssetsExplorer, this, shade::AssetManager::GetAssetsDataList());
 		ShowWindowBar("Logs", &EditorLayer::LogsExplorer, this);
-		ShowWindowBar("Bloom", [&]() 
-			{
+		ShowWindowBar("Render", &EditorLayer::Render, this);
 
-				DrawCurve("Curve", glm::value_ptr(m_PPBloom->GetCurve()), 0, { 0.5, 0.5 }, 0, nullptr);
-				static glm::vec3 curve = m_PPBloom->GetCurve();
-				static int scaling     = m_PPBloom->GetScaling();
-				static int radius	   = m_PPBloom->GetRadius();
-
-				
-				if (ImGui::DragInt("Radius", &radius))
-					m_PPBloom->SetRadius(radius);
-				if (ImGui::DragInt("Scaling", &scaling))
-					m_PPBloom->SetScaling(scaling);
-				ImGui::DragFloat("Threshold", &m_PPBloom->GetThreshold(), 0.001f);
-				
-			});
-		//ShowDemoWindow();
+		ShowDemoWindow();
 
 	} ImGui::End(); // Begin("DockSpace")
-	
+
+	{
+		auto environments = scene->GetEntities().view<shade::EnvironmentComponent>();
+		shade::Render::Begin(m_FrameBuffer);
+
+
+		shade::Render::BeginScene(m_EditorCamera, environments.raw(), environments.size());
+		shade::Render::DrawInstances(m_InstancedShader);
+		shade::Render::EndScene();
+
+		shade::Render::PProcess::Process(m_PPBloom);
+
+		shade::Render::BeginScene(m_EditorCamera);
+		shade::Render::DrawSubmited(m_GridShader);
+		shade::Render::DrawSubmited(m_FrustumShader);
+		shade::Render::EndScene();
+
+		shade::Render::End(m_FrameBuffer);
+	}
 }
 
 void EditorLayer::OnDelete()
@@ -615,6 +597,23 @@ void EditorLayer::Model3dComponent(shade::Entity& entity)
 		ImGui::TreePop();
 	}
 }
+
+void EditorLayer::Render()
+{
+	if (ImGui::TreeNodeEx("Bloom", ImGuiTreeNodeFlags_Framed))
+	{
+		static bool isEnabled = false;
+		ImGui::Checkbox("Enable", &isEnabled);
+		DrawFlaot("Threshold", &m_PPBloom->GetThreshold(), 1.f, 0.f, FLT_MAX, 80.f);
+		DrawFlaot("Knee", &m_PPBloom->GetKnee(), 1.f, 0.f, FLT_MAX, 80.f);
+		DrawInt("Samples", (int*)&m_PPBloom->GetSamplesCount(), 5, 1, 10, 80.f);
+
+		DrawCurve("Curve", glm::value_ptr(m_PPBloom->GetCurve()), 3, ImVec2{ ImGui::GetContentRegionAvail().x, 70 });
+
+		ImGui::TreePop();
+	}
+}
+
 void EditorLayer::EnvironmentComponent(shade::Entity& entity)
 {
 	auto& environment = entity.GetComponent<shade::EnvironmentComponent>();

@@ -1,11 +1,11 @@
 #include "shade_pch.h"
 #include "ImGuiLayer.h"
 
-
+//#include "shade/core/layer/ImGui/ImGuiCurve.h"
 #include <ImGui/imgui_internal.h>
 #include <ImGui/backends/imgui_impl_glfw.h>
 #include <ImGui/backends/imgui_impl_opengl3.h>
-//#include "shade/core/layer/ImGui/ImGuiCurve.hpp"
+
 #include <GLFW/glfw3.h>
 #include <glad/glad.h>
 
@@ -211,7 +211,25 @@ bool shade::ImGuiLayer::DrawFlaot(const char* lable, float* data, const float& r
 	ImGui::Text(lable);
 	ImGui::NextColumn();
 	ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth());
-	bool isUsed = ImGui::DragFloat("##value", data, 0.001f, -FLT_MAX, FLT_MAX, "%.5f");
+	bool isUsed = ImGui::DragFloat("##value", data, 0.001f, min, max, "%.5f");
+	ImGui::PopItemWidth();
+	ImGui::Columns(1);
+	ImGui::PopID();
+
+	return isUsed;
+}
+bool shade::ImGuiLayer::DrawInt(const char* lable, int* data, const int& reset, const int& min, const int& max, const float& cw1, const float& cw2)
+{
+	ImGui::PushID(lable);
+	ImGui::Columns(2);
+	ImGui::SetColumnWidth(0, cw1);
+	if (cw2 > 0.0f)
+		ImGui::SetColumnWidth(1, cw2);
+
+	ImGui::Text(lable);
+	ImGui::NextColumn();
+	ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth());
+	bool isUsed = ImGui::DragInt("##value", data, 0.05f, min, max, "%.d");
 	ImGui::PopItemWidth();
 	ImGui::Columns(1);
 	ImGui::PopID();
@@ -253,8 +271,8 @@ bool shade::ImGuiLayer::DrawImGuizmo(glm::mat4& transform, const Shared<Camera>&
 		return false;
 }
 
-int shade::ImGuiLayer::DrawCurve(const char* label, float* values, int points_count, const ImVec2& editor_size, ImU32 flags, int* new_count)
+int shade::ImGuiLayer::DrawCurve(const std::string& label, const float* values, int points_count, const ImVec2& editor_size)
 {
-	//return ImGui::CurveEditor(label, values, points_count, editor_size, flags, new_count);
+	ImGui::PlotLines(std::string("##" + label).c_str(), values, points_count, 0, label.c_str(), 0.0f, FLT_MAX, editor_size, 4);
 	return 0;
 }

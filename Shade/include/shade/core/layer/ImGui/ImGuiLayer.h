@@ -47,10 +47,10 @@ namespace shade
 		void DrawImage(const std::uint32_t& renderId, const float& width, const float& height, const bool& tooltip = false);
 		bool DrawVec3F(const char* title, float* data, const float& resetValue = 0.0f, const float& min = -FLT_MAX, const float& max = FLT_MAX, const float& colw1 = 80.0f);
 		bool DrawFlaot(const char* lable, float* data, const float& reset = 0.0f, const float& min = -FLT_MAX, const float& max = FLT_MAX, const float& cw1 = 140.0f, const float& cw2 = 0.0f);
+		bool DrawInt(const char* lable,   int* data, const int& reset = 0.0f, const int& min = -FLT_MAX, const int& max = FLT_MAX, const float& cw1 = 140.0f, const float& cw2 = 0.0f);
 		bool DrawColor3(const char* title, float* data, const float& cw1 = 80.0f, const float& cw2 = 0);
 		bool DrawImGuizmo(glm::mat4& transform, const Shared<Camera>& camera, const ImGuizmo::OPERATION& operation, const float& x, const float& y, const float& width, const float& height);
-		int DrawCurve(const char* label, float* values, int points_count, const ImVec2& editor_size, ImU32 flags,
-			int* new_count);
+		int DrawCurve(const std::string& label, const float* values, int points_count, const ImVec2& editor_size);
 		/*template<typename T, typename ...Args, typename R = std::result_of<T(Args&&...)>::type>
 		auto ShowWindowBar(const char* title, T callback, Args&& ...args)
 		{
@@ -78,7 +78,7 @@ namespace shade
 			if (entity.HasComponent<Comp>())
 			{
 				ImGui::AlignTextToFramePadding();
-				if (ImGui::TreeNodeEx(title, ImGuiTreeNodeFlags_KeppFramedWhenOpen))
+				if (ImGui::TreeNodeEx(title, ImGuiTreeNodeFlags_Framed))
 				{
 					if (!RemoveComponent<Comp>(title, entity))
 						std::invoke(callback, std::forward<Args>(args)...);

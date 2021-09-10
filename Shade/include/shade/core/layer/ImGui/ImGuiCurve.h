@@ -13,7 +13,7 @@ static const float NODE_SLOT_RADIUS = 4.0f;
 namespace ImGui
 {
 
-    static ImVec2 node_pos;
+    static ImVec2  node_pos;
     static ImGuiID last_node_id;
 
     enum class CurveEditorFlags

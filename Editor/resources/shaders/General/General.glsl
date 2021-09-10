@@ -122,7 +122,7 @@ void main()
 	// Do lighting calculation;
 	vec4 Color 				= u_sLighting(ToCameraDirection);
 	
-	const float Exposure   = 1.0 * 9;
+	const float Exposure   = 1.0 * 10;
 	const float Gamma      = 0.6;
 	// Exposure
 	Color.rgb  = vec3(1.0) - exp(-Color.rgb * Exposure);
