@@ -37,21 +37,21 @@ layout(std140, binding = 0) uniform UCamera
     Camera u_Camera;
 };
 
-vec4 Grid(vec3 fragPos3D, float scale, bool drawAxis) 
+vec4 Grid(vec3 gridColor, vec3 fragPos3D, float scale, bool drawAxis) 
 {
     vec2 coord = fragPos3D.xz * scale;
     vec2 derivative = fwidth(coord);
     vec2 grid = abs(fract(coord - 0.5) - 0.5) / derivative;
     float line = min(grid.x, grid.y);
-    float minimumz = min(derivative.y, 1);
-    float minimumx = min(derivative.x, 1);
-    vec4 color = vec4(0.2, 0.2, 0.2, 1.0 - min(line, 1));
+    float minimumz = min(derivative.y, 0.1);
+    float minimumx = min(derivative.x, 0.1);
+    vec4 color = vec4(gridColor.rgb, 1.0 - min(line, 1));
     // z axis
-    if(fragPos3D.x > - 10 * minimumx && fragPos3D.x < 5 * minimumx)
-       color.rgb = vec3(0.0, 0.0, 1.0);
+    if(fragPos3D.x > - 3 * minimumx && fragPos3D.x < 3 * minimumx)
+       color.rgb = vec3(0.0, 0.0, 2.0);
     // x axis
-    if(fragPos3D.z > - 10 * minimumz && fragPos3D.z < 5 * minimumz)
-        color.rgb = vec3(1.0, 0.0, 0.0);
+    if(fragPos3D.z > - 3 * minimumz && fragPos3D.z < 3 * minimumz)
+        color.rgb = vec3(2.0, 0.0, 0.0);
     return color;
 }
 
@@ -81,11 +81,12 @@ void main()
 	float t             = -a_Near.y / (a_Far.y - a_Near.y);
     vec3 fragPos3D      = a_Near + t * (a_Far - a_Near);
     float linearDepth   = ComputeLinearDepth(fragPos3D);
-    float fading        = max(0, (0.5 - linearDepth));
+    float fading        = max(0, (0.4 - linearDepth));
 
 
     gl_FragDepth        = ComputeDepth(fragPos3D);
-    FrameBuffer         = (Grid(fragPos3D, 0.01, true) + Grid(fragPos3D, 0.1, true))* float(t > 0); 
+    vec3 gridColor      =  vec3(0.1, 0.1, 0.1);
+    FrameBuffer         = (Grid(gridColor, fragPos3D, 0.1, true) + Grid(gridColor, fragPos3D, 1.0, true))* float(t > 0); 
 	FrameBuffer.a      *= fading;
 
 	if(FrameBuffer.a <= 0.2)

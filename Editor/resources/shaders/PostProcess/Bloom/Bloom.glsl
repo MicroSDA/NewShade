@@ -71,6 +71,7 @@ void Combine(int lod)
      vec4 second    = imageLoad(u_OutputImage,position);
 
      imageStore(u_OutputImage, position, vec4(ACES(first.rgb + second.rgb), first.a));
+     //imageStore(u_OutputImage, position, first + second);
 };
 
 subroutine uniform Stage s_Stage;

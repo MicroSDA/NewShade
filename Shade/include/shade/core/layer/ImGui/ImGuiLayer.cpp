@@ -166,7 +166,7 @@ bool shade::ImGuiLayer::DrawVec3F(const char* title, float* data, const float& r
 	ImGui::Text(title);
 	ImGui::NextColumn();
 
-	if (ImGui::Button("X")) { data[0] = resetValue; isUsed = true; }
+	/*if (ImGui::Button("X")) { data[0] = resetValue; isUsed = true; }
 
 	const ImGuiStyle& style = ImGui::GetStyle();
 	ImVec2 label_size = ImGui::CalcTextSize("X", NULL, true);
@@ -194,7 +194,22 @@ bool shade::ImGuiLayer::DrawVec3F(const char* title, float* data, const float& r
 	if (ImGui::DragFloat("##Z", &data[2], 0.01f, min, max, "%.2f"))
 		isUsed = true;
 
-	ImGui::PopItemWidth();
+	ImGui::PopItemWidth();*/
+
+	const ImGuiStyle& style = ImGui::GetStyle();
+	//ImVec2 label_size		= ImGui::CalcTextSize("X", NULL, true);
+	//ImVec2 button_size		= ImGui::CalcItemSize(ImVec2(0, 0), label_size.x + style.ItemSpacing.x, label_size.y + style.ItemSpacing.y);
+	float width				= (ImGui::GetContentRegionAvailWidth() / 3.0) - ((style.ItemSpacing.x) * 6.0);
+
+	ImGui::PushStyleColor(ImGuiCol_Button, ImVec4{ 0.753f, 0.000f, 0.099f, 0.709f });	ImGui::Button("X"); ImGui::PopStyleColor();
+	ImGui::SameLine();  ImGui::PushItemWidth(width); ImGui::DragFloat("##X", &data[0]); ImGui::PopItemWidth(); ImGui::SameLine();
+
+	ImGui::PushStyleColor(ImGuiCol_Button, ImVec4{ 0.000f, 0.698f, 0.008f, 0.709f });	ImGui::Button("Y"); ImGui::PopStyleColor();
+	ImGui::SameLine();  ImGui::PushItemWidth(width); ImGui::DragFloat("##Y", &data[1]); ImGui::PopItemWidth(); ImGui::SameLine();
+
+	ImGui::PushStyleColor(ImGuiCol_Button, ImVec4{ 0.257f, 0.542f, 0.852f, 0.709f });	ImGui::Button("Z"); ImGui::PopStyleColor();
+    ImGui::SameLine();  ImGui::PushItemWidth(width); ImGui::DragFloat("##Z", &data[2]); ImGui::PopItemWidth();
+
 	ImGui::Columns(1);
 	ImGui::PopID();
 
@@ -275,4 +290,21 @@ int shade::ImGuiLayer::DrawCurve(const std::string& label, const float* values, 
 {
 	ImGui::PlotLines(std::string("##" + label).c_str(), values, points_count, 0, label.c_str(), 0.0f, FLT_MAX, editor_size, 4);
 	return 0;
+}
+
+bool shade::ImGuiLayer::DrawButtonCol(const char* cw1Lable, const char* buttonLable, const float& cw1, const float& cw2)
+{
+	ImGui::PushID(cw1Lable);
+	ImGui::Columns(2);
+	ImGui::SetColumnWidth(0, cw1);
+	if (cw2 > 0.0f)
+		ImGui::SetColumnWidth(1, cw2);
+
+	ImGui::Text(cw1Lable);
+	ImGui::NextColumn();
+	bool isUsed = ImGui::Button(buttonLable, ImVec2 { ImGui::GetContentRegionAvailWidth() + ImGui::GetStyle().ItemSpacing.x,0});
+	ImGui::Columns(1);
+	ImGui::PopID();
+
+	return isUsed;
 }

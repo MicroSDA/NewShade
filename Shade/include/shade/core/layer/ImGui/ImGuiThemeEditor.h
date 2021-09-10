@@ -115,7 +115,7 @@ namespace shade
 			style.ItemSpacing = ImVec2(4, 2);
 			style.ItemInnerSpacing = ImVec2(1, 1);
 			style.TouchExtraPadding = ImVec2(0, 0);
-			style.IndentSpacing = 1.0f;
+			style.IndentSpacing = 29.0f;
 			style.ScrollbarSize = 12.0f;
 			style.ScrollbarRounding = 16.0f;
 			style.GrabMinSize = 20.0f;

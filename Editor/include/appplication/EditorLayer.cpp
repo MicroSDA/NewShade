@@ -9,7 +9,7 @@ EditorLayer::EditorLayer(const std::string& name) :
 	shade::ImGuiLayer(name)
 {
 	//shade::ImGuiThemeEditor::SetColors(0x21272977, 0xFDFFFCFF, 0x621234FF, 0x13534CFF, 0x621234FF);
-	shade::ImGuiThemeEditor::SetColors(0x202020FF, 0xFAFFFDFF, 0x464646FF, 0x9C1938CC, 0xFFC307B1);
+	shade::ImGuiThemeEditor::SetColors(0x202020FF, 0xFAFFFDFF, 0x505050FF, 0x9C1938CC, 0xFFC307B1);
 	shade::ImGuiThemeEditor::SetFont("resources/font/Roboto-Medium.ttf", 14.5);
 	shade::ImGuiThemeEditor::ApplyTheme();
 }
@@ -25,9 +25,9 @@ void EditorLayer::OnCreate()
 	m_TestEditorCamera = shade::CreateShared<shade::Camera>();
 	m_TestEditorCamera->SetFar(500);
 
-	m_FrameBuffer = shade::FrameBuffer::Create(shade::FrameBuffer::Layout(100, 100, { 
-		shade::FrameBuffer::Texture::Format::RGBA16F, 
-		shade::FrameBuffer::Texture::Format::DEPTH24STENCIL8 })); 
+	m_FrameBuffer = shade::FrameBuffer::Create(shade::FrameBuffer::Layout(100, 100, {
+		shade::FrameBuffer::Texture::Format::RGBA16F,
+		shade::FrameBuffer::Texture::Format::DEPTH24STENCIL8 }));
 
 	m_InstancedShader = shade::ShadersLibrary::Get("General");
 	m_GridShader = shade::ShadersLibrary::Get("Grid");
@@ -37,7 +37,7 @@ void EditorLayer::OnCreate()
 	m_Grid = shade::Grid::Create(0, 0, 0);
 	m_Box = shade::Box::Create(0, 0);
 
-	m_PPBloom			= shade::PPBloom::Create();
+	m_PPBloom = shade::PPBloom::Create();
 	m_PPBloom->SetInOutTargets(m_FrameBuffer, m_FrameBuffer, m_BloomShader);
 
 }
@@ -47,9 +47,9 @@ void EditorLayer::OnUpdate(const shade::Shared<shade::Scene>& scene, const shade
 
 	auto frustum = m_TestEditorCamera->GetFrustum();
 
-											/* Materials always nullptr for this*/
-	shade::Render::Submit(m_GridShader,    m_Grid,   m_Grid->GetMaterial(), glm::mat4(1));
-	shade::Render::Submit(m_FrustumShader, m_Box,    m_Box->GetMaterial(),  glm::inverse(m_TestEditorCamera->GetViewProjection()));
+	/* Materials always nullptr for this*/
+	shade::Render::Submit(m_GridShader, m_Grid, m_Grid->GetMaterial(), glm::mat4(1));
+	shade::Render::Submit(m_FrustumShader, m_Box, m_Box->GetMaterial(), glm::inverse(m_TestEditorCamera->GetViewProjection()));
 
 
 	scene->GetEntities().view<shade::Model3DComponent, shade::Transform3DComponent>().each([&](auto& entity, shade::Model3DComponent& model, shade::Transform3DComponent& transform)
@@ -64,7 +64,7 @@ void EditorLayer::OnUpdate(const shade::Shared<shade::Scene>& scene, const shade
 
 void EditorLayer::OnRender(const shade::Shared<shade::Scene>& scene, const shade::Timer& deltaTime)
 {
-	
+
 	if (ImGui::Begin("DockSpace", (bool*)(nullptr), m_WindowFlags))
 	{
 		//ImGui::PopStyleVar();
@@ -83,7 +83,8 @@ void EditorLayer::OnRender(const shade::Shared<shade::Scene>& scene, const shade
 		ShowWindowBar("Asset explorer", &EditorLayer::AssetsExplorer, this, shade::AssetManager::GetAssetsDataList());
 		ShowWindowBar("Logs", &EditorLayer::LogsExplorer, this);
 		ShowWindowBar("Render", &EditorLayer::Render, this);
-
+		ShowWindowBar("Material", &EditorLayer::Material, this, m_SelectedMaterial3D);
+		//ShowWindowBar("Model3D",   nullptr, this, nullptr);
 		ShowDemoWindow();
 
 	} ImGui::End(); // Begin("DockSpace")
@@ -97,7 +98,8 @@ void EditorLayer::OnRender(const shade::Shared<shade::Scene>& scene, const shade
 		shade::Render::DrawInstances(m_InstancedShader);
 		shade::Render::EndScene();
 
-		shade::Render::PProcess::Process(m_PPBloom);
+		if (m_isBloomEnabled)
+			shade::Render::PProcess::Process(m_PPBloom);
 
 		shade::Render::BeginScene(m_EditorCamera);
 		shade::Render::DrawSubmited(m_GridShader);
@@ -172,7 +174,7 @@ void EditorLayer::OnEvent(const shade::Shared<shade::Scene>& scene, shade::Event
 		if (keyCode == shade::Key::Down)
 			m_TestEditorCamera->SetPosition(m_TestEditorCamera->GetPosition().x, m_TestEditorCamera->GetPosition().y - 1, 0);
 
-		if(keyCode == shade::Key::PageUp)
+		if (keyCode == shade::Key::PageUp)
 			m_InstancedShader->SelectSubrutine("u_sLighting", "BillinPhong", shade::Shader::Type::Fragment);
 		if (keyCode == shade::Key::PageDown)
 			m_InstancedShader->SelectSubrutine("u_sLighting", "FlatColor", shade::Shader::Type::Fragment);
@@ -286,7 +288,7 @@ void EditorLayer::Inspector(shade::Entity& entity)
 
 void EditorLayer::Scene(shade::Scene* scene)
 {
-	
+
 	if (m_SceneViewPort.x != ImGui::GetContentRegionAvail().x || m_SceneViewPort.y != ImGui::GetContentRegionAvail().y)
 	{
 		m_SceneViewPort = ImGui::GetContentRegionAvail();
@@ -298,7 +300,7 @@ void EditorLayer::Scene(shade::Scene* scene)
 
 		ImGui::Image(reinterpret_cast<void*>(m_FrameBuffer->GetAttachment(0)),
 			m_SceneViewPort, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
-		
+
 
 		FpsOverlay(ImGui::GetWindowViewport());
 
@@ -540,7 +542,58 @@ void EditorLayer::LogsExplorer()
 
 void EditorLayer::Model3dComponent(shade::Entity& entity)
 {
-	if (ImGui::TreeNodeEx("Meshes: ", ImGuiTreeNodeFlags_KeppFramedWhenOpen))
+	auto& model = entity.GetComponent<shade::Model3DComponent>();
+
+	ImGui::Columns(2);
+	ImGui::SetColumnWidth(0, 80.f);
+	ImGui::Text("Asset");
+	ImGui::NextColumn();
+
+	if (ImGui::BeginMenu(model->GetAssetData().Attribute("Id").as_string()))
+	{
+		for (auto& asset : shade::AssetManager::GetAssetsDataList())
+		{
+			if (strcmp(asset.second.Attribute("Type").as_string(), "Model3D") == 0)
+			{
+				if (ImGui::MenuItem(asset.second.Attribute("Id").as_string()))
+				{
+					shade::AssetManager::Hold<shade::Model3D>(asset.second.Attribute("Id").as_string(),
+						shade::Asset::State::RemoveIfPosible, [&](auto& asset) mutable
+						{
+							model = shade::AssetManager::Receive<shade::Model3D>(asset);
+						});
+				}
+			}
+
+		}
+		ImGui::EndMenu();
+	}
+	ImGui::Columns(1);
+
+
+	ImGui::AlignTextToFramePadding();
+	if (ImGui::TreeNodeEx("Meshes", ImGuiTreeNodeFlags_Framed))
+	{
+		for (auto& mesh : model->GetMeshes())
+		{
+			auto meshId = mesh->GetAssetData().Attribute("Id").as_string();
+			if (DrawButtonCol("Asset", meshId))
+			{
+				m_SelectedMaterial3D = mesh->GetMaterial();
+			}
+			/*if (ImGui::TreeNodeEx(std::string("Material: Render##" + std::string(meshId)).c_str(), ImGuiTreeNodeFlags_Framed))
+			{
+				m_SelectedMaterial3D = mesh->GetMaterial();
+				//Material(m_SelectedMaterial3D);
+				ImGui::TreePop();
+			}*/
+		}
+		ImGui::TreePop();
+	}
+
+
+	//ImGui::Button("Cube");
+	/*if (ImGui::TreeNodeEx("Meshes: ", ImGuiTreeNodeFlags_KeppFramedWhenOpen))
 	{
 		auto& model = entity.GetComponent<shade::Model3DComponent>();
 
@@ -573,14 +626,14 @@ void EditorLayer::Model3dComponent(shade::Entity& entity)
 							DrawImage(material->TextureDiffuse->GetRenderID(), 100, 100, true);
 							DrawImage(material->TextureSpecular->GetRenderID(), 100, 100, true);
 							DrawImage(material->TextureNormals->GetRenderID(), 100, 100, true);
-							
+
 						}, mesh->GetMaterial().get());
 
 					DrawTreeNode("Vertices", [&](shade::Vertex3D* vertices, uint32_t count)
 						{
 							for (auto i = 0; i < count; i++)
 							{
-								
+
 
 								DrawVec3F(std::string("P##" + std::to_string(i)).c_str(),   glm::value_ptr(vertices[i].Position), 100, 100, true);
 								DrawVec3F(std::string("N##" + std::to_string(i)).c_str(),   glm::value_ptr(vertices[i].Normal), 100, 100, true);
@@ -595,15 +648,16 @@ void EditorLayer::Model3dComponent(shade::Entity& entity)
 		}
 
 		ImGui::TreePop();
-	}
+	}*/
 }
 
 void EditorLayer::Render()
 {
+
 	if (ImGui::TreeNodeEx("Bloom", ImGuiTreeNodeFlags_Framed))
 	{
-		static bool isEnabled = false;
-		ImGui::Checkbox("Enable", &isEnabled);
+
+		ImGui::Checkbox("Enable", &m_isBloomEnabled);
 		DrawFlaot("Threshold", &m_PPBloom->GetThreshold(), 1.f, 0.f, FLT_MAX, 80.f);
 		DrawFlaot("Knee", &m_PPBloom->GetKnee(), 1.f, 0.f, FLT_MAX, 80.f);
 		DrawInt("Samples", (int*)&m_PPBloom->GetSamplesCount(), 5, 1, 10, 80.f);
@@ -611,6 +665,82 @@ void EditorLayer::Render()
 		DrawCurve("Curve", glm::value_ptr(m_PPBloom->GetCurve()), 3, ImVec2{ ImGui::GetContentRegionAvail().x, 70 });
 
 		ImGui::TreePop();
+	}
+}
+
+void EditorLayer::Material(const shade::Shared<shade::Material3D>& material)
+{
+	ImGui::Columns(2);
+	ImGui::SetColumnWidth(0, 80.f);
+	ImGui::Text("Asset");
+	ImGui::NextColumn();
+
+	if (ImGui::BeginMenu((material) ? material->GetAssetData().Attribute("Id").as_string() : "None"))
+	{
+		for (auto& asset : shade::AssetManager::GetAssetsDataList())
+		{
+			if (strcmp(asset.second.Attribute("Type").as_string(), "Material") == 0)
+			{
+				if (ImGui::MenuItem(asset.second.Attribute("Id").as_string()))
+				{
+					shade::AssetManager::Hold<shade::Material3D>(asset.second.Attribute("Id").as_string(),
+						shade::Asset::State::RemoveIfPosible, [&](auto& asset) mutable
+						{
+							m_SelectedMaterial3D = shade::AssetManager::Receive<shade::Material3D>(asset);
+						}, asset.second);
+				}
+			}
+
+		}
+
+		ImGui::EndMenu();
+	}
+	
+	ImGui::Columns(1);
+	/*
+	for (auto& asset : shade::AssetManager::GetAssetsDataList())
+	{
+		if (strcmp(asset.second.Attribute("Type").as_string(), "Material3D") == 0)
+		{
+
+		}
+	}*/
+
+	if (material)
+	{
+		DrawColor3("Albedo", glm::value_ptr(material->ColorDiffuse));
+		DrawColor3("Specular", glm::value_ptr(material->ColorSpecular));
+		DrawColor3("Ambinet", glm::value_ptr(material->ColorAmbient));
+		DrawColor3("Transparent", glm::value_ptr(material->ColorTransparent));
+		ImGui::Separator();
+		ImGui::Text("Shading model %d", material->Shading);
+		DrawFlaot("Shininess", &material->Shininess);
+		DrawFlaot("Shininess power", &material->ShininessStrength);
+		DrawFlaot("Opacity", &material->Opacity);
+		DrawFlaot("Refracti", &material->Refracti);
+		DrawFlaot("Emissive", &material->Emmisive);
+		ImGui::Checkbox("Use wireframe", &material->WireFrame);
+		ImGui::Separator();
+
+		if (ImGui::TreeNodeEx("Map: Albedo", ImGuiTreeNodeFlags_Framed))
+		{
+			if(material->TextureDiffuse)
+				DrawImage(material->TextureDiffuse->GetRenderID(), 100, 100, true);
+			ImGui::TreePop();
+		}
+		if (ImGui::TreeNodeEx("Map: Specular", ImGuiTreeNodeFlags_Framed))
+		{
+			if (material->TextureDiffuse)
+				DrawImage(material->TextureSpecular->GetRenderID(), 100, 100, true);
+			ImGui::TreePop();
+		}
+		if (ImGui::TreeNodeEx("Map: Normal", ImGuiTreeNodeFlags_Framed))
+		{
+			if (material->TextureDiffuse)
+				DrawImage(material->TextureNormals->GetRenderID(), 100, 100, true);
+			ImGui::TreePop();
+		}
+
 	}
 }
 

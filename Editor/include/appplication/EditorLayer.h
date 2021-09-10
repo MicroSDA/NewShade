@@ -38,12 +38,12 @@ private:
 
 	/*Post process*/
 	shade::Shared<shade::PPBloom> m_PPBloom;
-
+	bool						  m_isBloomEnabled = true;
 
 	shade::Shared<shade::Grid>   m_Grid;
 	shade::Shared<shade::Box>    m_Box;
 	shade::Entity				 m_SelectedEntity;
-
+	shade::Shared<shade::Material3D> m_SelectedMaterial3D;
 
 
 
@@ -60,6 +60,7 @@ private:
 	void AssetDataExpader(shade::AssetData& data);
 	void LogsExplorer();
 	void Render();
+	void Material(const shade::Shared<shade::Material3D>& mateial);
 	// Themes
 	void DarkVineTheme();
 
