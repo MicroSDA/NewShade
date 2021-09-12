@@ -50,7 +50,7 @@ void shade::Application::Start()
 
 	Render::Init();
 	Render::SetViewPort(0, 0, m_Window->GetWidth(), m_Window->GetHeight());
-	Render::SetClearColor(0.3, 0.3, 0.3, 1);
+	Render::SetClearColor(0.0, 0.0, 0.0, 1.0);
 
 	while (!m_IsQuitRequested)
 	{

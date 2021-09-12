@@ -33,17 +33,24 @@ private:
 	shade::Shared<shade::Shader> m_InstancedShader;
 	shade::Shared<shade::Shader> m_GridShader;
 	shade::Shared<shade::Shader> m_FrustumShader;
-	shade::Shared<shade::Shader> m_BloomShader;
+	
 
 
-	/*Post process*/
+	/* Post process */
 	shade::Shared<shade::PPBloom> m_PPBloom;
+	shade::Shared<shade::Shader>  m_BloomShader;
 	bool						  m_isBloomEnabled = true;
+	shade::Shared<shade::PPColorCorrection> m_PPColorCorrection;
+	bool						  m_isColorCorrectionmEnabled = true;
+	shade::Shared<shade::Shader>  m_ColorCorrectionShader;
+	////////////////////////////////////
 
 	shade::Shared<shade::Grid>   m_Grid;
 	shade::Shared<shade::Box>    m_Box;
 	shade::Entity				 m_SelectedEntity;
 	shade::Shared<shade::Material3D> m_SelectedMaterial3D;
+	shade::Shared<shade::Model3D>    m_SelectedModel3D;
+	shade::Shared<shade::Mesh>       m_SelectedMesh;
 
 
 
@@ -60,7 +67,10 @@ private:
 	void AssetDataExpader(shade::AssetData& data);
 	void LogsExplorer();
 	void Render();
+	void ShadersLibrary();
 	void Material(const shade::Shared<shade::Material3D>& mateial);
+	void Model3D(const shade::Shared<shade::Model3D>& model);
+	void Mesh(const shade::Shared<shade::Mesh>& mesh);
 	// Themes
 	void DarkVineTheme();
 

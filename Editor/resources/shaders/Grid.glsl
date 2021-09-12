@@ -85,7 +85,7 @@ void main()
 
 
     gl_FragDepth        = ComputeDepth(fragPos3D);
-    vec3 gridColor      =  vec3(0.1, 0.1, 0.1);
+    vec3 gridColor      =  vec3(0.2, 0.2, 0.2);
     FrameBuffer         = (Grid(gridColor, fragPos3D, 0.1, true) + Grid(gridColor, fragPos3D, 1.0, true))* float(t > 0); 
 	FrameBuffer.a      *= fading;
 

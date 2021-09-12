@@ -687,7 +687,6 @@ void EditorLayer::ShadersLibrary()
 	
 	for (auto& [key, val] : shade::ShadersLibrary::GetLibrary())
 	{
-		// TODO not sure if button has coorect id in stack!
 		if (DrawButtonCol(key.c_str(), "Recompile"))
 			val->Recompile();
 	}

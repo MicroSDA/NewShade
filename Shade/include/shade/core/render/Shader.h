@@ -55,6 +55,7 @@ namespace shade
 	public:
 		static void Create(const std::string& name, const std::string& filepath);
 		static Shared<Shader> Get(const std::string& name);
+		static std::unordered_map<std::string, Shared<Shader>>& GetLibrary();
 		static void Remove(const std::string& name);
 	private:
 		static std::unordered_map<std::string, Shared<Shader>> m_sLibrary;

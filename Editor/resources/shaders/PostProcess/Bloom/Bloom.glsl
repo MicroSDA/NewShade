@@ -3,19 +3,18 @@
 
 layout(local_size_x = 16, local_size_y = 16) in;
 
-layout (            binding = 0) uniform          sampler2D  u_InputSampler;
+layout (          binding = 0) uniform          sampler2D  u_InputSampler;
 layout (rgba16f,	binding = 1) uniform restrict image2D    u_InputImage;
 layout (rgba16f, 	binding = 2) uniform restrict image2D    u_OutputImage;
 
-#define MAX_GAUSSIAN_RADIUS 8
-
-struct Data
+struct Bloom
 {
-	vec3  Curve;
-	float Threshold;
+   vec3  Curve;
+   float Exposure;
+   float Threshold; 
+   float Knee;
 };
-
-uniform Data u_Data;
+uniform Bloom	u_Bloom;
 // Include our filters
 #include "resources/shaders/PostProcess/Bloom/Filters.glsl"
 
@@ -35,7 +34,7 @@ void HDR(int lod)
    float clampValue = 20.0f;
    vec4 color = imageLoad(u_InputImage, position);
    color = min(vec4(clampValue), color);
-   color = QThreshold(color, u_Data.Curve, u_Data.Threshold, 3.0);
+   color = QThreshold(color, u_Bloom.Curve, u_Bloom.Threshold, u_Bloom.Exposure);
 
    imageStore(u_OutputImage, position, color);
 };
@@ -70,14 +69,15 @@ void Combine(int lod)
      vec4 first     = imageLoad(u_InputImage, position);
      vec4 second    = imageLoad(u_OutputImage,position);
 
-     imageStore(u_OutputImage, position, vec4(ACES(first.rgb + second.rgb), first.a));
+     vec3 color = first.rgb + second.rgb;
+	  //color.rgb  = pow(color.rgb, vec3(1.0 / 1.5));
+     imageStore(u_OutputImage, position, vec4(color, first.a));
      //imageStore(u_OutputImage, position, first + second);
 };
 
 subroutine uniform Stage s_Stage;
 /* Texture mip level */
 uniform int	u_Lod;
-
 void main()
 {
 	s_Stage(u_Lod);

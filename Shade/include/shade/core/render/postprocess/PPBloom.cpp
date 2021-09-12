@@ -15,7 +15,7 @@ shade::Shared<shade::PPBloom> shade::PPBloom::Create()
 }
 
 shade::PPBloom::PPBloom() :
-	m_Samples(5), m_Threshold(1.f), m_Knee(0.1f)
+	m_Samples(5), m_Exposure(1.0f), m_Threshold(1.f), m_Knee(0.1f)
 {
 	m_BloomFrameBuffer = shade::FrameBuffer::Create(shade::FrameBuffer::Layout(1, 1,
 		{ shade::FrameBuffer::Texture::Format::RGBA16F,
@@ -48,6 +48,11 @@ void shade::PPBloom::SetKnee(const float& knee)
 	m_Knee = knee;
 }
 
+void shade::PPBloom::SetExposure(const float& exposure)
+{
+	m_Exposure = exposure;
+}
+
 std::uint32_t& shade::PPBloom::GetSamplesCount()
 {
 	return m_Samples;
@@ -66,6 +71,11 @@ float& shade::PPBloom::GetThreshold()
 float& shade::PPBloom::GetKnee()
 {
 	return m_Knee;
+}
+
+float& shade::PPBloom::GetExposure()
+{
+	return m_Exposure;
 }
 
 

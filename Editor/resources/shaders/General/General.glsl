@@ -32,7 +32,7 @@ void main()
 	// Set vertex position
 	gl_Position 		= u_Camera.ViewProjection * a_Transform *  vec4(a_Position, 1.0);
 	// Clip
-	gl_ClipDistance[0] 	= dot(u_Camera.View * vec4(a_Position, 1.0f), u_ClipDistance);
+	gl_ClipDistance[0] 	= dot(u_Camera.View * vec4(a_Position, 1.0), u_ClipDistance);
 	// Pass other data to fragment shader
 	out_UV_Coordinates 	= a_UV_Coordinates;
 	out_Normal  		= normalize((a_Transform 	* vec4(a_Normal, 	0.0)).xyz);
@@ -125,9 +125,9 @@ void main()
 	const float Exposure   = 1.0 * 10;
 	const float Gamma      = 0.9;
 	// Exposure
-	Color.rgb  = vec3(1.0) - exp(-Color.rgb * Exposure);
+	//Color.rgb  = vec3(1.0) - exp(-Color.rgb * Exposure);
 	// Gamma
-	Color.rgb  = pow(Color.rgb, vec3(1.0 / Gamma));
+	//Color.rgb  = pow(Color.rgb, vec3(1.0 / Gamma));
 	
 	FrameBuffer 		= vec4(Color.rgb + (u_Material.DiffuseColor * u_Material.Emissive), 1.0);
 }

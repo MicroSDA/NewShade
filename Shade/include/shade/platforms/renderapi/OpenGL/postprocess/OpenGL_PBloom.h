@@ -1,6 +1,7 @@
 #pragma once
 #include "shade/core/render/postprocess/PPBloom.h"
 #include <glad/glad.h>
+
 namespace shade
 {
 	class OpenGL_PBloom : public PPBloom

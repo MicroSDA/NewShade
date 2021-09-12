@@ -166,3 +166,7 @@ void shade::ShadersLibrary::Remove(const std::string& name)
 	else
 		SHADE_CORE_WARNING("Shader '{0}' doensn't exist in library!", name);
 }
+std::unordered_map<std::string, shade::Shared<shade::Shader>>& shade::ShadersLibrary::GetLibrary()
+{
+	return m_sLibrary;
+}

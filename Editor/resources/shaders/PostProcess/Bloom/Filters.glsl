@@ -4,14 +4,13 @@
 /* Quadratic threshold */
 vec4 QThreshold(vec4 color, vec3 curve, float threshold, float exposure)
 {
-	color.rgb;
 	float br =  max(max(color.r, color.g), color.b);
     // Under-threshold part: quadratic curve
     float rq = clamp(br - curve.x, 0.0, curve.y);
     rq = curve.z * (rq * rq);
     // Combine and apply the brightness response curve.
     color.rgb *= max(rq, br - threshold) / max(br, EPSILON);
-    return color;
+    return color * exposure;
 };
 
 vec4 DownsampleBox4(sampler2D texture, vec2 uv, vec2 texelSize, float lod)
