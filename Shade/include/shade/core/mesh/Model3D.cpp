@@ -20,22 +20,30 @@ shade::Model3D::~Model3D()
 
 void shade::Model3D::LoadFromAssetData(shade::AssetData& data, const shade::AssetData& bundle)
 {
-    SetAssetData(data);
-
-    for (auto& dependancy : GetAssetData().Dependencies())
+    auto dependencies = data.Dependencies();
+    /* If it's has a dependencies*/
+    if (dependencies.size())
     {
-        const std::string id    = dependancy.Attribute("Id").as_string();
-        auto asset              = AssetManager::GetAssetData(id);
-
-        if (std::string(asset.Attribute("Type").as_string()) == "Mesh")
+        for (auto& dependancy : dependencies)
         {
-            AssetManager::Hold<Mesh>(id, Asset::State::RemoveIfPosible,
-                [this](auto& mesh) mutable
-                {
-                   m_Meshes.push_back(AssetManager::Receive<Mesh>(mesh));
-                }, dependancy);
+            const std::string id = dependancy.Attribute("Id").as_string();
+            /* Trying to get dependancy as asset */
+            auto dependancyAsset = AssetManager::GetAssetData(id);
+            /* If dependancy is asset, we can grab all specific metadata*/
+            if (strcmp(dependancyAsset.Attribute("Type").as_string(), "Mesh") == 0)
+            {
+                AssetManager::HoldPrefab<Mesh>(id,
+                    [this](auto& mesh) mutable
+                    {
+                        m_Meshes.push_back(AssetManager::Receive<Mesh>(mesh));
+
+                    }, shade::Asset::Lifetime::Destroy);
+            }
         }
     }
+
+    // Model 3d is prefab only
+    SetAssetData(data);
 }
 
 void shade::Model3D::AssetInit()

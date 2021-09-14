@@ -159,7 +159,15 @@ void EditorLayer::OnEvent(const shade::Shared<shade::Scene>& scene, shade::Event
 		{
 			for (auto i = 0; i < 1; i++)
 			{
-				shade::AssetManager::Hold<shade::Model3D>("Cube",
+				shade::AssetManager::HoldPrefab<shade::Model3D>("Nanosuit", [&](auto& asset) mutable 
+					{
+						
+						auto entity = scene->CreateEntity("Cube");
+						entity.AddComponent<shade::Model3DComponent>(shade::AssetManager::Receive<shade::Model3D>(asset));
+
+					}, shade::Asset::Lifetime::Destroy);
+
+				/*shade::AssetManager::Hold<shade::Model3D>("Cube",
 					shade::Asset::State::RemoveIfPosible, [&](auto& asset) mutable
 					{
 						auto entity = scene->CreateEntity("Cube");
@@ -167,7 +175,7 @@ void EditorLayer::OnEvent(const shade::Shared<shade::Scene>& scene, shade::Event
 						float x = 1 + rand() % 550;
 						float z = 1 + rand() % 550;
 						entity.AddComponent<shade::Transform3DComponent>();
-					});
+					});*/
 			}
 
 		}
@@ -256,8 +264,8 @@ void EditorLayer::Entities(shade::Scene* scene)
 								if (strcmp(asset.second.Attribute("Type").as_string(), "Model3D") == 0)
 									if (ImGui::MenuItem(asset.first.c_str()))
 									{
-										shade::AssetManager::Hold<shade::Model3D>(asset.first, shade::Asset::State::RemoveIfPosible,
-											[&](auto& model)
+										shade::AssetManager::HoldPrefab<shade::Model3D>(asset.first,
+											[&](auto& model) mutable
 											{
 												m_SelectedEntity.AddComponent<shade::Model3DComponent>(shade::AssetManager::Receive<shade::Model3D>(model));
 											});
@@ -565,8 +573,8 @@ void EditorLayer::Model3dComponent(shade::Entity& entity)
 			{
 				if (ImGui::MenuItem(asset.second.Attribute("Id").as_string()))
 				{
-					shade::AssetManager::Hold<shade::Model3D>(asset.second.Attribute("Id").as_string(),
-						shade::Asset::State::RemoveIfPosible, [&](auto& asset) mutable
+					shade::AssetManager::HoldPrefab<shade::Model3D>(asset.second.Attribute("Id").as_string(),
+						[&](auto& asset) mutable
 						{
 							model = shade::AssetManager::Receive<shade::Model3D>(asset);
 						});
@@ -711,11 +719,11 @@ void EditorLayer::Material(const shade::Shared<shade::Material3D>& material)
 			{
 				if (ImGui::MenuItem(asset.second.Attribute("Id").as_string()))
 				{
-					shade::AssetManager::Hold<shade::Material3D>(asset.second.Attribute("Id").as_string(),
-						shade::Asset::State::RemoveIfPosible, [&](auto& asset) mutable
+					shade::AssetManager::HoldPrefab<shade::Material3D>(asset.second.Attribute("Id").as_string(),
+						[&](auto& asset) mutable
 						{
 							m_SelectedMaterial3D = shade::AssetManager::Receive<shade::Material3D>(asset);
-						}, asset.second);
+						});
 				}
 			}
 
@@ -790,11 +798,11 @@ void EditorLayer::Model3D(const shade::Shared<shade::Model3D>& model)
 			{
 				if (ImGui::MenuItem(asset.second.Attribute("Id").as_string()))
 				{
-					shade::AssetManager::Hold<shade::Model3D>(asset.second.Attribute("Id").as_string(),
-						shade::Asset::State::RemoveIfPosible, [&](auto& asset) mutable
+					shade::AssetManager::HoldPrefab<shade::Model3D>(asset.second.Attribute("Id").as_string(),
+						[&](auto& asset) mutable
 						{
 							m_SelectedModel3D = shade::AssetManager::Receive<shade::Model3D>(asset);
-						}, asset.second);
+						});
 				}
 			}
 
@@ -846,11 +854,11 @@ void EditorLayer::Mesh(const shade::Shared<shade::Mesh>& mesh)
 			{
 				if (ImGui::MenuItem(asset.second.Attribute("Id").as_string()))
 				{
-					shade::AssetManager::Hold<shade::Mesh>(asset.second.Attribute("Id").as_string(),
-						shade::Asset::State::RemoveIfPosible, [&](auto& asset) mutable
+					shade::AssetManager::HoldPrefab<shade::Mesh>(asset.second.Attribute("Id").as_string(),
+						[&](auto& asset) mutable
 						{
 							m_SelectedMesh = shade::AssetManager::Receive<shade::Mesh>(asset);
-						}, asset.second);
+						});
 				}
 			}
 

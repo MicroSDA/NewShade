@@ -44,7 +44,7 @@ std::vector<shade::AssetData> shade::AssetData::Dependencies() const
     // &dependency ?
     if (!m_AssetData.child("dependencies").empty())
     {
-        for (auto dependency : m_AssetData.child("dependencies").children("dependency"))
+        for (auto dependency : m_AssetData.child("dependencies").children())
         {
             dependencies.push_back(dependency);
         }

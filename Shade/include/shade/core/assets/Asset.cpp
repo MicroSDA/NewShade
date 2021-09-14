@@ -2,9 +2,14 @@
 #include "Asset.h"
 #include "shade/core/assets/AssetManager.h"
 
+shade::Asset::Asset() 
+    :m_IsPrefab(false)
+{
+}
+
 shade::Asset::~Asset()
 {
-    shade::AssetManager::_ImLast(m_AssetData.Attribute("Id").as_string());
+    shade::AssetManager::_ImLast(m_AssetData.Attribute("Id").as_string(), m_IsPrefab);
     SHADE_CORE_DEBUG("Asset '{0}' has been deleted.", m_AssetData.Attribute("Id").as_string())
 }
 
@@ -21,4 +26,14 @@ shade::AssetData& shade::Asset::GetAssetData()
 const shade::AssetData& shade::Asset::GetAssetData() const
 {
     return m_AssetData;
+}
+
+const bool& shade::Asset::IsPrefab() const
+{
+    return m_IsPrefab;
+}
+
+void shade::Asset::_SetPrefab(const bool& isPrefab)
+{
+    m_IsPrefab = isPrefab;
 }

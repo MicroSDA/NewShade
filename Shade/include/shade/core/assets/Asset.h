@@ -7,20 +7,26 @@ namespace shade
 	class SHADE_API Asset : public Serializable
 	{
 	public:
-		enum class State
+		enum class Lifetime
 		{
 			KeepAlive,
-			RemoveIfPosible
+			Destroy
 		};
 	public:
-		Asset() = default;
+		Asset();
 		virtual ~Asset();
 		virtual void LoadFromAssetData(shade::AssetData& data, const shade::AssetData& bundle = AssetData()) = 0;
 		void SetAssetData(shade::AssetData& data);
 		AssetData& GetAssetData();
 		const AssetData& GetAssetData() const;
+		const bool& IsPrefab() const;
 		virtual void AssetInit() = 0;
 	private:
+		friend class AssetManager;
+
 		AssetData  m_AssetData;
+		bool	   m_IsPrefab;
+
+		void _SetPrefab(const bool& isPrefab);
 	};
 }

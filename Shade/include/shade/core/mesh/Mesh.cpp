@@ -17,26 +17,46 @@ void shade::Mesh::AssetInit()
 }
 
 void shade::Mesh::LoadFromAssetData(shade::AssetData& data, const shade::AssetData& bundle)
-{
-    SetAssetData(data);
-
-    for (auto& dependency : bundle.Dependencies())
+{ 
+   
+    auto dependencies = data.Dependencies();
+    /* If it's has a dependencies*/
+    if (dependencies.size())
     {
-        const std::string id	= dependency.Attribute("Id").as_string();
-        auto asset				= AssetManager::GetAssetData(id);
-
-        if (std::string(asset.Attribute("Type").as_string()) == "Material")
+        for (auto& dependancy : dependencies)
         {
-            AssetManager::Hold<Material3D>(id, Asset::State::RemoveIfPosible,
-                [this](auto& texture) mutable
-                {
-                    SetMaterial(AssetManager::Receive<Material3D>(texture));
-                }, dependency);
+            const std::string id =  dependancy.Attribute("Id").as_string();
+            /* Trying to get dependancy as asset */
+            auto dependancyAsset = AssetManager::GetAssetData(id);
+            /* If dependancy is asset, we can grab all specific metadata*/
+            if (strcmp(dependancyAsset.Attribute("Type").as_string(), "Material") == 0)
+            {
+                AssetManager::HoldPrefab<Material3D>(id,
+                    [this](auto& material) mutable
+                    {
+                        SetMaterial(AssetManager::Receive<Material3D>(material));
+
+                    }, shade::Asset::Lifetime::Destroy);
+            }
         }
     }
 
-    Deserialize();
-    GenerateHalfExt();
+    /* Trying to find in asset data*/
+    auto asset = AssetManager::GetAssetData(data.Attribute("Id").as_string());
+    /* If current prefab is asset */
+    if (asset.IsValid())
+    {
+        /* Set asset data as asset*/
+        SetAssetData(asset);
+
+        Deserialize();
+        GenerateHalfExt();// TODO need to remove it from here
+    }
+    else
+    {
+        /* Set asset data if it only represents prefab */
+        SetAssetData(data);
+    }
 }
 bool shade::Mesh::Serialize(std::ostream& stream) const
 {

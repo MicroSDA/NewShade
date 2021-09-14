@@ -96,33 +96,50 @@ bool shade::Material3D::Deserialize()
 
 void shade::Material3D::LoadFromAssetData(shade::AssetData& data, const shade::AssetData& bundle)
 {
-	SetAssetData(data);
-
-	for (auto& dependency : bundle.Dependencies())
+	
+	/* If prefab has dependencies*/
+	auto dependencies = data.Dependencies();
+	if (dependencies.size())
 	{
-		const std::string id = dependency.Attribute("Id").as_string();
-		auto asset = AssetManager::GetAssetData(id);
-
-		if (std::string(asset.Attribute("Type").as_string()) == "Texture")
+		for (auto& dependancy : dependencies)
 		{
-			AssetManager::Hold<Texture>(id, Asset::State::RemoveIfPosible,
-				[this](auto& texture) mutable
-				{
-					Shared<Texture> _texture = AssetManager::Receive<Texture>(texture);
-					//Shared<Material3D>(this)->TextureDiffuse = _texture;
+			const std::string id = dependancy.Attribute("Id").as_string();
+			/* Trying to get dependancy as asset */
+			auto dependancyAsset = AssetManager::GetAssetData(id);
+			/* If dependancy is asset, we can grab all specific metadata*/
+			if (strcmp(dependancyAsset.Attribute("Type").as_string(), "Texture") == 0)
+			{
+				AssetManager::HoldAsset<Texture>(id,
+					[this](auto& texture) mutable
+					{
+						Shared<Texture> _texture = AssetManager::Receive<Texture>(texture);
 
-					if (strcmp(_texture->GetAssetData().Attribute("TextureType").as_string(), "Diffuse") == 0)
-						TextureDiffuse = _texture;
-					if (strcmp(_texture->GetAssetData().Attribute("TextureType").as_string(), "Specular") == 0)
-						TextureSpecular = _texture;
-					if (strcmp(_texture->GetAssetData().Attribute("TextureType").as_string(), "Normal") == 0)
-						TextureNormals = _texture;
-					
-				}, dependency);
+						if (strcmp(_texture->GetAssetData().Attribute("TextureType").as_string(), "Diffuse") == 0)
+							TextureDiffuse = _texture;
+						if (strcmp(_texture->GetAssetData().Attribute("TextureType").as_string(), "Specular") == 0)
+							TextureSpecular = _texture;
+						if (strcmp(_texture->GetAssetData().Attribute("TextureType").as_string(), "Normal") == 0)
+							TextureNormals = _texture;
+
+					}, shade::Asset::Lifetime::Destroy );
+			}
 		}
 	}
 
-	Deserialize();
+	/* Trying to get prefab as asset*/
+	auto asset = AssetManager::GetAssetData(data.Attribute("Id").as_string());
+	/* If current prefab is asset */
+	if (asset.IsValid())
+	{
+		/* Set asset data as asset*/
+		SetAssetData(asset);
+		Deserialize();
+	}
+	else
+	{
+		/* Set asset data as prefab */
+		SetAssetData(data);
+	}
 }
 
 void shade::Material3D::AssetInit()

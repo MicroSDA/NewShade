@@ -150,11 +150,11 @@ static bool DesserModel3DComponent(shade::Entity& entity, YAML::detail::iterator
 {
 	if (value["Model3D"])
 	{
-		shade::AssetManager::Hold<shade::Model3D>(value["Model3D"]["Asset"].as<std::string>(),
-			shade::Asset::State::RemoveIfPosible, [entity](auto& asset) mutable
+		shade::AssetManager::HoldPrefab<shade::Model3D>(value["Model3D"]["Asset"].as<std::string>(),
+		[entity](auto& asset) mutable
 			{
 				entity.AddComponent<shade::Model3DComponent>(shade::AssetManager::Receive<shade::Model3D>(asset));
-			});
+			}, shade::Asset::Lifetime::Destroy);
 	}
 
 	return true;
