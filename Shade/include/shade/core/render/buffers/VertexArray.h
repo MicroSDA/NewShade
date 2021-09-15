@@ -21,6 +21,7 @@ namespace shade
 		const Shared<IndexBuffer>& GetIndexBuffer() const;
 		Shared<IndexBuffer>& GetIndexBuffer();
 		
+		virtual const std::uint32_t& GetRenderID()  const = 0;
 		void RemoveVertexBuffer(const std::uint32_t& renderId);
 
 		static Shared<VertexArray> Create();

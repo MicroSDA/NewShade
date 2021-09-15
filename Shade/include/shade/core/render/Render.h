@@ -30,7 +30,7 @@ namespace shade
 			Shared<VertexBuffer>			VBO;
 			Shared<IndexBuffer>				IBO;
 			std::vector<std::tuple<glm::mat4, Shared<Material3D>>> MaterialTransforms;
-			bool							Expired = false;
+			bool							Expired = true;
 		};
 		struct Instances
 		{
@@ -42,10 +42,10 @@ namespace shade
 			Shared<VertexBuffer>		VBO;
 			Shared<VertexBuffer>		EBO;
 			Shared<IndexBuffer>			IBO;
-			bool						Expired = false;
+			bool						Expired = true;
 		};
-		using InstancePool = std::unordered_map<Shader* ,std::unordered_map<Drawable*, Instances>>;
-		using SubmitedPool = std::unordered_map<Shader* ,std::unordered_map<Drawable*, Instance>>;
+		using InstancePool = std::unordered_map<Shader* ,std::unordered_map<shade::Shared<Drawable>, Instances>>;
+		using SubmitedPool = std::unordered_map<Shader* ,std::unordered_map<shade::Shared<Drawable>, Instance>>;
 	public:
 		class SHADE_API PProcess
 		{
@@ -87,7 +87,7 @@ namespace shade
 		static Shared<UniformBuffer> m_sClippingUniformBuffer;
 
 		static Shared<ShaderStorageBuffer>	m_sDirectLightsBuffer;
-		static Shared<ShaderStorageBuffer>	m_sPointLightsBuffeer;
+		static Shared<ShaderStorageBuffer>	m_sPointLightsBuffer;
 		static Shared<ShaderStorageBuffer>	m_sSpotLightsBuffer;
 		//Util
 		static void _CreateInstance(const Shared<Shader>& shader, const Shared<Drawable>& drawable, const Shared<Material3D>& material, const glm::mat4& transform);

@@ -6,9 +6,10 @@ namespace shade
 	class SHADE_API Box : public Drawable
 	{
 	public:
-		static Shared<Box> Create(const std::uint32_t& width, const std::uint32_t& height);
-		virtual ~Box() = default;
+		static Shared<Box> Create(const glm::vec3& minHalfExt = glm::vec3(-0.5f), const glm::vec3& maxHalfExt = glm::vec3(0.5f));
+		virtual ~Box() {};
+		
 	private:
-		Box(const std::uint32_t& width, const std::uint32_t& height);
+		Box(const glm::vec3& minHalfExt, const glm::vec3& maxHalfEx);
 	};
 }

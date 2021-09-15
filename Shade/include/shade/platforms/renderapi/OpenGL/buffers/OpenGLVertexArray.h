@@ -18,6 +18,8 @@ namespace shade
 		virtual const std::vector<Shared<VertexBuffer>>& GetVertexBuffers() const;
 		virtual std::vector<Shared<VertexBuffer>>& GetVertexBuffers();
 		virtual const Shared<IndexBuffer>& GetIndexBuffer() const;
+
+		virtual const std::uint32_t& GetRenderID()  const;
 	private:
 		uint32_t m_RenderID;
 		uint32_t m_VertexBufferIndex = 0;

@@ -20,6 +20,7 @@ shade::OpenGLVertexBuffer::OpenGLVertexBuffer(const void* data, const std::uint3
 
 shade::OpenGLVertexBuffer::~OpenGLVertexBuffer()
 {
+	//SHADE_CORE_TRACE("~OpenGLVertexBuffer id: {0}", m_RenderID);
 	glDeleteBuffers(1, &m_RenderID);
 }
 
@@ -35,7 +36,7 @@ void shade::OpenGLVertexBuffer::UnBind() const
 
 void shade::OpenGLVertexBuffer::SetData(const void* data, const uint32_t& size, const uint32_t& offset)
 {
-	glBindBuffer(GL_ARRAY_BUFFER, m_RenderID);
+	Bind();
 	glBufferSubData(GL_ARRAY_BUFFER, offset, size, data);
 	UnBind(); // ?
 }

@@ -34,9 +34,9 @@ void EditorLayer::OnCreate()
 	m_FrustumShader = shade::ShadersLibrary::Get("Frustum");
 	m_BloomShader = shade::ShadersLibrary::Get("Bloom");
 	m_ColorCorrectionShader = shade::ShadersLibrary::Get("ColorCorrection");
-
+	m_BoxShader = shade::ShadersLibrary::Get("Box");
 	m_Grid = shade::Grid::Create(0, 0, 0);
-	m_Box = shade::Box::Create(0, 0);
+	m_Box  = shade::Box::Create(glm::vec3(-1.f), glm::vec3(1.f));
 
 	m_PPBloom = shade::PPBloom::Create();
 	m_PPBloom->SetInOutTargets(m_FrameBuffer, m_FrameBuffer, m_BloomShader);
@@ -60,7 +60,12 @@ void EditorLayer::OnUpdate(const shade::Shared<shade::Scene>& scene, const shade
 			for (auto& mesh : model->GetMeshes())
 			{
 				if (frustum.IsInFrustum(transform, mesh->GetMinHalfExt(), mesh->GetMaxHalfExt()))
+				{
 					shade::Render::SubmitInstance(m_InstancedShader, mesh, mesh->GetMaterial(), transform.GetModelMatrix());
+					shade::Render::Submit(m_BoxShader, shade::Box::Create(mesh->GetMinHalfExt(), mesh->GetMaxHalfExt()), nullptr, transform.GetModelMatrix());
+					
+				}
+					
 			}
 		});
 }
@@ -111,6 +116,7 @@ void EditorLayer::OnRender(const shade::Shared<shade::Scene>& scene, const shade
 		shade::Render::BeginScene(m_EditorCamera);
 		shade::Render::DrawSubmited(m_GridShader);
 		shade::Render::DrawSubmited(m_FrustumShader);
+		shade::Render::DrawSubmited(m_BoxShader);
 		shade::Render::EndScene();
 
 		shade::Render::End(m_FrameBuffer);
@@ -164,6 +170,7 @@ void EditorLayer::OnEvent(const shade::Shared<shade::Scene>& scene, shade::Event
 						
 						auto entity = scene->CreateEntity("Cube");
 						entity.AddComponent<shade::Model3DComponent>(shade::AssetManager::Receive<shade::Model3D>(asset));
+						entity.AddComponent<shade::Transform3DComponent>();
 
 					}, shade::Asset::Lifetime::Destroy);
 

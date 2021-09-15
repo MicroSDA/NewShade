@@ -32,6 +32,7 @@ shade::OpenGLVertexArray::OpenGLVertexArray()
 
 shade::OpenGLVertexArray::~OpenGLVertexArray()
 {
+	//SHADE_CORE_TRACE("~OpenGLVertexArray id: {0}", m_RenderID);
 	glDeleteVertexArrays(1, &m_RenderID);
 }
 
@@ -50,7 +51,7 @@ void shade::OpenGLVertexArray::AddVertexBuffer(const Shared<VertexBuffer>& verte
 	if (!vertexBuffer->GetLayout().GetElements().size())
 		SHADE_CORE_ERROR("Vertex buffer layout is 0!");
 
-	glBindVertexArray(m_RenderID);
+	Bind();
 	vertexBuffer->Bind();
 
 	const auto& layout = vertexBuffer->GetLayout();
@@ -113,6 +114,7 @@ void shade::OpenGLVertexArray::AddVertexBuffer(const Shared<VertexBuffer>& verte
 	}
 
 	m_VertexBuffers.push_back(vertexBuffer);
+	UnBind();
 }
 
 void shade::OpenGLVertexArray::SetIndexBuffer(const Shared<IndexBuffer>& indexBuffer)
@@ -136,4 +138,9 @@ std::vector<shade::Shared<shade::VertexBuffer>>& shade::OpenGLVertexArray::GetVe
 const shade::Shared<shade::IndexBuffer>& shade::OpenGLVertexArray::GetIndexBuffer() const
 {
 	return m_IndexBuffer;
+}
+
+const std::uint32_t& shade::OpenGLVertexArray::GetRenderID() const
+{
+	return m_RenderID;
 }

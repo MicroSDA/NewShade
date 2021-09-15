@@ -33,6 +33,7 @@ private:
 	shade::Shared<shade::Shader> m_InstancedShader;
 	shade::Shared<shade::Shader> m_GridShader;
 	shade::Shared<shade::Shader> m_FrustumShader;
+	shade::Shared<shade::Shader> m_BoxShader;
 	
 
 

@@ -14,7 +14,7 @@ namespace shade
 	Shared<UniformBuffer>		Render::m_sCameraUniformBuffer;
 	Shared<UniformBuffer>		Render::m_sClippingUniformBuffer;
 	Shared<ShaderStorageBuffer> Render::m_sDirectLightsBuffer;
-	Shared<ShaderStorageBuffer> Render::m_sPointLightsBuffeer;
+	Shared<ShaderStorageBuffer> Render::m_sPointLightsBuffer;
 	Shared<ShaderStorageBuffer> Render::m_sSpotLightsBuffer;
 
 }
@@ -35,7 +35,7 @@ void shade::Render::Init()
 		m_sCameraUniformBuffer		= UniformBuffer::Create(sizeof(Camera::RenderData),	0);
 		m_sClippingUniformBuffer	= UniformBuffer::Create(sizeof(glm::vec4),			1);
 		m_sDirectLightsBuffer		= ShaderStorageBuffer::Create(0,  2);
-		m_sPointLightsBuffeer		= ShaderStorageBuffer::Create(0,  3);
+		m_sPointLightsBuffer		= ShaderStorageBuffer::Create(0,  3);
 		m_sSpotLightsBuffer			= ShaderStorageBuffer::Create(0,  4);
 
 	}
@@ -72,18 +72,15 @@ void shade::Render::SetViewPort(std::uint32_t x, std::uint32_t y, std::uint32_t 
 
 void shade::Render::Begin(Shared<FrameBuffer> framebuffer)
 {
-	
-	m_sRenderAPI->Begin(framebuffer);
 	/* Instances */
 	for (auto shader = m_sInstancePool.begin(); shader != m_sInstancePool.end();)
 	{
-		auto& instancesPool = shader->second.begin();
-		while (instancesPool != shader->second.end()) // Wrong iteration, second elemts leaving need iterate thour for
+		for (auto pool = shader->second.begin(); pool != shader->second.end();)
 		{
-			if (instancesPool->second.Expired)
-				instancesPool = shader->second.erase(instancesPool++);
+			if (pool->second.Expired)
+				pool = shader->second.erase(pool++);
 			else
-				++instancesPool;
+				++pool;
 		}
 
 		if (shader->second.size() == 0)
@@ -91,58 +88,34 @@ void shade::Render::Begin(Shared<FrameBuffer> framebuffer)
 		else
 			++shader;
 	}
+
 	/* Submited */
 	for (auto shader = m_sSubmitedPool.begin(); shader != m_sSubmitedPool.end();)
 	{
-		auto& submitedPool = shader->second.begin();
-		while (submitedPool != shader->second.end())
+		for (auto pool = shader->second.begin(); pool != shader->second.end();)
 		{
-			if (submitedPool->second.Expired)
-				submitedPool = shader->second.erase(submitedPool++);
+			if (pool->second.Expired)
+				pool = shader->second.erase(pool++);
 			else
-				++submitedPool;
+				++pool;
 		}
 
 		if (shader->second.size() == 0)
-			shader = m_sSubmitedPool.erase(shader++);
+			m_sSubmitedPool.erase(shader++);
 		else
 			++shader;
 	}
+
+	m_sRenderAPI->Begin(framebuffer);
 }
 
 void shade::Render::End(Shared<FrameBuffer> framebuffer)
 {
 	m_sRenderAPI->End(framebuffer);
-	/* Instances */
-	for (auto& shader : m_sInstancePool)
-	{
-		for (auto& instances : shader.second)
-		{
-			if (!instances.second.Expired)
-			{
-				instances.second.Count = 0;
-				instances.second.Transforms.clear();
-				instances.second.Expired = true;
-			}
-		}
-	}
-	/* Submited */
-	for (auto& shader : m_sSubmitedPool)
-	{
-		for (auto& instances : shader.second)
-		{
-			if (!instances.second.Expired)
-			{
-				instances.second.MaterialTransforms.clear();
-				instances.second.Expired = true;
-			}
-		}
-	}
 }
 
 void shade::Render::BeginScene(const Shared<Camera>& camera, const Shared<Environment>* env, const std::size_t& envCount, const glm::vec4& clipping)
 {
-
 	m_sRenderAPI->BeginScene(camera, env, envCount);
 	/* Set data to uniforsm buffetrs */
 	m_sCameraUniformBuffer->SetData(&camera->GetData(), sizeof(Camera::RenderData), 0);
@@ -153,8 +126,8 @@ void shade::Render::BeginScene(const Shared<Camera>& camera, const Shared<Enviro
 
 	if (m_sDirectLightsBuffer->GetSize() != sizeof(DirectLight::RenderData) * DirectLight::GetTotalCount())
 		m_sDirectLightsBuffer->Resize(sizeof(DirectLight::RenderData) * DirectLight::GetTotalCount());
-	if (m_sPointLightsBuffeer->GetSize() != sizeof(PointLight::RenderData) * PointLight::GetTotalCount())
-		m_sPointLightsBuffeer->Resize(sizeof(PointLight::RenderData) * PointLight::GetTotalCount());
+	if (m_sPointLightsBuffer->GetSize() != sizeof(PointLight::RenderData) * PointLight::GetTotalCount())
+		m_sPointLightsBuffer->Resize(sizeof(PointLight::RenderData) * PointLight::GetTotalCount());
 	if (m_sSpotLightsBuffer->GetSize() != sizeof(SpotLight::RenderData) * SpotLight::GetTotalCount())
 		m_sSpotLightsBuffer->Resize(sizeof(SpotLight::RenderData) * SpotLight::GetTotalCount());
 
@@ -167,7 +140,7 @@ void shade::Render::BeginScene(const Shared<Camera>& camera, const Shared<Enviro
 			dLightIndex++;
 			break;
 		case Environment::Type::PointLight:
-			m_sPointLightsBuffeer->SetData(env[i]->ReciveRenderData<PointLight>(), sizeof(PointLight::RenderData), sizeof(PointLight::RenderData) * pLighIndex);
+			m_sPointLightsBuffer->SetData(env[i]->ReciveRenderData<PointLight>(), sizeof(PointLight::RenderData), sizeof(PointLight::RenderData) * pLighIndex);
 			pLighIndex++;
 			break;
 		case Environment::Type::SpotLight:
@@ -195,7 +168,7 @@ void shade::Render::SubmitInstance(const Shared<Shader>& shader, const Shared<Dr
 	}
 	else
 	{
-		auto& _drawablePool = _shaderPool->second.find(drawable.get());
+		auto& _drawablePool = _shaderPool->second.find(drawable);
 		if (_drawablePool == _shaderPool->second.end())
 		{
 			// Create new
@@ -204,10 +177,10 @@ void shade::Render::SubmitInstance(const Shared<Shader>& shader, const Shared<Dr
 		else
 		{
 			// Update existing 
-			m_sInstancePool[shader.get()][drawable.get()].Expired = false; 
-			m_sInstancePool[shader.get()][drawable.get()].Count++;
-			m_sInstancePool[shader.get()][drawable.get()].Material = material;
-			m_sInstancePool[shader.get()][drawable.get()].Transforms.push_back(transform);
+			m_sInstancePool[shader.get()][drawable].Expired = false; 
+			m_sInstancePool[shader.get()][drawable].Count++;
+			m_sInstancePool[shader.get()][drawable].Material = material;
+			m_sInstancePool[shader.get()][drawable].Transforms.push_back(transform);
 		}
 	}
 }
@@ -223,7 +196,7 @@ void shade::Render::Submit(const Shared<Shader>& shader, const Shared<Drawable>&
 	}
 	else
 	{
-		auto& _drawablePool = _shaderPool->second.find(drawable.get());
+		auto _drawablePool = _shaderPool->second.find(drawable);
 		if (_drawablePool == _shaderPool->second.end())
 		{
 			// Create new
@@ -232,8 +205,8 @@ void shade::Render::Submit(const Shared<Shader>& shader, const Shared<Drawable>&
 		else
 		{
 			// Update existing 
-			m_sSubmitedPool[shader.get()][drawable.get()].Expired = false;
-			m_sSubmitedPool[shader.get()][drawable.get()].MaterialTransforms.push_back(std::make_tuple(transform, material));
+			_drawablePool->second.Expired = false;
+			_drawablePool->second.MaterialTransforms.push_back(std::make_tuple(transform, material));
 		}
 	}
 }
@@ -282,7 +255,13 @@ void shade::Render::DrawInstances(const Shared<Shader>& shader)
 			}
 			/*Execute draw call*/
 			m_sRenderAPI->DrawInstanced(instance.second.DrawMode, instance.second.VAO, instance.second.VAO->GetIndexBuffer(), instance.second.Count);
+			/* Make as expired */
+			instance.second.Expired = true;
+			instance.second.Count	= 0;
+			instance.second.Transforms.clear();
 		}
+
+		shader->UnBind();
 	}
 }
 
@@ -305,7 +284,6 @@ void shade::Render::DrawSubmited(const Shared<Shader>& shader)
 				/* If material exist */
 				if (std::get<1>(instance.second.MaterialTransforms[i]))
 				{
-					
 					/* Send material */
 					shader->SendFlaot3("u_Material.AmbientColor",		glm::value_ptr(material->ColorAmbient));
 					shader->SendFlaot3("u_Material.DiffuseColor",		glm::value_ptr(material->ColorDiffuse));
@@ -328,10 +306,16 @@ void shade::Render::DrawSubmited(const Shared<Shader>& shader)
 						material->TextureNormals->Bind(2);
 
 				}
+
 				/*Execute draw call*/
 				m_sRenderAPI->DrawIndexed(instance.second.DrawMode, instance.second.VAO, instance.second.VAO->GetIndexBuffer());
+				/* Make as expired */
+				instance.second.Expired = true;
+				instance.second.MaterialTransforms.clear();
 			}
 		}
+
+		shader->UnBind(); // Need here to successful remove shader from pool
 	}
 }
 
@@ -352,19 +336,21 @@ void shade::Render::_CreateInstance(const Shared<Shader>& shader, const Shared<D
 	Render::Instance instance;
 	instance.DrawMode = drawable->GetDrawMode();
 	instance.MaterialTransforms.push_back(std::make_tuple(transform,material));
-	instance.DrawMode = drawable->GetDrawMode();
 	instance.VAO = VertexArray::Create();																		/* Im not sure if we use dynamic funtional*/
 	instance.VBO = VertexBuffer::Create(drawable->GetVertices().data(), sizeof(Vertex3D) * drawable->GetVertices().size(), VertexBuffer::BufferType::Dynamic);
 	instance.IBO = IndexBuffer::Create(drawable->GetIndices().data(), drawable->GetIndices().size());
-	instance.VBO->SetLayout({ {shade::VertexBuffer::ElementType::Float3,   "Position"	},
+	instance.VBO->SetLayout({   {shade::VertexBuffer::ElementType::Float3, "Position"	},
 								{shade::VertexBuffer::ElementType::Float2, "UV_Coords"	},
 								{shade::VertexBuffer::ElementType::Float3, "Normal"		},
 								{shade::VertexBuffer::ElementType::Float3, "Tangent"	} });
 	/* Add all buffers to VAO */
 	instance.VAO->AddVertexBuffer(instance.VBO);
 	instance.VAO->SetIndexBuffer(instance.IBO);
+	instance.Expired = false;
 	/* Add new instance */
-	m_sSubmitedPool[shader.get()][drawable.get()] = instance;
+
+	//m_sSubmitedPool.insert({ shader.get(),});
+	m_sSubmitedPool[shader.get()][drawable] = std::move(instance);
 }
 
 void shade::Render::_CreateInstances(const Shared<Shader>& shader, const Shared<Drawable>& drawable, const Shared<Material3D>& material, const glm::mat4& transform)
@@ -374,7 +360,6 @@ void shade::Render::_CreateInstances(const Shared<Shader>& shader, const Shared<
 	instance.Count++;
 	instance.DrawMode   = drawable->GetDrawMode();
 	instance.Material	= material;
-	instance.DrawMode	= drawable->GetDrawMode();
 	instance.VAO		= VertexArray::Create();																		/* Im not sure if we use dynamic funtional*/
 	instance.VBO		= VertexBuffer::Create(drawable->GetVertices().data(), sizeof(Vertex3D) * drawable->GetVertices().size(), VertexBuffer::BufferType::Dynamic);
 	instance.EBO		= VertexBuffer::Create(0, VertexBuffer::BufferType::Dynamic);
@@ -388,12 +373,8 @@ void shade::Render::_CreateInstances(const Shared<Shader>& shader, const Shared<
 	instance.VAO->AddVertexBuffer(instance.VBO);
 	instance.VAO->AddVertexBuffer(instance.EBO);
 	instance.VAO->SetIndexBuffer(instance.IBO);
+	instance.Expired = false;
 	instance.Transforms.push_back(transform);
 	/* Add new instance */
-	m_sInstancePool[shader.get()][drawable.get()] = instance;
+	m_sInstancePool[shader.get()][drawable] = std::move(instance);
 }
-
-//void shade::Render::Bloom(const Shared<FrameBuffer>& inputFrameBuffer, const Shared<FrameBuffer>& outFrameBuffer, const Shared<Shader>& bloomShader)
-//{
-//	m_sRenderAPI->Bloom(inputFrameBuffer, outFrameBuffer, bloomShader);
-//}

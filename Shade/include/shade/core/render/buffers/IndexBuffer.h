@@ -2,6 +2,7 @@
 #include "shade/config/API.h"
 #include "shade/core/Types.h"
 #include "shade/core/vertex/Vertex3D.h"
+#include "shade/core/utils/Log.h"
 
 namespace shade
 {
