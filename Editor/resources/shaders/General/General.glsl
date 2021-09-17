@@ -116,19 +116,10 @@ layout (location = 1) out vec4 FrameBuffer2;
 // Main entry point
 void main()
 {
-
-
 	vec3 ToCameraDirection 	= normalize(u_Camera.Position - a_Vertex);
 	// Do lighting calculation;
-	vec4 Color 				= u_sLighting(ToCameraDirection);
-	
-	const float Exposure   = 1.0 * 10;
-	const float Gamma      = 0.9;
-	// Exposure
-	//Color.rgb  = vec3(1.0) - exp(-Color.rgb * Exposure);
-	// Gamma
-	//Color.rgb  = pow(Color.rgb, vec3(1.0 / Gamma));
-	
+	vec4 Color 			= u_sLighting(ToCameraDirection);
+
 	FrameBuffer 		= vec4(Color.rgb + (u_Material.DiffuseColor * u_Material.Emissive), 1.0);
 }
 // !End of fragment shader

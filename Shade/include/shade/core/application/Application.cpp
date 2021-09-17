@@ -60,7 +60,7 @@ void shade::Application::Start()
 		NativeScriptsUpdate(m_DeltaTime);
 
 
-		((!m_CurrentScene) ? dummyScene : m_CurrentScene)->NativeScriptsUpdate(m_DeltaTime);
+		((!m_CurrentScene) ? dummyScene : m_CurrentScene)->OnPlaying(m_DeltaTime);
 
 		for (auto& const layer : m_Layers)
 		{

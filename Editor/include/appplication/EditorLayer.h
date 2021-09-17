@@ -55,11 +55,12 @@ private:
 
 
 
-	void MainMenu(shade::Scene* scene);
+	void MainMenu(const shade::Shared<shade::Scene>& scene);
 	void AssetsExplorer(shade::AssetManager::AssetsDataList& data);
 	void FileExplorer(const std::string& rootPath);
 	void Entities(shade::Scene* scene);
 	void Inspector(shade::Entity& entity);
+	void ScenePlayStop(const shade::Shared<shade::Scene>& scene);
 	void Scene(shade::Scene* scene);
 	void TagComponent(shade::Entity& entity);
 	void Transform3DComponent(shade::Entity& entity);

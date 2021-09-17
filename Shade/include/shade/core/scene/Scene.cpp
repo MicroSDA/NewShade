@@ -5,7 +5,13 @@
 
 shade::Shared<shade::Scene> shade::Scene::Create()
 {
-	return CreateShared<Scene>();
+	return Shared<Scene>(new Scene());
+}
+
+shade::Scene::Scene() :
+	m_IsPlaying(false)
+{
+
 }
 
 shade::Scene::~Scene()
@@ -42,6 +48,39 @@ shade::Entity shade::Scene::GetPrimaryCamera()
 		});
 
 	return Entity(); // Make use that entity is valid !
+}
+
+void shade::Scene::OnPlayStart()
+{
+	SHADE_CORE_DEBUG("OnPlayStart");
+}
+
+void shade::Scene::OnPlaying(const shade::Timer& deltaTime)
+{
+	if (m_IsPlaying)
+	{
+		NativeScriptsUpdate(deltaTime);
+	}
+}
+
+void shade::Scene::OnPlayStop()
+{
+	SHADE_CORE_DEBUG("OnPlayStop");
+}
+
+const bool& shade::Scene::IsPlaying() const
+{
+	return m_IsPlaying;
+}
+
+void shade::Scene::SetPlaying(const bool& play)
+{
+	m_IsPlaying = play;
+
+	if (play)
+		OnPlayStart();
+	else
+		OnPlayStop();
 }
 
 bool shade::Scene::Serialize(std::ostream& stream) const

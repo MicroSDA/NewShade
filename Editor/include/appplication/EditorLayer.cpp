@@ -51,8 +51,8 @@ void EditorLayer::OnUpdate(const shade::Shared<shade::Scene>& scene, const shade
 	auto frustum = m_TestEditorCamera->GetFrustum();
 
 	/* Materials always nullptr for this*/
-	shade::Render::Submit(m_GridShader, m_Grid, m_Grid->GetMaterial(), glm::mat4(1));
-	shade::Render::Submit(m_FrustumShader, m_Box, m_Box->GetMaterial(), glm::inverse(m_TestEditorCamera->GetViewProjection()));
+	shade::Render::Submit(m_GridShader,    m_Grid, m_Grid->GetMaterial(),  glm::mat4(1));
+	shade::Render::Submit(m_FrustumShader, m_Box,  m_Box->GetMaterial(),   glm::inverse(m_TestEditorCamera->GetViewProjection()));
 
 
 	scene->GetEntities().view<shade::Model3DComponent, shade::Transform3DComponent>().each([&](auto& entity, shade::Model3DComponent& model, shade::Transform3DComponent& transform)
@@ -63,7 +63,6 @@ void EditorLayer::OnUpdate(const shade::Shared<shade::Scene>& scene, const shade
 				{
 					shade::Render::SubmitInstance(m_InstancedShader, mesh, mesh->GetMaterial(), transform.GetModelMatrix());
 					shade::Render::Submit(m_BoxShader, shade::Box::Create(mesh->GetMinHalfExt(), mesh->GetMaxHalfExt()), nullptr, transform.GetModelMatrix());
-					
 				}
 					
 			}
@@ -83,7 +82,7 @@ void EditorLayer::OnRender(const shade::Shared<shade::Scene>& scene, const shade
 			ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), m_DockSpaceFlags);
 		}
 
-		MainMenu(scene.get());
+		MainMenu(scene);
 		ShowWindowBar("Entities", &EditorLayer::Entities, this, scene.get());
 		ShowWindowBar("Inspector", &EditorLayer::Inspector, this, m_SelectedEntity);
 		ShowWindowBar("Scene", &EditorLayer::Scene, this, scene.get());
@@ -95,7 +94,7 @@ void EditorLayer::OnRender(const shade::Shared<shade::Scene>& scene, const shade
 		ShowWindowBar("Mesh", &EditorLayer::Mesh, this,    m_SelectedMesh);
 		ShowWindowBar("Material", &EditorLayer::Material, this, m_SelectedMaterial3D);
 		ShowWindowBar("Shaders library", &EditorLayer::ShadersLibrary, this);
-		//ShowWindowBar("Model3D",   nullptr, this, nullptr);
+		ShowDemoWindow();
 
 	} ImGui::End(); // Begin("DockSpace")
 
@@ -307,6 +306,47 @@ void EditorLayer::Inspector(shade::Entity& entity)
 	DrawComponent<shade::Transform3DComponent>("Transform", entity, &EditorLayer::Transform3DComponent, this, entity); // "this" as first argument ! for std::invoke when non static fucntion provided it should know instance
 	DrawComponent<shade::Model3DComponent>("Model", entity, &EditorLayer::Model3dComponent, this, entity); // "this" as first argument ! for std::invoke when non static fucntion provided it should know instance
 	DrawComponent<shade::EnvironmentComponent>("Enviroment", entity, &EditorLayer::EnvironmentComponent, this, entity); // "this" as first argument ! for std::invoke when non static fucntion provided it should know instance
+
+	static bool is = false;
+	ImVec2 _PlayButtonSize = { 150, 150 };
+	if (!is)
+	{
+		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4{ 0,1,0,1 });
+		if (DrawButtonTrinagle("Play", _PlayButtonSize))
+			is = true;
+		ImGui::PopStyleColor();
+	}
+	else
+	{
+		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4{ 1,0,0,1 });
+		if (DrawButtonSquare("Stop", _PlayButtonSize))
+			is = false;
+		ImGui::PopStyleColor();
+	}
+}
+
+void EditorLayer::ScenePlayStop(const shade::Shared<shade::Scene>& scene)
+{
+	//ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth() / 2);
+	const ImGuiStyle& style = ImGui::GetStyle();
+	ImVec2 _PlayButtonSize = { 20, 0 };
+	ImGui::SameLine((ImGui::GetContentRegionAvailWidth() / 2) - (_PlayButtonSize.x / 2) + style.ItemSpacing.x / 2);
+
+	if (!scene->IsPlaying())
+	{
+		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4{ 0,1,0,1 });
+		if (DrawButtonTrinagle("Play", _PlayButtonSize))
+			scene->SetPlaying(true);
+		ImGui::PopStyleColor();
+	}
+	else
+	{
+		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4{ 1,0,0,1 });
+		if (DrawButtonSquare("Stop", _PlayButtonSize))
+			scene->SetPlaying(false);
+		ImGui::PopStyleColor();
+	}
+	
 }
 
 void EditorLayer::Scene(shade::Scene* scene)
@@ -387,7 +427,7 @@ void EditorLayer::FileExplorer(const std::string& rootPath)
 
 }
 
-void EditorLayer::MainMenu(shade::Scene* scene)
+void EditorLayer::MainMenu(const shade::Shared<shade::Scene>& scene)
 {
 	if (ImGui::BeginMenuBar())
 	{
@@ -450,8 +490,14 @@ void EditorLayer::MainMenu(shade::Scene* scene)
 			ImGui::EndMenu();
 		}
 
+		ScenePlayStop(scene);
+		
 		ImGui::EndMenuBar();
 	}
+
+	
+	
+
 }
 
 void EditorLayer::AssetsExplorer(shade::AssetManager::AssetsDataList& data)

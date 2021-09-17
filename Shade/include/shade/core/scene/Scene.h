@@ -16,6 +16,13 @@ namespace shade
 		const std::string& GetName() const;
 		Entity GetPrimaryCamera();
 
+		void OnPlayStart();
+		void OnPlaying(const shade::Timer& deltaTime);
+		void OnPlayStop();
+
+		const bool& IsPlaying() const;
+		void SetPlaying(const bool& play);
+
 		virtual bool Serialize(std::ostream& stream) const override;
 		virtual bool Deserialize(std::istream& stream) override;
 		virtual bool Serialize() const override;
@@ -24,7 +31,8 @@ namespace shade
 		virtual void AssetInit() override;
 
 	private:
-		//Scene();
+		Scene();
 		std::string m_Name;
+		bool        m_IsPlaying;
 	};
 }

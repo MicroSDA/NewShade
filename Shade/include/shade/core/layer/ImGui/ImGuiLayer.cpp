@@ -1,6 +1,9 @@
 #include "shade_pch.h"
 #include "ImGuiLayer.h"
 
+#ifndef IMGUI_DEFINE_MATH_OPERATORS
+#define IMGUI_DEFINE_MATH_OPERATORS
+#endif
 //#include "shade/core/layer/ImGui/ImGuiCurve.h"
 #include <ImGui/imgui_internal.h>
 #include <ImGui/backends/imgui_impl_glfw.h>
@@ -307,4 +310,111 @@ bool shade::ImGuiLayer::DrawButtonCol(const char* cw1Lable, const char* buttonLa
 	ImGui::PopID();
 
 	return isUsed;
+}
+
+bool shade::ImGuiLayer::DrawButtonTrinagle(const char* label, const ImVec2& size_arg, ImGuiButtonFlags flags)
+{
+
+	ImGuiWindow* window = ImGui::GetCurrentWindow();
+	if (window->SkipItems)
+		return false;
+
+	ImGuiContext& g = *GImGui;
+	const ImGuiStyle& style = g.Style;
+	const ImGuiID id = window->GetID(label);
+	const ImVec2 label_size = ImGui::CalcTextSize(label, NULL, true);
+
+	ImVec2 pos = window->DC.CursorPos;
+	if ((flags & ImGuiButtonFlags_AlignTextBaseLine) && style.FramePadding.y < window->DC.CurrLineTextBaseOffset) // Try to vertically align buttons that are smaller/have no padding so that text baseline matches (bit hacky, since it shouldn't be a flag)
+		pos.y += window->DC.CurrLineTextBaseOffset - style.FramePadding.y;
+	ImVec2 size = ImGui::CalcItemSize(size_arg, label_size.x + style.FramePadding.x * 2.0f, label_size.y + style.FramePadding.y * 2.0f);
+
+	const ImRect bb(pos, pos + size);
+	ImGui::ItemSize(size, style.FramePadding.y);
+	if (!ImGui::ItemAdd(bb, id))
+		return false;
+
+	if (g.CurrentItemFlags & ImGuiItemFlags_ButtonRepeat)
+		flags |= ImGuiButtonFlags_Repeat;
+	bool hovered, held;
+	bool pressed = ImGui::ButtonBehavior(bb, id, &hovered, &held, flags);
+
+	
+	// Render
+	const ImU32 col = ImGui::GetColorU32((held && hovered) ? ImGuiCol_ButtonActive : hovered ? ImGuiCol_ButtonHovered : ImGuiCol_Button);
+	ImGui::RenderNavHighlight(bb, id);
+	//ImGui::RenderFrame(bb.Min, bb.Max, col, true, style.FrameRounding);
+	
+	ImVec2 _Points[3];
+	_Points[0] = bb.Min;
+	_Points[1] = { bb.Max.x, bb.Max.y - size.y / 2 };
+	_Points[2] = { bb.Min.x, bb.Max.y };
+	/**/
+	window->DrawList->AddConvexPolyFilled(_Points, 3, col);
+    /**/
+
+	if (g.LogEnabled)
+		ImGui::LogSetNextTextDecoration("[", "]");
+	//ImGui::RenderTextClipped(bb.Min + style.FramePadding, bb.Max - style.FramePadding, label, NULL, &label_size, style.ButtonTextAlign, &bb);
+
+	// Automatically close popups
+	//if (pressed && !(flags & ImGuiButtonFlags_DontClosePopups) && (window->Flags & ImGuiWindowFlags_Popup))
+	//    CloseCurrentPopup();
+
+	IMGUI_TEST_ENGINE_ITEM_INFO(id, label, window->DC.LastItemStatusFlags);
+	return pressed;
+}
+
+bool shade::ImGuiLayer::DrawButtonSquare(const char* label, const ImVec2& size_arg, ImGuiButtonFlags flags)
+{
+
+	ImGuiWindow* window = ImGui::GetCurrentWindow();
+	if (window->SkipItems)
+		return false;
+
+	ImGuiContext& g = *GImGui;
+	const ImGuiStyle& style = g.Style;
+	const ImGuiID id = window->GetID(label);
+	const ImVec2 label_size = ImGui::CalcTextSize(label, NULL, true);
+
+	ImVec2 pos = window->DC.CursorPos;
+	if ((flags & ImGuiButtonFlags_AlignTextBaseLine) && style.FramePadding.y < window->DC.CurrLineTextBaseOffset) // Try to vertically align buttons that are smaller/have no padding so that text baseline matches (bit hacky, since it shouldn't be a flag)
+		pos.y += window->DC.CurrLineTextBaseOffset - style.FramePadding.y;
+	ImVec2 size = ImGui::CalcItemSize(size_arg, label_size.x + style.FramePadding.x * 2.0f, label_size.y + style.FramePadding.y * 2.0f);
+
+	const ImRect bb(pos, pos + size);
+	ImGui::ItemSize(size, style.FramePadding.y);
+	if (!ImGui::ItemAdd(bb, id))
+		return false;
+
+	if (g.CurrentItemFlags & ImGuiItemFlags_ButtonRepeat)
+		flags |= ImGuiButtonFlags_Repeat;
+	bool hovered, held;
+	bool pressed = ImGui::ButtonBehavior(bb, id, &hovered, &held, flags);
+
+
+	// Render
+	const ImU32 col = ImGui::GetColorU32((held && hovered) ? ImGuiCol_ButtonActive : hovered ? ImGuiCol_ButtonHovered : ImGuiCol_Button);
+	ImGui::RenderNavHighlight(bb, id);
+	//ImGui::RenderFrame(bb.Min, bb.Max, col, true, style.FrameRounding);
+
+	ImVec2 _Points[4];
+	_Points[0] = bb.Min;
+	_Points[1] = { bb.Max.x, bb.Min.y };
+	_Points[2] = bb.Max;
+	_Points[3] = { bb.Min.x, bb.Max.y };
+	/**/
+	window->DrawList->AddConvexPolyFilled(_Points, 4, col);
+	/**/
+
+	if (g.LogEnabled)
+		ImGui::LogSetNextTextDecoration("[", "]");
+	//ImGui::RenderTextClipped(bb.Min + style.FramePadding, bb.Max - style.FramePadding, label, NULL, &label_size, style.ButtonTextAlign, &bb);
+
+	// Automatically close popups
+	//if (pressed && !(flags & ImGuiButtonFlags_DontClosePopups) && (window->Flags & ImGuiWindowFlags_Popup))
+	//    CloseCurrentPopup();
+
+	IMGUI_TEST_ENGINE_ITEM_INFO(id, label, window->DC.LastItemStatusFlags);
+	return pressed;
 }

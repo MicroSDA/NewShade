@@ -52,15 +52,11 @@ namespace shade
 		bool DrawImGuizmo(glm::mat4& transform, const Shared<Camera>& camera, const ImGuizmo::OPERATION& operation, const float& x, const float& y, const float& width, const float& height);
 		int  DrawCurve(const std::string& label, const float* values, int points_count, const ImVec2& editor_size);
 		bool DrawButtonCol(const char* cw1Lable, const char* buttonLable, const float& cw1 = 80.0f, const float& cw2 = 0.0f);
-		/*template<typename T, typename ...Args, typename R = std::result_of<T(Args&&...)>::type>
-		auto ShowWindowBar(const char* title, T callback, Args&& ...args)
-		{
-			R value;
-			if (ImGui::Begin(title))
-				value = callback(std::forward<Args>(args)...);
-			ImGui::End();
-			return value;
-		}*/
+		bool DrawButtonTrinagle(const char* label, const ImVec2& size_arg, ImGuiButtonFlags flags = ImGuiButtonFlags_None);
+		bool DrawButtonSquare(const char* label, const ImVec2& size_arg, ImGuiButtonFlags flags = ImGuiButtonFlags_None);
+		/*
+		* 
+		*/
 
 	};
 
