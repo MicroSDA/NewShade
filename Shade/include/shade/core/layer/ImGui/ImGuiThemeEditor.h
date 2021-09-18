@@ -58,7 +58,7 @@ namespace shade
 			colors[ImGuiCol_Text] = GetColor(TextColor);
 			colors[ImGuiCol_TextDisabled] = Disabled(colors[ImGuiCol_Text]);
 			colors[ImGuiCol_WindowBg] = GetColor(BackGroundColor);
-			colors[ImGuiCol_ChildBg] = GetColor(Black, Alpha20);
+			colors[ImGuiCol_ChildBg] = GetColor(Black);
 			colors[ImGuiCol_PopupBg] = GetColor(BackGroundColor, Alpha90);
 			colors[ImGuiCol_Border] = Lighten(GetColor(BackGroundColor), 0.1f);
 			colors[ImGuiCol_BorderShadow] = GetColor(Black);
@@ -110,7 +110,7 @@ namespace shade
 			style.WindowMenuButtonPosition = ImGuiDir_Right;
 			style.WindowPadding = ImVec2(6, 4);
 			style.WindowRounding = 6.0f;
-			style.FramePadding = ImVec2(5, 2);
+			style.FramePadding = ImVec2(5, 4);
 			style.FrameRounding = 3.0f;
 			style.ItemSpacing = ImVec2(4, 2);
 			style.ItemInnerSpacing = ImVec2(1, 1);

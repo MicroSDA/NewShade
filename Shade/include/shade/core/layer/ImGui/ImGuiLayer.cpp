@@ -418,3 +418,14 @@ bool shade::ImGuiLayer::DrawButtonSquare(const char* label, const ImVec2& size_a
 	IMGUI_TEST_ENGINE_ITEM_INFO(id, label, window->DC.LastItemStatusFlags);
 	return pressed;
 }
+
+bool shade::ImGuiLayer::DrawButtonImage(const Shared<Texture>& texture, const ImVec2& buttonSize, const ImVec2& imageSize, const ImVec2& start, int frame_padding, const ImVec4& bg_col, const ImVec4& tint_col)
+{
+	ImVec2 textureSize = { (float)texture->GetImageData().Width, (float)texture->GetImageData().Height };
+
+	ImVec2 uv1 = ImVec2(start.x / textureSize.x, start.y / textureSize.y);
+	ImVec2 uv2 = ImVec2((start.x + imageSize.x) / textureSize.x, (start.y + imageSize.y) / textureSize.y);
+
+	return ImGui::ImageButton(reinterpret_cast<void*>(texture->GetRenderID()),
+		buttonSize, uv1, uv2, frame_padding, bg_col, tint_col);
+}

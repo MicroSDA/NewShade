@@ -52,7 +52,8 @@ private:
 	shade::Shared<shade::Material3D> m_SelectedMaterial3D;
 	shade::Shared<shade::Model3D>    m_SelectedModel3D;
 	shade::Shared<shade::Mesh>       m_SelectedMesh;
-
+	/* Editor assets */
+	shade::Shared<shade::Texture>	 m_IconsTexture;
 
 
 	void MainMenu(const shade::Shared<shade::Scene>& scene);
@@ -61,7 +62,7 @@ private:
 	void Entities(shade::Scene* scene);
 	void Inspector(shade::Entity& entity);
 	void ScenePlayStop(const shade::Shared<shade::Scene>& scene);
-	void Scene(shade::Scene* scene);
+	void Scene(const shade::Shared<shade::Scene>& scene);
 	void TagComponent(shade::Entity& entity);
 	void Transform3DComponent(shade::Entity& entity);
 	void EnvironmentComponent(shade::Entity& entity);

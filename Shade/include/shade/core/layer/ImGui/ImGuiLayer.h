@@ -32,6 +32,8 @@ namespace shade
 		// Support functions
 		template<typename Callback, typename ...Args>
 		void ShowWindowBar(const char* title, Callback callback, Args&& ...args);
+		template<typename Callback, typename ...Args>
+		void ShowWindowBarOverlay(const char* title, ImGuiViewport* veiwport, Callback callback, Args && ...args);
 		template<typename Comp, typename Call, typename ...Args>
 		void DrawComponent(const char* title, Entity& entity, Call callback, Args&& ...args);
 		template<typename Call, typename ...Args>
@@ -54,6 +56,18 @@ namespace shade
 		bool DrawButtonCol(const char* cw1Lable, const char* buttonLable, const float& cw1 = 80.0f, const float& cw2 = 0.0f);
 		bool DrawButtonTrinagle(const char* label, const ImVec2& size_arg, ImGuiButtonFlags flags = ImGuiButtonFlags_None);
 		bool DrawButtonSquare(const char* label, const ImVec2& size_arg, ImGuiButtonFlags flags = ImGuiButtonFlags_None);
+		bool DrawButtonImage(const Shared<Texture>& texture, const ImVec2& buttonSize, const ImVec2& imageSize, const ImVec2& start = ImVec2(0,0), int frame_padding = -1, const ImVec4& bg_col = ImVec4(0, 0, 0, 0), const ImVec4& tint_col = ImVec4(1, 1, 1, 1));
+		/*ImVec2 start = {892, 614};
+		ImVec2 size = { 26,  26 };
+		ImVec2 textureSize = { (float)m_IconsTexture->GetImageData().Width, (float)m_IconsTexture->GetImageData().Height };
+
+		ImVec2 uv1 = ImVec2(start.x / textureSize.x, start.y / textureSize.y);
+		ImVec2 uv2 = ImVec2((start.x + size.x) / textureSize.x, (start.y + size.y) / textureSize.y);
+
+		ImGui::ImageButton(reinterpret_cast<void*>(m_IconsTexture->GetRenderID()),
+			ImVec2{ 26, 26 }, uv1, uv2);*/
+		/*ImGui::Image(reinterpret_cast<void*>(m_IconsTexture->GetRenderID()),
+			ImVec2{26, 26}, uv1, uv2);*/
 		/*
 		* 
 		*/
@@ -65,6 +79,20 @@ namespace shade
 	{
 		if (ImGui::Begin(title))
 			std::invoke(callback, std::forward<Args>(args)...);
+		ImGui::End();
+	}
+	template<typename Callback, typename ...Args>
+	inline void ImGuiLayer::ShowWindowBarOverlay(const char* title, ImGuiViewport* veiwport, Callback callback, Args && ...args)
+	{
+		ImGui::SetNextWindowViewport(veiwport->ID);
+		ImGui::SetNextWindowBgAlpha(0.0f); // Transparent background
+		ImGui::SetNextWindowPos(ImVec2{ ImGui::GetWindowPos().x + 10.0f, ImGui::GetWindowPos().y + 30.0f }, ImGuiCond_Always);
+
+		if (ImGui::Begin(title, nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_AlwaysAutoResize |
+			ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav))
+		{
+			std::invoke(callback, std::forward<Args>(args)...);
+		}
 		ImGui::End();
 	}
 	template<typename Comp, typename Call, typename ...Args>

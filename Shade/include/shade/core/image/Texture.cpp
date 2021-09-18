@@ -24,7 +24,14 @@ bool shade::Texture::Serialize(std::ostream& stream) const
 
 bool shade::Texture::Deserialize(std::istream& stream)
 {
-    return false;
+	m_ImageData = Image::LoadFromStream(stream);
+
+	if (m_ImageData.Data != nullptr)
+		return true;
+	else
+	{
+		return false;
+	}
 }
 
 bool shade::Texture::Serialize() const
@@ -34,9 +41,6 @@ bool shade::Texture::Serialize() const
 
 bool shade::Texture::Deserialize()
 {
-	//return false; ////!!!!!!!!!!!!
-	 // Now only if it prsenet in asset data list
-	std::string id = GetAssetData().Attribute("Id").as_string();
 	std::string path = GetAssetData().Attribute("Path").as_string();
 
 	if (std::filesystem::path(path).extension().string() == ".dds")
@@ -46,15 +50,14 @@ bool shade::Texture::Deserialize()
 
 		if (file.is_open() && file.good())
 		{
-			m_ImageData = Image::LoadFromStream(file);
-			file.close();
-			if (m_ImageData.Data != nullptr)
-				return true;
-			else
+			if (!Deserialize(file))
 			{
 				SHADE_CORE_WARNING("Failed to decode image '{0}'.", path);
 				return false;
 			}
+			else
+				return true;
+			file.close();
 		}
 		else
 		{

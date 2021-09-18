@@ -29,14 +29,20 @@ void EditorLayer::OnCreate()
 		shade::FrameBuffer::Texture::Format::RGBA16F,
 		shade::FrameBuffer::Texture::Format::DEPTH24STENCIL8 }));
 
-	m_InstancedShader = shade::ShadersLibrary::Get("General");
-	m_GridShader = shade::ShadersLibrary::Get("Grid");
-	m_FrustumShader = shade::ShadersLibrary::Get("Frustum");
-	m_BloomShader = shade::ShadersLibrary::Get("Bloom");
+	m_IconsTexture = shade::Texture::Create();
+	m_IconsTexture->GetAssetData().Attribute("Path").set_value("resources/assets/textures/icons.dds");
+	m_IconsTexture->Deserialize();
+	m_IconsTexture->AssetInit();
+
+	m_InstancedShader		= shade::ShadersLibrary::Get("General");
+	m_GridShader			= shade::ShadersLibrary::Get("Grid");
+	m_FrustumShader			= shade::ShadersLibrary::Get("Frustum");
+	m_BloomShader			= shade::ShadersLibrary::Get("Bloom");
 	m_ColorCorrectionShader = shade::ShadersLibrary::Get("ColorCorrection");
-	m_BoxShader = shade::ShadersLibrary::Get("Box");
-	m_Grid = shade::Grid::Create(0, 0, 0);
-	m_Box  = shade::Box::Create(glm::vec3(-1.f), glm::vec3(1.f));
+	m_BoxShader				= shade::ShadersLibrary::Get("Box");
+
+	m_Grid					= shade::Grid::Create(0, 0, 0);
+	m_Box					= shade::Box::Create(glm::vec3(-1.f), glm::vec3(1.f));
 
 	m_PPBloom = shade::PPBloom::Create();
 	m_PPBloom->SetInOutTargets(m_FrameBuffer, m_FrameBuffer, m_BloomShader);
@@ -85,7 +91,7 @@ void EditorLayer::OnRender(const shade::Shared<shade::Scene>& scene, const shade
 		MainMenu(scene);
 		ShowWindowBar("Entities", &EditorLayer::Entities, this, scene.get());
 		ShowWindowBar("Inspector", &EditorLayer::Inspector, this, m_SelectedEntity);
-		ShowWindowBar("Scene", &EditorLayer::Scene, this, scene.get());
+		ShowWindowBar("Scene", &EditorLayer::Scene, this, scene);
 		ShowWindowBar("File explorer", &EditorLayer::FileExplorer, this, "");
 		ShowWindowBar("Asset explorer", &EditorLayer::AssetsExplorer, this, shade::AssetManager::GetAssetsDataList());
 		ShowWindowBar("Logs", &EditorLayer::LogsExplorer, this);
@@ -311,14 +317,14 @@ void EditorLayer::Inspector(shade::Entity& entity)
 	ImVec2 _PlayButtonSize = { 150, 150 };
 	if (!is)
 	{
-		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4{ 0,1,0,1 });
+		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4{ 0.1, 0.5, 0.1, 1 });
 		if (DrawButtonTrinagle("Play", _PlayButtonSize))
 			is = true;
 		ImGui::PopStyleColor();
 	}
 	else
 	{
-		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4{ 1,0,0,1 });
+		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4{ 0.5, 0.1, 0.1, 1 });
 		if (DrawButtonSquare("Stop", _PlayButtonSize))
 			is = false;
 		ImGui::PopStyleColor();
@@ -328,28 +334,57 @@ void EditorLayer::Inspector(shade::Entity& entity)
 void EditorLayer::ScenePlayStop(const shade::Shared<shade::Scene>& scene)
 {
 	//ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth() / 2);
-	const ImGuiStyle& style = ImGui::GetStyle();
-	ImVec2 _PlayButtonSize = { 20, 0 };
-	ImGui::SameLine((ImGui::GetContentRegionAvailWidth() / 2) - (_PlayButtonSize.x / 2) + style.ItemSpacing.x / 2);
+	/*const ImGuiStyle& style = ImGui::GetStyle();
+	ImVec2 _PlayButtonSize = { 26, 26 };
+	//ImGui::SameLine((ImGui::GetContentRegionAvailWidth() / 2) - (_PlayButtonSize.x / 2) + style.ItemSpacing.x / 2);
 
+	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2{ 10, 100 });
 	if (!scene->IsPlaying())
 	{
-		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4{ 0,1,0,1 });
+		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4{ 0.1, 0.7, 0.1, 1 });
 		if (DrawButtonTrinagle("Play", _PlayButtonSize))
 			scene->SetPlaying(true);
 		ImGui::PopStyleColor();
 	}
 	else
 	{
-		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4{ 1,0,0,1 });
+		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4{ 0.7, 0.1, 0.1, 1 });
 		if (DrawButtonSquare("Stop", _PlayButtonSize))
 			scene->SetPlaying(false);
 		ImGui::PopStyleColor();
 	}
+	ImGui::PopStyleVar();*/
+
+	if(m_GuizmoOperation == ImGuizmo::TRANSLATE)
+		DrawButtonImage(m_IconsTexture, { 25, 25 }, { 24, 24 }, { 562, 186 }, -1, ImVec4(0, 0, 0, 0), ImGui::GetStyle().Colors[ImGuiCol_PlotLines]);
+	else
+	{
+		if (DrawButtonImage(m_IconsTexture, { 25, 25 }, { 24, 24 }, { 562, 186 }, -1, ImVec4(0, 0, 0, 0)))
+			m_GuizmoOperation = ImGuizmo::TRANSLATE;
+	}
 	
+	ImGui::SameLine();
+	if(m_GuizmoOperation == ImGuizmo::ROTATE)
+		DrawButtonImage(m_IconsTexture, { 25, 25 }, { 256, 256 }, { 287, 286 }, - 1, ImVec4(0, 0, 0, 0), ImGui::GetStyle().Colors[ImGuiCol_PlotLines]);
+	else
+	{
+		if(DrawButtonImage(m_IconsTexture, { 25, 25 }, { 256, 256 }, { 287, 286 }, -1, ImVec4(0, 0, 0, 0)))
+			m_GuizmoOperation = ImGuizmo::ROTATE;
+	}
+		
+	ImGui::SameLine();
+	if (m_GuizmoOperation == ImGuizmo::SCALE)
+		DrawButtonImage(m_IconsTexture, { 25, 25 }, { 24, 24 }, { 562, 318 },    -1, ImVec4(0, 0, 0, 0), ImGui::GetStyle().Colors[ImGuiCol_PlotLines]);
+	else
+	{
+		if(DrawButtonImage(m_IconsTexture, { 25, 25 }, { 24, 24 }, { 562, 318 }, -1, ImVec4(0, 0, 0, 0)))
+			m_GuizmoOperation = ImGuizmo::SCALE;
+	}
+		
+
 }
 
-void EditorLayer::Scene(shade::Scene* scene)
+void EditorLayer::Scene(const shade::Shared<shade::Scene>& scene)
 {
 
 	if (m_SceneViewPort.x != ImGui::GetContentRegionAvail().x || m_SceneViewPort.y != ImGui::GetContentRegionAvail().y)
@@ -360,12 +395,33 @@ void EditorLayer::Scene(shade::Scene* scene)
 	}
 	else
 	{
-
 		ImGui::Image(reinterpret_cast<void*>(m_FrameBuffer->GetAttachment(0)),
 			m_SceneViewPort, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
 
+		//FpsOverlay(ImGui::GetWindowViewport());
+		ShowWindowBarOverlay("Overlay", ImGui::GetWindowViewport(), [&]() 
+			{
+				ScenePlayStop(scene);
+				
+				/*ImGuiIO& io = ImGui::GetIO();
+				ImGui::Text("Application average %.1f ms/frame (%.0f FPS)", 1000.0f / io.Framerate, io.Framerate);
+				ScenePlayStop(scene);
+			
+				ImGui::Spacing();
+				ImDrawList* draw_list = ImGui::GetWindowDrawList();
+				const ImVec2 p1 = ImGui::GetCursorScreenPos();
+				draw_list->AddCircle(ImVec2(ImGui::GetWindowPos().x + 50, ImGui::GetWindowPos().y + 50), 10, ImGui::GetColorU32(ImGuiCol_Text));
 
-		FpsOverlay(ImGui::GetWindowViewport());
+				ImGui::Spacing();
+				ImGui::Spacing();
+				ImGui::Spacing();
+				draw_list->AddTriangleFilled(
+					ImGui::GetWindowPos(),
+					{ ImGui::GetWindowPos().x + 50,ImGui::GetWindowPos().y + 50 },
+					{ ImGui::GetWindowPos().x   ,ImGui::GetWindowPos().y + 50 },
+					ImGui::GetColorU32(ImVec4{1,0,0,1}));*/
+			});
+
 
 		if (m_SelectedEntity.IsValid())
 		{
@@ -429,6 +485,7 @@ void EditorLayer::FileExplorer(const std::string& rootPath)
 
 void EditorLayer::MainMenu(const shade::Shared<shade::Scene>& scene)
 {
+
 	if (ImGui::BeginMenuBar())
 	{
 		if (ImGui::BeginMenu("File"))
@@ -490,14 +547,14 @@ void EditorLayer::MainMenu(const shade::Shared<shade::Scene>& scene)
 			ImGui::EndMenu();
 		}
 
-		ScenePlayStop(scene);
+	
 		
+	
+
 		ImGui::EndMenuBar();
 	}
 
 	
-	
-
 }
 
 void EditorLayer::AssetsExplorer(shade::AssetManager::AssetsDataList& data)
