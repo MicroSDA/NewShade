@@ -178,16 +178,6 @@ void EditorLayer::OnEvent(const shade::Shared<shade::Scene>& scene, shade::Event
 						entity.AddComponent<shade::Transform3DComponent>();
 
 					}, shade::Asset::Lifetime::Destroy);
-
-				/*shade::AssetManager::Hold<shade::Model3D>("Cube",
-					shade::Asset::State::RemoveIfPosible, [&](auto& asset) mutable
-					{
-						auto entity = scene->CreateEntity("Cube");
-						entity.AddComponent<shade::Model3DComponent>(shade::AssetManager::Receive<shade::Model3D>(asset));
-						float x = 1 + rand() % 550;
-						float z = 1 + rand() % 550;
-						entity.AddComponent<shade::Transform3DComponent>();
-					});*/
 			}
 
 		}
@@ -308,80 +298,73 @@ void EditorLayer::Entities(shade::Scene* scene)
 
 void EditorLayer::Inspector(shade::Entity& entity)
 {
+	DrawComponent2<shade::Tag>("Test", entity,
+		[&](auto entity) mutable
+		{
+			ImGui::Text(entity.GetComponent<shade::Tag>().c_str());
+
+		},	[&](bool isOpen, auto entity) mutable
+		{
+			
+			ImGui::SameLine(ImGui::GetContentRegionAvailWidth() - 16 - ImGui::GetStyle().FramePadding.x + (isOpen ? ImGui::GetStyle().IndentSpacing : 0.0f));
+			if (DrawButtonImage("#Remove", m_IconsTexture, { 16, 15 }, { 128, 128 }, { 531, 134 }, -1, ImGui::GetStyle().Colors[ImGuiCol_Text]))
+				entity.RemoveComponent<shade::Tag>();
+		}, entity);
+
 	DrawComponent<shade::Tag>("Tag", entity, &EditorLayer::TagComponent, this, entity); // "this" as first argument ! for std::invoke when non static fucntion provided it should know instance
 	DrawComponent<shade::Transform3DComponent>("Transform", entity, &EditorLayer::Transform3DComponent, this, entity); // "this" as first argument ! for std::invoke when non static fucntion provided it should know instance
 	DrawComponent<shade::Model3DComponent>("Model", entity, &EditorLayer::Model3dComponent, this, entity); // "this" as first argument ! for std::invoke when non static fucntion provided it should know instance
 	DrawComponent<shade::EnvironmentComponent>("Enviroment", entity, &EditorLayer::EnvironmentComponent, this, entity); // "this" as first argument ! for std::invoke when non static fucntion provided it should know instance
-
-	static bool is = false;
-	ImVec2 _PlayButtonSize = { 150, 150 };
-	if (!is)
-	{
-		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4{ 0.1, 0.5, 0.1, 1 });
-		if (DrawButtonTrinagle("Play", _PlayButtonSize))
-			is = true;
-		ImGui::PopStyleColor();
-	}
-	else
-	{
-		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4{ 0.5, 0.1, 0.1, 1 });
-		if (DrawButtonSquare("Stop", _PlayButtonSize))
-			is = false;
-		ImGui::PopStyleColor();
-	}
 }
 
 void EditorLayer::ScenePlayStop(const shade::Shared<shade::Scene>& scene)
 {
-	//ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth() / 2);
-	/*const ImGuiStyle& style = ImGui::GetStyle();
-	ImVec2 _PlayButtonSize = { 26, 26 };
-	//ImGui::SameLine((ImGui::GetContentRegionAvailWidth() / 2) - (_PlayButtonSize.x / 2) + style.ItemSpacing.x / 2);
-
-	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2{ 10, 100 });
-	if (!scene->IsPlaying())
-	{
-		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4{ 0.1, 0.7, 0.1, 1 });
-		if (DrawButtonTrinagle("Play", _PlayButtonSize))
-			scene->SetPlaying(true);
-		ImGui::PopStyleColor();
-	}
+	if (m_GuizmoOperation == 0)
+		DrawButtonImage("##Select", m_IconsTexture, { 25, 25 }, { 128, 128 }, { 659, 398 }, -1, ImGui::GetStyle().Colors[ImGuiCol_PlotLines]);
 	else
 	{
-		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4{ 0.7, 0.1, 0.1, 1 });
-		if (DrawButtonSquare("Stop", _PlayButtonSize))
-			scene->SetPlaying(false);
-		ImGui::PopStyleColor();
+		if (DrawButtonImage("##Select", m_IconsTexture, { 25, 25 }, { 128, 128 }, { 659, 398 }, -1, ImGui::GetStyle().Colors[ImGuiCol_Text]))
+			m_GuizmoOperation = ImGuizmo::OPERATION(0);
 	}
-	ImGui::PopStyleVar();*/
 
-	if(m_GuizmoOperation == ImGuizmo::TRANSLATE)
-		DrawButtonImage(m_IconsTexture, { 25, 25 }, { 24, 24 }, { 562, 186 }, -1, ImVec4(0, 0, 0, 0), ImGui::GetStyle().Colors[ImGuiCol_PlotLines]);
+	ImGui::SameLine();
+	if (m_GuizmoOperation == ImGuizmo::TRANSLATE)
+		DrawButtonImage("##TRANSLATE", m_IconsTexture, { 25, 25 },     { 128, 128 }, { 3, 266 }, -1, ImGui::GetStyle().Colors[ImGuiCol_PlotLines]);
 	else
 	{
-		if (DrawButtonImage(m_IconsTexture, { 25, 25 }, { 24, 24 }, { 562, 186 }, -1, ImVec4(0, 0, 0, 0)))
+		if (DrawButtonImage("##TRANSLATE", m_IconsTexture, { 25, 25 }, { 128, 128 }, { 3, 266 }, -1, ImGui::GetStyle().Colors[ImGuiCol_Text]))
 			m_GuizmoOperation = ImGuizmo::TRANSLATE;
 	}
-	
+
 	ImGui::SameLine();
-	if(m_GuizmoOperation == ImGuizmo::ROTATE)
-		DrawButtonImage(m_IconsTexture, { 25, 25 }, { 256, 256 }, { 287, 286 }, - 1, ImVec4(0, 0, 0, 0), ImGui::GetStyle().Colors[ImGuiCol_PlotLines]);
+	if (m_GuizmoOperation == ImGuizmo::ROTATE)
+		DrawButtonImage("##ROTATE", m_IconsTexture, { 25, 25 }, { 128, 128 }, { 662, 530 }, -1, ImGui::GetStyle().Colors[ImGuiCol_PlotLines]);
 	else
 	{
-		if(DrawButtonImage(m_IconsTexture, { 25, 25 }, { 256, 256 }, { 287, 286 }, -1, ImVec4(0, 0, 0, 0)))
+		if (DrawButtonImage("##ROTATE", m_IconsTexture, { 25, 25 }, { 128, 128 }, { 662, 530 }, -1, ImGui::GetStyle().Colors[ImGuiCol_Text]))
 			m_GuizmoOperation = ImGuizmo::ROTATE;
 	}
-		
+
 	ImGui::SameLine();
 	if (m_GuizmoOperation == ImGuizmo::SCALE)
-		DrawButtonImage(m_IconsTexture, { 25, 25 }, { 24, 24 }, { 562, 318 },    -1, ImVec4(0, 0, 0, 0), ImGui::GetStyle().Colors[ImGuiCol_PlotLines]);
+		DrawButtonImage("##SCALE", m_IconsTexture, { 25, 25 }, { 128, 128 }, { 262, 2 }, -1, ImGui::GetStyle().Colors[ImGuiCol_PlotLines]);
 	else
 	{
-		if(DrawButtonImage(m_IconsTexture, { 25, 25 }, { 24, 24 }, { 562, 318 }, -1, ImVec4(0, 0, 0, 0)))
+		if (DrawButtonImage("##SCALE", m_IconsTexture, { 25, 25 }, { 128, 128 }, { 262, 2 }, -1, ImGui::GetStyle().Colors[ImGuiCol_Text]))
 			m_GuizmoOperation = ImGuizmo::SCALE;
 	}
-		
 
+	ImGui::SameLine((ImGui::GetContentRegionAvailWidth() / 2) - (25 / 2));
+	if (!scene->IsPlaying())
+	{
+		if (DrawButtonImage("##Play", m_IconsTexture, { 25, 25 }, { 128, 128 }, { 535, 794 }, -1, ImVec4(0.2, 0.7, 0.2, 1.0)))
+			scene->SetPlaying(true);
+	}
+	else
+	{
+		if (DrawButtonImage("##Stop", m_IconsTexture, { 25, 25 }, { 128, 128 }, { 266, 794 }, -1, ImVec4(0.7, 0.2, 0.2, 1.0)))
+			scene->SetPlaying(false);
+	}
 }
 
 void EditorLayer::Scene(const shade::Shared<shade::Scene>& scene)
@@ -399,27 +382,10 @@ void EditorLayer::Scene(const shade::Shared<shade::Scene>& scene)
 			m_SceneViewPort, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
 
 		//FpsOverlay(ImGui::GetWindowViewport());
+		ImGui::SetNextWindowSize(ImVec2{ ImGui::GetWindowSize().x - 20.0f,0 }, ImGuiCond_Always);
 		ShowWindowBarOverlay("Overlay", ImGui::GetWindowViewport(), [&]() 
 			{
 				ScenePlayStop(scene);
-				
-				/*ImGuiIO& io = ImGui::GetIO();
-				ImGui::Text("Application average %.1f ms/frame (%.0f FPS)", 1000.0f / io.Framerate, io.Framerate);
-				ScenePlayStop(scene);
-			
-				ImGui::Spacing();
-				ImDrawList* draw_list = ImGui::GetWindowDrawList();
-				const ImVec2 p1 = ImGui::GetCursorScreenPos();
-				draw_list->AddCircle(ImVec2(ImGui::GetWindowPos().x + 50, ImGui::GetWindowPos().y + 50), 10, ImGui::GetColorU32(ImGuiCol_Text));
-
-				ImGui::Spacing();
-				ImGui::Spacing();
-				ImGui::Spacing();
-				draw_list->AddTriangleFilled(
-					ImGui::GetWindowPos(),
-					{ ImGui::GetWindowPos().x + 50,ImGui::GetWindowPos().y + 50 },
-					{ ImGui::GetWindowPos().x   ,ImGui::GetWindowPos().y + 50 },
-					ImGui::GetColorU32(ImVec4{1,0,0,1}));*/
 			});
 
 

@@ -110,7 +110,7 @@ namespace shade
 			style.WindowMenuButtonPosition = ImGuiDir_Right;
 			style.WindowPadding = ImVec2(6, 4);
 			style.WindowRounding = 6.0f;
-			style.FramePadding = ImVec2(5, 4);
+			style.FramePadding = ImVec2(5, 6);
 			style.FrameRounding = 3.0f;
 			style.ItemSpacing = ImVec2(4, 2);
 			style.ItemInnerSpacing = ImVec2(1, 1);

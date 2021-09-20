@@ -36,6 +36,8 @@ namespace shade
 		void ShowWindowBarOverlay(const char* title, ImGuiViewport* veiwport, Callback callback, Args && ...args);
 		template<typename Comp, typename Call, typename ...Args>
 		void DrawComponent(const char* title, Entity& entity, Call callback, Args&& ...args);
+		template<typename Comp, typename Call, typename ButtonCall, typename ...Args>
+		void DrawComponent2(const char* title, Entity& entity, Call callback, ButtonCall buttonCall, Args&& ...args);
 		template<typename Call, typename ...Args>
 		void DrawTreeNode(const char* title, Call callback, Args&& ...args);
 		template<typename Comp, typename Call, typename ...Args>
@@ -56,7 +58,7 @@ namespace shade
 		bool DrawButtonCol(const char* cw1Lable, const char* buttonLable, const float& cw1 = 80.0f, const float& cw2 = 0.0f);
 		bool DrawButtonTrinagle(const char* label, const ImVec2& size_arg, ImGuiButtonFlags flags = ImGuiButtonFlags_None);
 		bool DrawButtonSquare(const char* label, const ImVec2& size_arg, ImGuiButtonFlags flags = ImGuiButtonFlags_None);
-		bool DrawButtonImage(const Shared<Texture>& texture, const ImVec2& buttonSize, const ImVec2& imageSize, const ImVec2& start = ImVec2(0,0), int frame_padding = -1, const ImVec4& bg_col = ImVec4(0, 0, 0, 0), const ImVec4& tint_col = ImVec4(1, 1, 1, 1));
+		bool DrawButtonImage(const char* id, const Shared<Texture>& texture, const ImVec2& buttonSize, const ImVec2& imageSize, const ImVec2& start = ImVec2(0,0), int frame_padding = -1, const ImVec4& tint_col = ImVec4(1, 1, 1, 1));
 		/*ImVec2 start = {892, 614};
 		ImVec2 size = { 26,  26 };
 		ImVec2 textureSize = { (float)m_IconsTexture->GetImageData().Width, (float)m_IconsTexture->GetImageData().Height };
@@ -85,8 +87,9 @@ namespace shade
 	inline void ImGuiLayer::ShowWindowBarOverlay(const char* title, ImGuiViewport* veiwport, Callback callback, Args && ...args)
 	{
 		ImGui::SetNextWindowViewport(veiwport->ID);
-		ImGui::SetNextWindowBgAlpha(0.0f); // Transparent background
+		ImGui::SetNextWindowBgAlpha(0.5f); // Transparent background
 		ImGui::SetNextWindowPos(ImVec2{ ImGui::GetWindowPos().x + 10.0f, ImGui::GetWindowPos().y + 30.0f }, ImGuiCond_Always);
+		//ImGui::SetNextWindowSize(ImVec2{ ImGui::GetWindowSize().x - 20.0f,0}, ImGuiCond_Always);
 
 		if (ImGui::Begin(title, nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_AlwaysAutoResize |
 			ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav))
@@ -107,7 +110,28 @@ namespace shade
 				{
 					if (!RemoveComponent<Comp>(title, entity))
 						std::invoke(callback, std::forward<Args>(args)...);
-					//callback(std::forward<Args>(args)...);
+
+					ImGui::TreePop();
+				}
+			}
+		}
+	}
+	template<typename Comp, typename Call, typename ButtonCall, typename ...Args>
+	inline void ImGuiLayer::DrawComponent2(const char* title, Entity& entity, Call callback, ButtonCall buttonCall, Args&& ...args)
+	{
+		if (entity.IsValid())
+		{
+			if (entity.HasComponent<Comp>())
+			{
+				
+				ImGui::AlignTextToFramePadding();
+				bool isOpen = ImGui::TreeNodeEx(title, ImGuiTreeNodeFlags_AllowItemOverlap | ImGuiTreeNodeFlags_Framed);
+
+				std::invoke(buttonCall, isOpen, std::forward<Args>(args)...);
+
+				if (isOpen)
+				{
+					std::invoke(callback, std::forward<Args>(args)...);
 					ImGui::TreePop();
 				}
 			}
