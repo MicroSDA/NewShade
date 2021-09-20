@@ -88,19 +88,23 @@ void EditorLayer::OnRender(const shade::Shared<shade::Scene>& scene, const shade
 			ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), m_DockSpaceFlags);
 		}
 
-		MainMenu(scene);
-		ShowWindowBar("Entities", &EditorLayer::Entities, this, scene.get());
-		ShowWindowBar("Inspector", &EditorLayer::Inspector, this, m_SelectedEntity);
+		if (!scene->IsPlaying())
+		{
+			MainMenu(scene);
+			ShowWindowBar("Entities", &EditorLayer::Entities, this, scene.get());
+			ShowWindowBar("Inspector", &EditorLayer::Inspector, this, m_SelectedEntity);
+			ShowWindowBar("File explorer", &EditorLayer::FileExplorer, this, "");
+			ShowWindowBar("Asset explorer", &EditorLayer::AssetsExplorer, this, shade::AssetManager::GetAssetsDataList());
+			ShowWindowBar("Logs", &EditorLayer::LogsExplorer, this);
+			ShowWindowBar("Render", &EditorLayer::Render, this);
+			ShowWindowBar("Model", &EditorLayer::Model3D, this, m_SelectedModel3D);
+			ShowWindowBar("Mesh", &EditorLayer::Mesh, this, m_SelectedMesh);
+			ShowWindowBar("Material", &EditorLayer::Material, this, m_SelectedMaterial3D);
+			ShowWindowBar("Shaders library", &EditorLayer::ShadersLibrary, this);
+		}
+
 		ShowWindowBar("Scene", &EditorLayer::Scene, this, scene);
-		ShowWindowBar("File explorer", &EditorLayer::FileExplorer, this, "");
-		ShowWindowBar("Asset explorer", &EditorLayer::AssetsExplorer, this, shade::AssetManager::GetAssetsDataList());
-		ShowWindowBar("Logs", &EditorLayer::LogsExplorer, this);
-		ShowWindowBar("Render", &EditorLayer::Render, this);
-		ShowWindowBar("Model", &EditorLayer::Model3D, this, m_SelectedModel3D);
-		ShowWindowBar("Mesh", &EditorLayer::Mesh, this,    m_SelectedMesh);
-		ShowWindowBar("Material", &EditorLayer::Material, this, m_SelectedMaterial3D);
-		ShowWindowBar("Shaders library", &EditorLayer::ShadersLibrary, this);
-		ShowDemoWindow();
+		//ShowDemoWindow();
 
 	} ImGui::End(); // Begin("DockSpace")
 
@@ -298,71 +302,73 @@ void EditorLayer::Entities(shade::Scene* scene)
 
 void EditorLayer::Inspector(shade::Entity& entity)
 {
-	DrawComponent2<shade::Tag>("Test", entity,
-		[&](auto entity) mutable
-		{
-			ImGui::Text(entity.GetComponent<shade::Tag>().c_str());
+	ImVec4 editIcon = ImVec4{ 128, 128, 897, 750 };
 
-		},	[&](bool isOpen, auto entity) mutable
+	/*DrawComponent2<shade::Tag>("Tag", entity, &EditorLayer::TagComponent, [&](auto isTreeOpen)->bool
 		{
-			
-			ImGui::SameLine(ImGui::GetContentRegionAvailWidth() - 16 - ImGui::GetStyle().FramePadding.x + (isOpen ? ImGui::GetStyle().IndentSpacing : 0.0f));
-			if (DrawButtonImage("#Remove", m_IconsTexture, { 16, 15 }, { 128, 128 }, { 531, 134 }, -1, ImGui::GetStyle().Colors[ImGuiCol_Text]))
-				entity.RemoveComponent<shade::Tag>();
-		}, entity);
-
-	DrawComponent<shade::Tag>("Tag", entity, &EditorLayer::TagComponent, this, entity); // "this" as first argument ! for std::invoke when non static fucntion provided it should know instance
-	DrawComponent<shade::Transform3DComponent>("Transform", entity, &EditorLayer::Transform3DComponent, this, entity); // "this" as first argument ! for std::invoke when non static fucntion provided it should know instance
-	DrawComponent<shade::Model3DComponent>("Model", entity, &EditorLayer::Model3dComponent, this, entity); // "this" as first argument ! for std::invoke when non static fucntion provided it should know instance
-	DrawComponent<shade::EnvironmentComponent>("Enviroment", entity, &EditorLayer::EnvironmentComponent, this, entity); // "this" as first argument ! for std::invoke when non static fucntion provided it should know instance
+			return EditComponentButton<shade::Tag>(entity, m_IconsTexture, editIcon, isTreeOpen);
+		}, this, entity);*/
+	DrawComponent2<shade::Transform3DComponent>("Transform", entity, &EditorLayer::Transform3DComponent, [&](auto isTreeOpen)->bool
+		{
+			return EditComponentButton<shade::Transform3DComponent>(entity, m_IconsTexture, editIcon, isTreeOpen);
+		}, this, entity);
+	DrawComponent2<shade::Model3DComponent>("Model", entity, &EditorLayer::Model3dComponent, [&](auto isTreeOpen)->bool
+		{
+			return EditComponentButton<shade::Model3DComponent>(entity, m_IconsTexture, editIcon, isTreeOpen);
+		}, this, entity);
+	DrawComponent2<shade::EnvironmentComponent>("Environment", entity, &EditorLayer::EnvironmentComponent, [&](auto isTreeOpen)->bool
+		{
+			return EditComponentButton<shade::EnvironmentComponent>(entity, m_IconsTexture, editIcon, isTreeOpen);
+		}, this, entity);
 }
 
 void EditorLayer::ScenePlayStop(const shade::Shared<shade::Scene>& scene)
 {
+	ImVec4 buttonProps = { 20,20, 128, 128 };
 	if (m_GuizmoOperation == 0)
-		DrawButtonImage("##Select", m_IconsTexture, { 25, 25 }, { 128, 128 }, { 659, 398 }, -1, ImGui::GetStyle().Colors[ImGuiCol_PlotLines]);
+		DrawButtonImage("##Select", m_IconsTexture, { buttonProps.x, buttonProps.y }, { buttonProps.z, buttonProps.w }, { 8, 750 }, -1, ImGui::GetStyle().Colors[ImGuiCol_PlotLines]);
 	else
 	{
-		if (DrawButtonImage("##Select", m_IconsTexture, { 25, 25 }, { 128, 128 }, { 659, 398 }, -1, ImGui::GetStyle().Colors[ImGuiCol_Text]))
+		if (DrawButtonImage("##Select", m_IconsTexture, { buttonProps.x, buttonProps.y }, { buttonProps.z, buttonProps.w }, { 8, 750 }, -1, ImGui::GetStyle().Colors[ImGuiCol_Text]))
 			m_GuizmoOperation = ImGuizmo::OPERATION(0);
 	}
 
 	ImGui::SameLine();
 	if (m_GuizmoOperation == ImGuizmo::TRANSLATE)
-		DrawButtonImage("##TRANSLATE", m_IconsTexture, { 25, 25 },     { 128, 128 }, { 3, 266 }, -1, ImGui::GetStyle().Colors[ImGuiCol_PlotLines]);
+		DrawButtonImage("##TRANSLATE", m_IconsTexture, { buttonProps.x, buttonProps.y }, { buttonProps.z, buttonProps.w }, { 159, 158 }, -1, ImGui::GetStyle().Colors[ImGuiCol_PlotLines]);
 	else
 	{
-		if (DrawButtonImage("##TRANSLATE", m_IconsTexture, { 25, 25 }, { 128, 128 }, { 3, 266 }, -1, ImGui::GetStyle().Colors[ImGuiCol_Text]))
+		if (DrawButtonImage("##TRANSLATE", m_IconsTexture, { buttonProps.x, buttonProps.y }, { buttonProps.z, buttonProps.w }, { 159, 158 }, -1, ImGui::GetStyle().Colors[ImGuiCol_Text]))
 			m_GuizmoOperation = ImGuizmo::TRANSLATE;
 	}
 
 	ImGui::SameLine();
 	if (m_GuizmoOperation == ImGuizmo::ROTATE)
-		DrawButtonImage("##ROTATE", m_IconsTexture, { 25, 25 }, { 128, 128 }, { 662, 530 }, -1, ImGui::GetStyle().Colors[ImGuiCol_PlotLines]);
+		DrawButtonImage("##ROTATE", m_IconsTexture, { buttonProps.x, buttonProps.y }, { buttonProps.z, buttonProps.w }, { 454, 898 }, -1, ImGui::GetStyle().Colors[ImGuiCol_PlotLines]);
 	else
 	{
-		if (DrawButtonImage("##ROTATE", m_IconsTexture, { 25, 25 }, { 128, 128 }, { 662, 530 }, -1, ImGui::GetStyle().Colors[ImGuiCol_Text]))
+		if (DrawButtonImage("##ROTATE", m_IconsTexture, { buttonProps.x, buttonProps.y }, { buttonProps.z, buttonProps.w }, { 454, 898 }, -1, ImGui::GetStyle().Colors[ImGuiCol_Text]))
 			m_GuizmoOperation = ImGuizmo::ROTATE;
 	}
 
 	ImGui::SameLine();
 	if (m_GuizmoOperation == ImGuizmo::SCALE)
-		DrawButtonImage("##SCALE", m_IconsTexture, { 25, 25 }, { 128, 128 }, { 262, 2 }, -1, ImGui::GetStyle().Colors[ImGuiCol_PlotLines]);
+		DrawButtonImage("##SCALE", m_IconsTexture, { buttonProps.x, buttonProps.y }, { buttonProps.z, buttonProps.w }, { 10, 10 }, -1, ImGui::GetStyle().Colors[ImGuiCol_PlotLines]);
 	else
 	{
-		if (DrawButtonImage("##SCALE", m_IconsTexture, { 25, 25 }, { 128, 128 }, { 262, 2 }, -1, ImGui::GetStyle().Colors[ImGuiCol_Text]))
+		if (DrawButtonImage("##SCALE", m_IconsTexture, { buttonProps.x, buttonProps.y }, { buttonProps.z, buttonProps.w }, { 10, 10 }, -1, ImGui::GetStyle().Colors[ImGuiCol_Text]))
 			m_GuizmoOperation = ImGuizmo::SCALE;
 	}
 
 	ImGui::SameLine((ImGui::GetContentRegionAvailWidth() / 2) - (25 / 2));
 	if (!scene->IsPlaying())
 	{
-		if (DrawButtonImage("##Play", m_IconsTexture, { 25, 25 }, { 128, 128 }, { 535, 794 }, -1, ImVec4(0.2, 0.7, 0.2, 1.0)))
+		if (DrawButtonImage("##Play", m_IconsTexture, { buttonProps.x, buttonProps.y }, { buttonProps.z, buttonProps.w }, { 900, 898 }, -1, ImVec4(0.2, 0.7, 0.2, 1.0)))
 			scene->SetPlaying(true);
 	}
 	else
 	{
-		if (DrawButtonImage("##Stop", m_IconsTexture, { 25, 25 }, { 128, 128 }, { 266, 794 }, -1, ImVec4(0.7, 0.2, 0.2, 1.0)))
+		if (DrawButtonImage("##Stop", m_IconsTexture, { buttonProps.x, buttonProps.y }, { buttonProps.z, buttonProps.w }, { 602, 898 }, -1, ImVec4(0.7, 0.2, 0.2, 1.0)))
 			scene->SetPlaying(false);
 	}
 }
@@ -427,7 +433,7 @@ void EditorLayer::Scene(const shade::Shared<shade::Scene>& scene)
 				default:
 					break;
 				}
-				;
+				
 			}
 		}
 	}
@@ -961,6 +967,7 @@ void EditorLayer::Mesh(const shade::Shared<shade::Mesh>& mesh)
 
 void EditorLayer::EnvironmentComponent(shade::Entity& entity)
 {
+
 	auto& environment = entity.GetComponent<shade::EnvironmentComponent>();
 	switch (environment->GetType())
 	{

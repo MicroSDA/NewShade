@@ -36,14 +36,16 @@ namespace shade
 		void ShowWindowBarOverlay(const char* title, ImGuiViewport* veiwport, Callback callback, Args && ...args);
 		template<typename Comp, typename Call, typename ...Args>
 		void DrawComponent(const char* title, Entity& entity, Call callback, Args&& ...args);
-		template<typename Comp, typename Call, typename ButtonCall, typename ...Args>
-		void DrawComponent2(const char* title, Entity& entity, Call callback, ButtonCall buttonCall, Args&& ...args);
+		template<typename Comp, typename Call, typename EditCall, typename ...Args>
+		void DrawComponent2(const char* title, Entity& entity, Call callback, EditCall editCall, Args&& ...args);
+		template<typename Comp>
+		bool EditComponentButton(Entity& entity, const shade::Shared<Texture>& icon, ImVec4 imageProps, const bool& isTreeOpend);
 		template<typename Call, typename ...Args>
 		void DrawTreeNode(const char* title, Call callback, Args&& ...args);
 		template<typename Comp, typename Call, typename ...Args>
 		void AddComponent(const char* title, const bool& isMenu, Entity& entity, Call callback, Args&& ...args);
 		template<typename Comp>
-		bool RemoveComponent(const char* title, Entity& entity);
+		bool RemoveComponent(Entity& entity, bool isOpen);
 		template<typename Callback, typename ...Args>
 		bool InputText(const char* title, char* buffer, std::size_t buffer_size, Callback callback, Args&& ...args);
 		bool InputText(const char* title, char* buffer, std::size_t buffer_size);
@@ -105,26 +107,7 @@ namespace shade
 		{
 			if (entity.HasComponent<Comp>())
 			{
-				ImGui::AlignTextToFramePadding();
-				if (ImGui::TreeNodeEx(title, ImGuiTreeNodeFlags_Framed))
-				{
-					if (!RemoveComponent<Comp>(title, entity))
-						std::invoke(callback, std::forward<Args>(args)...);
-
-					ImGui::TreePop();
-				}
-			}
-		}
-	}
-	template<typename Comp, typename Call, typename ButtonCall, typename ...Args>
-	inline void ImGuiLayer::DrawComponent2(const char* title, Entity& entity, Call callback, ButtonCall buttonCall, Args&& ...args)
-	{
-		if (entity.IsValid())
-		{
-			if (entity.HasComponent<Comp>())
-			{
-				
-				ImGui::AlignTextToFramePadding();
+				/*ImGui::AlignTextToFramePadding();
 				bool isOpen = ImGui::TreeNodeEx(title, ImGuiTreeNodeFlags_AllowItemOverlap | ImGuiTreeNodeFlags_Framed);
 
 				std::invoke(buttonCall, isOpen, std::forward<Args>(args)...);
@@ -133,7 +116,31 @@ namespace shade
 				{
 					std::invoke(callback, std::forward<Args>(args)...);
 					ImGui::TreePop();
+				}*/
+			}
+		}
+	}
+	template<typename Comp, typename Call, typename EditCall, typename ...Args>
+	inline void ImGuiLayer::DrawComponent2(const char* title, Entity& entity, Call callback, EditCall editCall, Args&& ...args)
+	{
+		if (entity.IsValid())
+		{
+			if (entity.HasComponent<Comp>())
+			{
+				
+				ImGui::AlignTextToFramePadding();
+				ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, { ImGui::GetStyle().FramePadding.x , ImGui::GetStyle().FramePadding.y * 2.5f });
+				bool isTreeOpen = ImGui::TreeNodeEx(title, ImGuiTreeNodeFlags_AllowItemOverlap | ImGuiTreeNodeFlags_Framed);
+				ImGui::PopStyleVar();
+				// If component has not been deleted
+				if (!std::invoke(editCall, isTreeOpen))
+				{
+					if (isTreeOpen)
+						std::invoke(callback, std::forward<Args>(args)...);
 				}
+
+				if (isTreeOpen)
+					ImGui::TreePop();
 			}
 		}
 	}
@@ -171,14 +178,49 @@ namespace shade
 		}
 	}
 	template<typename Comp>
-	inline bool ImGuiLayer::RemoveComponent(const char* title, Entity& entity)
+	inline bool ImGuiLayer::EditComponentButton(Entity& entity, const shade::Shared<Texture>& icon, ImVec4 imageProps, const bool& isTreeOpend)
+	{
+		/* Return true only when component has been deleted */
+		float buttonSize = ImGui::GetFrameHeight();
+
+		ImGui::AlignTextToFramePadding();
+		ImGui::SameLine(ImGui::GetContentRegionAvailWidth() - buttonSize - ImGui::GetStyle().FramePadding.x + (isTreeOpend ? ImGui::GetStyle().IndentSpacing : 0.0f));
+		// Create id for component
+		std::string id = typeid(Comp).name();
+		
+		//ImGui::PushStyleColor(ImGuiCol_ButtonActive,  ImGui::GetStyle().Colors[ImGuiCol_PlotLines]);
+		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0, 0, 0, 0));
+		if (DrawButtonImage(std::string("##Edit" + id).c_str(), icon, { buttonSize + 1.0f, buttonSize + 1.0f }, { imageProps.x, imageProps.y }, { imageProps.z, imageProps.w }, -1, ImGui::GetStyle().Colors[ImGuiCol_Text]))
+			ImGui::OpenPopup(std::string("##EditComponentPopup" + id).c_str());
+		ImGui::PopStyleColor();	//ImGui::PopStyleColor();
+		if (ImGui::BeginPopup(std::string("##EditComponentPopup" + id).c_str()))
+		{
+			if (ImGui::MenuItem("Remove component"))
+			{
+				entity.RemoveComponent<Comp>();
+				ImGui::EndPopup();
+				return true;
+			}
+			else
+			{
+				ImGui::EndPopup();
+				return false;
+			}
+				
+			
+		}
+
+		return false;
+	}
+	template<typename Comp>
+	inline bool ImGuiLayer::RemoveComponent(Entity& entity, bool isOpen)
 	{
 		if (entity.IsValid())
 		{
 			if (entity.HasComponent<Comp>())
 			{
 				std::string id = "RemoveComponentPopup##" + entity;
-				std::string lable("Remove " + std::string(title));
+				std::string lable("Remove");
 				if (ImGui::BeginPopupContextItem())
 				{
 					ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.7, 0, 0, 1));
