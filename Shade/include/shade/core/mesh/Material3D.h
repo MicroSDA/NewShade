@@ -11,10 +11,7 @@ namespace shade
 	class SHADE_API Material3D : public Asset
 	{
 	public:
-		static Shared<Material3D> Create();
 		virtual ~Material3D() = default;
-	private:
-		Material3D() = default;
 	public:
 		struct Blending
 		{
@@ -63,10 +60,10 @@ namespace shade
 		virtual bool Serialize() const override;
 		virtual bool Deserialize() override;
 		// Inherited via Asset
-		virtual void LoadFromAssetData(shade::AssetData& data, const shade::AssetData& bundle = AssetData());
-
-		// Inherited via Asset
 		// TODO: Recreate function and set as like PostLoadCallback
 		virtual void AssetInit() override;
+	private:
+		// Asset loading behaviour
+		virtual void LoadDependentAssetsCallback(const shade::AssetData& data, const std::string& id) override;
 	};
 }

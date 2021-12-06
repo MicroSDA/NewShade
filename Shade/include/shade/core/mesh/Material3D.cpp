@@ -2,12 +2,6 @@
 #include "Material3D.h"
 #include "shade/core/assets/AssetManager.h"
 
-shade::Shared<shade::Material3D> shade::Material3D::Create()
-{
-	/* Private constructor */
-	return Shared<Material3D>(new Material3D());
-}
-
 bool shade::Material3D::Serialize(std::ostream& stream) const
 {
 	return false;
@@ -94,54 +88,26 @@ bool shade::Material3D::Deserialize()
 	return false;
 }
 
-void shade::Material3D::LoadFromAssetData(shade::AssetData& data, const shade::AssetData& bundle)
-{
-	
-	/* If prefab has dependencies*/
-	auto dependencies = data.Dependencies();
-	if (dependencies.size())
-	{
-		for (auto& dependancy : dependencies)
-		{
-			const std::string id = dependancy.Attribute("Id").as_string();
-			/* Trying to get dependancy as asset */
-			auto dependancyAsset = AssetManager::GetAssetData(id);
-			/* If dependancy is asset, we can grab all specific metadata*/
-			if (strcmp(dependancyAsset.Attribute("Type").as_string(), "Texture") == 0)
-			{
-				AssetManager::HoldAsset<Texture>(id,
-					[this](auto& texture) mutable
-					{
-						Shared<Texture> _texture = AssetManager::Receive<Texture>(texture);
-
-						if (strcmp(_texture->GetAssetData().Attribute("TextureType").as_string(), "Diffuse") == 0)
-							TextureDiffuse = _texture;
-						if (strcmp(_texture->GetAssetData().Attribute("TextureType").as_string(), "Specular") == 0)
-							TextureSpecular = _texture;
-						if (strcmp(_texture->GetAssetData().Attribute("TextureType").as_string(), "Normal") == 0)
-							TextureNormals = _texture;
-
-					}, shade::Asset::Lifetime::Destroy );
-			}
-		}
-	}
-
-	/* Trying to get prefab as asset*/
-	auto asset = AssetManager::GetAssetData(data.Attribute("Id").as_string());
-	/* If current prefab is asset */
-	if (asset.IsValid())
-	{
-		/* Set asset data as asset*/
-		SetAssetData(asset);
-		Deserialize();
-	}
-	else
-	{
-		/* Set asset data as prefab */
-		SetAssetData(data);
-	}
-}
-
 void shade::Material3D::AssetInit()
 {
+}
+
+void shade::Material3D::LoadDependentAssetsCallback(const shade::AssetData& data, const std::string& id)
+{
+	if (strcmp(data.Attribute("Type").as_string(), "Texture") == 0)
+	{
+		AssetManager::HoldAsset<Texture>(id,
+			[this](auto& texture) mutable
+			{
+				Shared<Texture> _texture = AssetManager::Receive<Texture>(texture);
+
+				if (strcmp(_texture->GetAssetData().Attribute("TextureType").as_string(), "Diffuse") == 0)
+					TextureDiffuse = _texture;
+				if (strcmp(_texture->GetAssetData().Attribute("TextureType").as_string(), "Specular") == 0)
+					TextureSpecular = _texture;
+				if (strcmp(_texture->GetAssetData().Attribute("TextureType").as_string(), "Normal") == 0)
+					TextureNormals = _texture;
+
+			}, shade::Asset::Lifetime::Destroy);
+	}
 }

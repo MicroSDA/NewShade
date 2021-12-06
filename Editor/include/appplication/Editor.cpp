@@ -8,7 +8,7 @@ Editor::Editor(int argc, char* argv[]):
 void Editor::OnCreate()
 {
 	//Should be first before tuching opengl functions
-	auto& widnow = CreateWindow();
+	auto& widnow = CreateWindow({"Shade editor", 1600, 800, false });
 	// Create shaders 
 	shade::ShadersLibrary::Create("Instanced",			"resources/shaders/BasicModel.glsl");
 	shade::ShadersLibrary::Create("Grid",				"resources/shaders/Grid.glsl");
@@ -17,6 +17,7 @@ void Editor::OnCreate()
 	shade::ShadersLibrary::Create("General",			"resources/shaders/General/General.glsl");
 	shade::ShadersLibrary::Create("Bloom",		        "resources/shaders/PostProcess/Bloom/Bloom.glsl");
 	shade::ShadersLibrary::Create("ColorCorrection",    "resources/shaders/PostProcess/ColorCorrection/ColorCorrection.glsl");
+	shade::ShadersLibrary::Create("Sprite",				"resources/shaders/2D/Sprite.glsl");
 
 
 

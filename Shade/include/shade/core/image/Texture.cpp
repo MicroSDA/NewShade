@@ -3,9 +3,9 @@
 #include "shade/core/render/RenderAPI.h"
 #include "shade/platforms/renderapi/OpenGL/OpenGLTexture.h"
 
-shade::Shared<shade::Texture> shade::Texture::Create()
+shade::Shared<shade::Texture> shade::Texture::_Create()
 {
-    switch (RenderAPI::GetAPI())
+	switch (RenderAPI::GetAPI())
 	{
 	case RenderAPI::API::None:
 		SHADE_CORE_ERROR("Undefined render API!"); return nullptr;
@@ -72,6 +72,12 @@ bool shade::Texture::Deserialize()
 	}
 }
 
+void shade::Texture::LoadDependentAssetsCallback(const shade::AssetData& data, const std::string& id)
+{
+	return; // Do nothing;
+}
+
+
 shade::Texture::~Texture()
 {
 	m_ImageData.Delete();
@@ -87,8 +93,3 @@ shade::ImageData& shade::Texture::GetImageData()
 	return const_cast<ImageData&>(const_cast<const Texture*>(this)->GetImageData());
 }
 
-void shade::Texture::LoadFromAssetData(shade::AssetData& data, const shade::AssetData& bundle)
-{
-	SetAssetData(data);
-	Deserialize();
-}

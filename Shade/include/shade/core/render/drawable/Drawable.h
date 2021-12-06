@@ -47,10 +47,9 @@ namespace shade
 	private:
 		DrawMode			 m_DrawMode = DrawMode::Triangles;
 		Vertices			 m_Vertices;
+		Indices				 m_Indices;
 		glm::vec3			 m_MinHalfExt;
 		glm::vec3			 m_MaxHalfExt;
-		Indices				 m_Indices;
 		Shared<Material3D>	 m_Material;
 	};
-
 }

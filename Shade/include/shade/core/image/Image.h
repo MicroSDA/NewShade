@@ -6,7 +6,7 @@ namespace shade
 {
 	struct ImageData
 	{
-		std::uint8_t* Data = nullptr;
+		std::uint8_t*  Data = nullptr;
 		std::uint16_t  Width = 0;
 		std::uint16_t  Height = 0;
 		std::uint8_t   MipMapCount = 1;

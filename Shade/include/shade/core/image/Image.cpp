@@ -26,7 +26,11 @@ shade::ImageData shade::Image::LoadFromStream(std::istream& stream)
 	{
 		data.Width			= header.Width;
 		data.Height			= header.Height;
-		data.Compression	= static_cast<ImageData::DXTCompression>(header.Dspf.dwFourCC);
+
+		/*If texture contains compressed RGB data; dwFourCC contains valid data.*/
+		if(header.Dspf.dwFlags == 0x4) // DDPF_FOURCC = 0x4 
+			data.Compression	= static_cast<ImageData::DXTCompression>(header.Dspf.dwFourCC);
+
 		data.MipMapCount	= header.MipMapCount;
 
 		// Image size

@@ -7,11 +7,7 @@ namespace shade
 	{
 	public:
 		virtual ~Model3D();
-		static Shared<Model3D> Create();
-
 		const std::vector<Shared<Mesh>>& GetMeshes() const;
-
-		virtual void LoadFromAssetData(shade::AssetData& data, const shade::AssetData& bundle = AssetData()) override;
 		virtual void AssetInit() override;
 		virtual bool Serialize(std::ostream& stream) const override;
 		virtual bool Deserialize(std::istream& stream) override;
@@ -19,5 +15,9 @@ namespace shade
 		virtual bool Deserialize() override;
 	protected:// Temporary
 		std::vector<Shared<Mesh>> m_Meshes;
+	private:
+		// Asset loading behaviour
+		virtual void LoadDependentAssetsCallback(const shade::AssetData& data, const std::string& id) override;
 	};
 }
+

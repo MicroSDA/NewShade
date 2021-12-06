@@ -244,7 +244,7 @@ namespace shade
 	template<typename T>
 	inline void AssetManager::_LoadNewAsset(const std::string& id, PostLoadCallback callback, const Asset::Lifetime& lifeTime)
 	{
-		//static_assert(std::is_member_function_pointer<decltype(&T::Create)>::value, "Specified asset doesn't have static Create fucntion");
+		
 
 		auto task = m_AssetsTaskList.find(id);
 		if (task != m_AssetsTaskList.end())
@@ -265,9 +265,9 @@ namespace shade
 						{
 							try
 							{
-								auto asset = T::Create();
+								auto asset = T::Create<T>();
 								asset->_SetPrefab(false);
-								asset->LoadFromAssetData(assetData->second);
+								asset->_LoadFromAssetData(assetData->second);
 								return std::make_tuple(std::static_pointer_cast<shade::Asset>(asset), std::current_exception());
 							}
 							catch (...)
@@ -310,9 +310,9 @@ namespace shade
 						{
 							try
 							{
-								auto asset = T::Create();
+								auto asset = T::Create<T>();
 								asset->_SetPrefab(true);
-								asset->LoadFromAssetData(assetData->second);
+								asset->_LoadFromAssetData(assetData->second);
 								return std::make_tuple(std::static_pointer_cast<shade::Asset>(asset), std::current_exception());
 							}
 							catch (...)

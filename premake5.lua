@@ -93,8 +93,55 @@ project "Shade"
 	filter "configurations:Release"
 		defines "SHADE_RELEASE"
 		optimize "On"
-			
+		
 group "Clients"	
+project "Sandbox"
+	location	"Sandbox"
+	language	"C++"
+
+	targetdir ("bin/" .. output_dir .. "/%{prj.name}")
+	objdir    ("bin-int/" .. output_dir .. "/%{prj.name}")
+
+	files {
+		"%{prj.name}/include/**.h",
+		"%{prj.name}/include/**.cpp"
+	}
+
+	includedirs {
+		"%{prj.name}/include",
+		"%{prj.name}/include/vendors",
+		"Shade/vendors/spdlog/include",
+		"Shade/vendors/glm/",
+		"Shade/include",
+		"Shade/vendors"
+	}
+	
+	links {
+		"Shade",
+		"pugixml"
+	}
+	filter "system:windows"
+		cppdialect "C++17"
+		staticruntime "off"
+		systemversion "latest"
+
+		defines {
+			"SHADE_WINDOWS_PLATFORM",
+			"ENTT_API_IMPORT"
+		}
+
+	filter "configurations:Debug"
+		defines "SHADE_DEBUG"
+		symbols "On"
+		kind	"ConsoleApp"
+		linkoptions '/ENTRY:"mainCRTStartup"'
+
+	filter "configurations:Release"
+		defines "SHADE_RELAESE"
+		optimize "On"
+		kind	 "WindowedApp"
+		linkoptions '/ENTRY:"mainCRTStartup"'
+		
 project "Editor"
 	location	"Editor"
 	language	"C++"

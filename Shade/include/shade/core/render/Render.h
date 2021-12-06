@@ -17,12 +17,22 @@
 #include "shade/core/render/buffers/ShaderStorageBuffer.h"
 #include "shade/core/render/postprocess/PPBloom.h"
 #include "shade/core/render/postprocess/PPColorCorrection.h"
+#include "shade/core/render/drawable/primitives/Plane.h"
+#include "shade/core/vertex/Vertex2D.h"
 
 namespace shade
 {
 	class SHADE_API Render
 	{
 	public:
+		struct Sprites
+		{
+			Shared<VertexArray>				VAO;
+			Shared<VertexBuffer>			VBO;
+			Shared<VertexBuffer>			EBO;
+			Shared<IndexBuffer>				IBO;
+			std::vector<std::tuple<glm::mat4, Shared<Texture>>>	TexturesTransforms;
+		};
 		struct Instance
 		{
 			Drawable::DrawMode				DrawMode;
@@ -55,6 +65,7 @@ namespace shade
 	public:
 		static void Init();
 		static void ShutDown();
+		static unsigned int GetVideoMemoryUsage();
 		static void SetClearColor(const float& r, const float& g, const float& b,const float& a);
 		static void Clear();
 		static void DepthTest(const bool& enable);
@@ -68,12 +79,16 @@ namespace shade
 		static void SubmitInstance(const Shared<Shader>& shader, const Shared<Drawable>& drawable, const Shared<Material3D>& material, const glm::mat4& transform);
 		static void Submit(const Shared<Shader>& shader, const Shared<Drawable>& drawable, const Shared<Material3D>& material, const glm::mat4& transform);
 
+		/* Has to be reworked */
+		static void Submit(const Shared<Shader>& shader, const Shared<Texture>&  texture,  const glm::mat4& transform);
+
 		static void DrawInstances(const Shared<Shader>& shader);
 		static void DrawSubmited(const Shared<Shader>& shader);
 
 
 		static void DrawNotIndexed(const Drawable::DrawMode& mode, const Shared<VertexArray>& VAO, const std::uint32_t& count);
 		static void DrawIndexed(const Drawable::DrawMode& mode, const Shared<VertexArray>& VAO, const Shared<IndexBuffer>& IBO);
+		static void DrawSprite(const Shared<Shader>& shader, const Shared<Texture>& texture, const glm::mat4& transform, const glm::vec4& rectangle = glm::vec4(0, 0, 1, 1));
 
 	private:
 		
@@ -82,6 +97,7 @@ namespace shade
 
 		static Render::InstancePool   m_sInstancePool;
 		static Render::SubmitedPool   m_sSubmitedPool;
+		static Render::Sprites		  m_sSprites;
 
 		static Shared<UniformBuffer> m_sCameraUniformBuffer;
 		static Shared<UniformBuffer> m_sClippingUniformBuffer;

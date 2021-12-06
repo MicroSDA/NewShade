@@ -25,6 +25,7 @@ namespace shade
 		virtual ~RenderAPI() = default;
 		virtual void Init() = 0;
 		virtual void ShutDown() = 0;
+		virtual unsigned int GetVideoMemoryUsage() = 0;
 		virtual void SetClearColor(const float& r, const float& g, const float& b, const float& a) = 0;
 		virtual void Clear() = 0;
 		virtual void DepthTest(const bool& enable) = 0;

@@ -7,8 +7,7 @@ namespace shade
 	{
 	public:
 		static Shared<Box> Create(const glm::vec3& minHalfExt = glm::vec3(-0.5f), const glm::vec3& maxHalfExt = glm::vec3(0.5f));
-		virtual ~Box() {};
-		
+		virtual ~Box() = default;
 	private:
 		Box(const glm::vec3& minHalfExt, const glm::vec3& maxHalfEx);
 	};

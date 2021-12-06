@@ -13,20 +13,31 @@ namespace shade
 			Destroy
 		};
 	public:
+		template<typename T, typename ...Args>
+		static Shared<T> Create(Args&& ...args);
+
 		Asset();
 		virtual ~Asset();
-		virtual void LoadFromAssetData(shade::AssetData& data, const shade::AssetData& bundle = AssetData()) = 0;
 		void SetAssetData(shade::AssetData& data);
 		AssetData& GetAssetData();
 		const AssetData& GetAssetData() const;
 		const bool& IsPrefab() const;
 		virtual void AssetInit() = 0;
+	protected:
+		virtual void LoadDependentAssetsCallback(const shade::AssetData& data, const std::string& id) = 0;
 	private:
 		friend class AssetManager;
+		// Acces only in AssetManager
+		void _SetPrefab(const bool& isPrefab);
+		void _LoadFromAssetData(shade::AssetData& data);
+
 
 		AssetData  m_AssetData;
 		bool	   m_IsPrefab;
-
-		void _SetPrefab(const bool& isPrefab);
 	};
+	template<typename T, typename ...Args>
+	inline static Shared<T> Asset::Create(Args&& ...args)
+	{
+		return CreateShared<T>(std::forward<Args>(args)...);
+	}
 }

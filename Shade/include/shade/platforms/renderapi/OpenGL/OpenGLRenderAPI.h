@@ -8,6 +8,7 @@ namespace shade
 	public:
 		virtual void Init() override;
 		virtual void ShutDown();
+		virtual unsigned int GetVideoMemoryUsage() override;
 		virtual void SetClearColor(const float& r, const float& g, const float& b, const float& a) override;
 		virtual void Clear() override;
 		virtual void SetViewPort(std::uint32_t x, std::uint32_t y, std::uint32_t width, std::uint32_t height) override;

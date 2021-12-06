@@ -34,6 +34,7 @@ namespace shade
 			std::string Title;
 			unsigned int Width, Height;
 			bool VSync;
+			bool Fullscreen;
 
 			EventCallbackFn EventCallback;
 		};

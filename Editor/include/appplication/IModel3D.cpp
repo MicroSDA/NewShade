@@ -111,7 +111,7 @@ void IModel3D::ProcessTexture(const shade::Shared<shade::Mesh>& mesh, const std:
 		
 		/*if (std::filesystem::exists(_path))
 		{*/
-			auto texture = shade::Texture::Create();
+			auto texture = shade::Texture::Create<shade::Texture>();
 			texture->GetAssetData().Attribute("id").set_value(std::filesystem::path(_path).stem().string().c_str());
 			texture->GetAssetData().Attribute("path").set_value(_path.c_str());
 			texture->GetAssetData().Attribute("category").set_value("secondary");

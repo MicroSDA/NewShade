@@ -27,12 +27,14 @@ namespace shade
 		virtual bool Deserialize(std::istream& stream) override;
 		virtual bool Serialize() const override;
 		virtual bool Deserialize() override;
-		virtual void LoadFromAssetData(shade::AssetData& data, const shade::AssetData& bundle = AssetData()) override;
 		virtual void AssetInit() override;
 
 	private:
 		Scene();
 		std::string m_Name;
 		bool        m_IsPlaying;
+
+		// Asset loading behaviour
+		virtual void LoadDependentAssetsCallback(const shade::AssetData& data, const std::string& id) override;
 	};
 }

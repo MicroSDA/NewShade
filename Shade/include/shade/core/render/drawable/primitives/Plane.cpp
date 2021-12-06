@@ -12,12 +12,16 @@ shade::Plane::Plane(const std::uint32_t& width, const std::uint32_t& height)
 
 	Vertex3D vertex;
 	vertex.Position = glm::vec3(-1.0, 1.0, 0);
+	vertex.UV_Coordinates = glm::fvec2(0.0, 0.0);
 	AddVertex(vertex);
 	vertex.Position = glm::vec3(-1.0, -1.0, 0);
+	vertex.UV_Coordinates = glm::fvec2(0.0, 1.0);
 	AddVertex(vertex);
 	vertex.Position = glm::vec3(1.0, 1.0, 0);
+	vertex.UV_Coordinates = glm::fvec2(1.0, 0.0);
 	AddVertex(vertex);
 	vertex.Position = glm::vec3(1.0, -1.0, 0);
+	vertex.UV_Coordinates = glm::fvec2(1.0, 1.0);
 	AddVertex(vertex);
 
 	AddIndex(0);

@@ -14,6 +14,11 @@ shade::Scene::Scene() :
 
 }
 
+void shade::Scene::LoadDependentAssetsCallback(const shade::AssetData& data, const std::string& id)
+{
+	return; // Do nothing
+}
+
 shade::Scene::~Scene()
 {
 	DestroyEntities();
@@ -178,12 +183,6 @@ bool shade::Scene::Deserialize()
 		return false;
 	}
 	
-}
-
-void shade::Scene::LoadFromAssetData(shade::AssetData& data, const shade::AssetData& bundle)
-{
-	SetAssetData(data);
-	Deserialize();
 }
 
 void shade::Scene::AssetInit()

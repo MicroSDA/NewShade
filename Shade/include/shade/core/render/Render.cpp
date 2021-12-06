@@ -10,6 +10,7 @@ namespace shade
 	/* Pools */
 	Render::InstancePool		Render::m_sInstancePool;
 	Render::SubmitedPool		Render::m_sSubmitedPool;
+	Render::Sprites				Render::m_sSprites;
 	/* Buffers */
 	Shared<UniformBuffer>		Render::m_sCameraUniformBuffer;
 	Shared<UniformBuffer>		Render::m_sClippingUniformBuffer;
@@ -38,6 +39,20 @@ void shade::Render::Init()
 		m_sPointLightsBuffer		= ShaderStorageBuffer::Create(0,  3);
 		m_sSpotLightsBuffer			= ShaderStorageBuffer::Create(0,  4);
 
+
+		glm::fvec2 plane[4] = { glm::fvec2(-1.0,  1.0 ), glm::fvec2(-1.0, -1.0) ,glm::fvec2(1.0,   1.0), glm::fvec2(1.0,  -1.0) };
+
+	
+		m_sSprites.VAO = VertexArray::Create();
+		m_sSprites.VBO = VertexBuffer::Create(plane, sizeof(glm::fvec2) * 4, VertexBuffer::BufferType::Static);
+		m_sSprites.EBO = VertexBuffer::Create(sizeof(glm::fvec2) * 4, VertexBuffer::BufferType::Dynamic);
+
+		m_sSprites.VBO->SetLayout({ {shade::VertexBuffer::ElementType::Float2,		 "Position"	}});
+		m_sSprites.EBO->SetLayout({ {shade::VertexBuffer::ElementType::Float2,		 "UV_Coords"} });
+	
+		m_sSprites.VAO->AddVertexBuffer(m_sSprites.VBO);
+		m_sSprites.VAO->AddVertexBuffer(m_sSprites.EBO);
+		/*------------------------------------------------------*/
 	}
 	else
 		SHADE_CORE_WARNING("Render API has been already initialized!");
@@ -48,6 +63,11 @@ void shade::Render::ShutDown()
 	m_sRenderAPI->ShutDown();
 	m_sSubmitedPool.clear();
 	m_sInstancePool.clear();
+}
+
+unsigned int shade::Render::GetVideoMemoryUsage()
+{
+	return m_sRenderAPI->GetVideoMemoryUsage();
 }
 
 void shade::Render::SetClearColor(const float& r, const float& g, const float& b, const float& a)
@@ -211,6 +231,11 @@ void shade::Render::Submit(const Shared<Shader>& shader, const Shared<Drawable>&
 	}
 }
 
+void shade::Render::Submit(const Shared<Shader>& shader, const Shared<Texture>& texture, const glm::mat4& transform)
+{
+	
+}
+
 void shade::Render::DrawInstances(const Shared<Shader>& shader)
 {
 	auto& _shader = m_sInstancePool.find(shader.get());
@@ -322,6 +347,22 @@ void shade::Render::DrawSubmited(const Shared<Shader>& shader)
 void shade::Render::DrawIndexed(const Drawable::DrawMode& mode, const Shared<VertexArray>& VAO, const Shared<IndexBuffer>& IBO)
 {
 	m_sRenderAPI->DrawIndexed(mode, VAO, IBO);
+}
+
+void shade::Render::DrawSprite(const Shared<Shader>& shader, const Shared<Texture>& texture, const glm::mat4& transform, const glm::vec4& rectangle)
+{
+	glm::fvec2 uv_coords[4] = { glm::vec2(1.f / texture->GetImageData().Width * rectangle.x, 1.f / texture->GetImageData().Height * rectangle.y) ,
+								glm::vec2(1.f / texture->GetImageData().Width * rectangle.x, 1.f / texture->GetImageData().Height * (rectangle.y + rectangle.w)) ,
+								glm::vec2(1.f / texture->GetImageData().Width * (rectangle.x + rectangle.z), 1.f / texture->GetImageData().Height * rectangle.y),
+								glm::vec2(1.f / texture->GetImageData().Width * (rectangle.x + rectangle.z), 1.f / texture->GetImageData().Height * (rectangle.y + rectangle.w)) };
+
+	m_sSprites.EBO->SetData(uv_coords, sizeof(glm::fvec2) * 4, 0);
+
+	texture->Bind(0);
+	shader->Bind();
+	shader->SendMat4("u_Transform", false, glm::value_ptr(transform));
+	
+	m_sRenderAPI->DrawNotIndexed(Drawable::DrawMode::TriangleStrip, m_sSprites.VAO, 4);
 }
 
 void shade::Render::DrawNotIndexed(const Drawable::DrawMode& mode, const Shared<VertexArray>& VAO, const std::uint32_t& count)

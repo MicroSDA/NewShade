@@ -29,10 +29,15 @@ void EditorLayer::OnCreate()
 		shade::FrameBuffer::Texture::Format::RGBA16F,
 		shade::FrameBuffer::Texture::Format::DEPTH24STENCIL8 }));
 
-	m_IconsTexture = shade::Texture::Create();
+	m_IconsTexture = shade::Texture::Create<shade::Texture>();
 	m_IconsTexture->GetAssetData().Attribute("Path").set_value("resources/assets/textures/icons.dds");
 	m_IconsTexture->Deserialize();
 	m_IconsTexture->AssetInit();
+
+	m_LogoTexture = shade::Texture::Create<shade::Texture>();
+	m_LogoTexture->GetAssetData().Attribute("Path").set_value("resources/assets/textures/logo.dds");
+	m_LogoTexture->Deserialize();
+	m_LogoTexture->AssetInit();
 
 	m_InstancedShader		= shade::ShadersLibrary::Get("General");
 	m_GridShader			= shade::ShadersLibrary::Get("Grid");
@@ -40,6 +45,7 @@ void EditorLayer::OnCreate()
 	m_BloomShader			= shade::ShadersLibrary::Get("Bloom");
 	m_ColorCorrectionShader = shade::ShadersLibrary::Get("ColorCorrection");
 	m_BoxShader				= shade::ShadersLibrary::Get("Box");
+	m_SpriteShader			= shade::ShadersLibrary::Get("Sprite");
 
 	m_Grid					= shade::Grid::Create(0, 0, 0);
 	m_Box					= shade::Box::Create(glm::vec3(-1.f), glm::vec3(1.f));
@@ -49,6 +55,11 @@ void EditorLayer::OnCreate()
 	m_PPColorCorrection = shade::PPColorCorrection::Create();
 	m_PPColorCorrection->SetInOutTargets(m_FrameBuffer, m_FrameBuffer, m_ColorCorrectionShader);
 
+	/*shade::AssetManager::HoldAsset<shade::Texture>("Sprite", [this](auto& texture) mutable
+		{
+			m_SpriteTexture = shade::AssetManager::Receive<shade::Texture>(texture);
+
+		}, shade::Asset::Lifetime::Destroy);*/
 }
 
 void EditorLayer::OnUpdate(const shade::Shared<shade::Scene>& scene, const shade::Timer& deltaTime)
@@ -59,7 +70,6 @@ void EditorLayer::OnUpdate(const shade::Shared<shade::Scene>& scene, const shade
 	/* Materials always nullptr for this*/
 	shade::Render::Submit(m_GridShader,    m_Grid, m_Grid->GetMaterial(),  glm::mat4(1));
 	shade::Render::Submit(m_FrustumShader, m_Box,  m_Box->GetMaterial(),   glm::inverse(m_TestEditorCamera->GetViewProjection()));
-
 
 	scene->GetEntities().view<shade::Model3DComponent, shade::Transform3DComponent>().each([&](auto& entity, shade::Model3DComponent& model, shade::Transform3DComponent& transform)
 		{
@@ -111,7 +121,7 @@ void EditorLayer::OnRender(const shade::Shared<shade::Scene>& scene, const shade
 	{
 		auto environments = scene->GetEntities().view<shade::EnvironmentComponent>();
 		shade::Render::Begin(m_FrameBuffer);
-
+	
 
 		shade::Render::BeginScene(m_EditorCamera, environments.raw(), environments.size());
 		shade::Render::DrawInstances(m_InstancedShader);
@@ -123,9 +133,21 @@ void EditorLayer::OnRender(const shade::Shared<shade::Scene>& scene, const shade
 			shade::Render::PProcess::Process(m_PPColorCorrection);
 
 		shade::Render::BeginScene(m_EditorCamera);
+		
 		shade::Render::DrawSubmited(m_GridShader);
 		shade::Render::DrawSubmited(m_FrustumShader);
 		shade::Render::DrawSubmited(m_BoxShader);
+
+		// Sprite
+		shade::Transform2D transform;
+		// Fixed aspect ratio
+		float scale = 1.0f;
+		transform.SetScale(glm::vec2(10.f / 120.f, 10.f /199.f));
+		transform.SetPostition(-0.9f, -0.9f);
+
+		shade::Render::DrawSprite(m_SpriteShader, m_LogoTexture, transform.GetModelMatrix(), glm::vec4{120, 199.0f, 574, 167});
+		///
+
 		shade::Render::EndScene();
 
 		shade::Render::End(m_FrameBuffer);
@@ -140,6 +162,7 @@ void EditorLayer::OnDelete()
 void EditorLayer::OnEvent(const shade::Shared<shade::Scene>& scene, shade::Event& event, const shade::Timer& deltaTime)
 {
 	OnImGuiEvent(event);
+
 	if (event.GetEventType() == shade::EventType::KeyPressed)
 	{
 		shade::KeyCode keyCode = static_cast<shade::KeyEvent*>(&event)->GetKeyCode();
@@ -209,7 +232,6 @@ void EditorLayer::Entities(shade::Scene* scene)
 	static char search[256];
 	InputText("Search", search, 256);
 
-
 	if (ImGui::ListBoxHeader("##EntitiesList", ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y)))
 	{
 		if (ImGui::BeginPopupContextWindow())
@@ -255,7 +277,34 @@ void EditorLayer::Entities(shade::Scene* scene)
 			if (ImGui::BeginPopupContextItem("##ComponentPopup"))
 			{
 
-				if (!m_SelectedEntity.HasComponent<shade::EnvironmentComponent>() && !m_SelectedEntity.HasComponent<shade::CameraComponent>())
+				AddComponent<shade::Transform3DComponent>("Transform3D", false, m_SelectedEntity, [](shade::Entity& entity)
+					{
+						entity.AddComponent<shade::Transform3DComponent>();
+
+					}, m_SelectedEntity);
+
+				AddComponent<shade::Model3DComponent>("Model3D", true, m_SelectedEntity, [&](shade::Entity& entity)
+					{
+						for (auto& asset : shade::AssetManager::GetPrefabsDataList())
+						{
+							if (strcmp(asset.second.Attribute("Type").as_string(), "Model3D") == 0)
+								if (ImGui::MenuItem(asset.first.c_str()))
+								{
+									shade::AssetManager::HoldPrefab<shade::Model3D>(asset.first,
+										[&](auto& model) mutable
+										{
+											m_SelectedEntity.AddComponent<shade::Model3DComponent>(shade::AssetManager::Receive<shade::Model3D>(model));
+										});
+
+								}
+						}
+					}, m_SelectedEntity);
+
+				AddComponent<shade::DirectLightComponent>("DirectLight", false,   m_SelectedEntity, [](shade::Entity& entity) { entity.AddComponent<shade::DirectLightComponent>(shade::CreateShared<shade::DirectLight>()); }, m_SelectedEntity);
+				AddComponent<shade::EnvironmentComponent>("PointLight",  false,   m_SelectedEntity, [](shade::Entity& entity) { entity.AddComponent<shade::DirectLightComponent>(shade::CreateShared<shade::DirectLight>()); }, m_SelectedEntity);
+				AddComponent<shade::EnvironmentComponent>("SpotLight",   false,   m_SelectedEntity, [](shade::Entity& entity) { entity.AddComponent<shade::DirectLightComponent>(shade::CreateShared<shade::DirectLight>()); }, m_SelectedEntity);
+
+				/*if (!m_SelectedEntity.HasComponent<shade::EnvironmentComponent>() && !m_SelectedEntity.HasComponent<shade::CameraComponent>())
 				{
 					AddComponent<shade::Transform3DComponent>("Transform3D", false, m_SelectedEntity, [](shade::Entity& entity)
 						{
@@ -265,7 +314,7 @@ void EditorLayer::Entities(shade::Scene* scene)
 
 					AddComponent<shade::Model3DComponent>("Model3D", true, m_SelectedEntity, [&](shade::Entity& entity)
 						{
-							for (auto& asset : shade::AssetManager::GetAssetsDataList())
+							for (auto& asset : shade::AssetManager::GetPrefabsDataList())
 							{
 								if (strcmp(asset.second.Attribute("Type").as_string(), "Model3D") == 0)
 									if (ImGui::MenuItem(asset.first.c_str()))
@@ -279,16 +328,16 @@ void EditorLayer::Entities(shade::Scene* scene)
 									}
 							}
 						}, m_SelectedEntity);
-				}
+				}*/
 
-				if (!m_SelectedEntity.HasComponent<shade::Transform3DComponent>() &&
+				/*if (!m_SelectedEntity.HasComponent<shade::Transform3DComponent>() &&
 					!m_SelectedEntity.HasComponent<shade::Model3DComponent>() &&
 					!m_SelectedEntity.HasComponent<shade::CameraComponent>())
 				{
 					/*AddComponent<shade::EnvironmentComponent>("DirectLight", m_SelectedEntity, &EditorLayer::AddDirectLight);
 					AddComponent<shade::EnvironmentComponent>("PointLight", m_SelectedEntity, &EditorLayer::AddPointLight);
-					AddComponent<shade::EnvironmentComponent>("SpotLight", m_SelectedEntity, &EditorLayer::AddSpotLight);*/
-				}
+					AddComponent<shade::EnvironmentComponent>("SpotLight", m_SelectedEntity, &EditorLayer::AddSpotLight);
+				}*/
 				// Remove, need to create specific fucntion ?
 				ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.7, 0, 0, 1));
 				if (ImGui::MenuItem("Remove entity"))
@@ -380,6 +429,7 @@ void EditorLayer::Scene(const shade::Shared<shade::Scene>& scene)
 	{
 		m_SceneViewPort = ImGui::GetContentRegionAvail();
 		m_FrameBuffer->Resize(m_SceneViewPort.x, m_SceneViewPort.y);
+
 		m_EditorCamera->Resize(m_SceneViewPort.x / m_SceneViewPort.y);
 	}
 	else
@@ -426,6 +476,35 @@ void EditorLayer::Scene(const shade::Shared<shade::Scene>& scene)
 					{
 						glm::vec3 position, rotation, scale;
 						ImGuizmo::DecomposeMatrixToComponents(glm::value_ptr(transform), glm::value_ptr(position), glm::value_ptr(rotation), glm::value_ptr(scale));
+						light->SetDirection(glm::radians(rotation)); // TODO: Normalize
+					}
+					break;
+				}
+				case shade::Environment::Type::PointLight:
+				{
+					m_AllowedGuizmoOperation = m_PointLightGuizmoOperation;
+					//m_GuizmoOperation = ImGuizmo::OPERATION::TRANSLATE | ImGuizmo::OPERATION::SCALE;
+					auto light = static_cast<shade::PointLight*>(env.get());
+					glm::mat4 transform = glm::translate(light->GetPosition());
+					if (DrawImGuizmo(transform, m_EditorCamera, m_GuizmoOperation, ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, ImGui::GetWindowSize().x, ImGui::GetWindowSize().y))
+					{
+						glm::vec3 position, rotation, scale;
+						ImGuizmo::DecomposeMatrixToComponents(glm::value_ptr(transform), glm::value_ptr(position), glm::value_ptr(rotation), glm::value_ptr(scale));
+						light->SetPosition(position); // TODO: Normalize
+					}
+					break;
+				}
+				case shade::Environment::Type::SpotLight:
+				{
+					m_AllowedGuizmoOperation = m_SpotLightGuizmoOperation;
+					//m_GuizmoOperation = ImGuizmo::OPERATION::TRANSLATE | ImGuizmo::OPERATION::SCALE;
+					auto light = static_cast<shade::SpotLight*>(env.get());
+					glm::mat4 transform = glm::translate(light->GetPosition()) * glm::toMat4(glm::quat((light->GetDirection())));
+					if (DrawImGuizmo(transform, m_EditorCamera, m_GuizmoOperation, ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, ImGui::GetWindowSize().x, ImGui::GetWindowSize().y))
+					{
+						glm::vec3 position, rotation, scale;
+						ImGuizmo::DecomposeMatrixToComponents(glm::value_ptr(transform), glm::value_ptr(position), glm::value_ptr(rotation), glm::value_ptr(scale));
+						light->SetPosition(position); // TODO: Normalize
 						light->SetDirection(glm::radians(rotation)); // TODO: Normalize
 					}
 					break;
@@ -770,6 +849,8 @@ void EditorLayer::Render()
 		DrawFlaot("Exposure",     &m_PPColorCorrection->GetExposure(), 1.f, 0.f, FLT_MAX, 80.f);
 		ImGui::TreePop();
 	}
+
+	ImGui::Text("Video memory in usage: %d(mbs)", shade::Render::GetVideoMemoryUsage());
 }
 
 void EditorLayer::ShadersLibrary()

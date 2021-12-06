@@ -8,11 +8,13 @@ namespace shade
 		std::string Title;
 		uint32_t Width;
 		uint32_t Height;
+		bool Fullscreen;
 
 		WindowConfig(const std::string& title = "Shade",
 			uint32_t width = 1600,
-			uint32_t height = 900)
-			: Title(title), Width(width), Height(height)
+			uint32_t height = 900,
+			bool fullscreen = false)
+			: Title(title), Width(width), Height(height), Fullscreen(fullscreen)
 		{
 		}
 	};

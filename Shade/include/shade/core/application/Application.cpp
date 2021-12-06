@@ -47,6 +47,7 @@ void shade::Application::Start()
 	// TODO Scenee assigment
 	Shared<Scene> dummyScene = Scene::Create();
 	m_CurrentScene = Scene::Create();
+	m_CurrentScene->GetAssetData().Attribute("Id").set_value("DummyScene");
 
 	Render::Init();
 	Render::SetViewPort(0, 0, m_Window->GetWidth(), m_Window->GetHeight());

@@ -20,8 +20,8 @@ private:
 	ImGuizmo::OPERATION m_AllowedGuizmoOperation;
 	ImGuizmo::OPERATION m_BasicGuizmoOperation       = ImGuizmo::OPERATION::TRANSLATE | ImGuizmo::OPERATION::ROTATE | ImGuizmo::OPERATION::SCALE;
 	ImGuizmo::OPERATION m_DirectLightGuizmoOperation = ImGuizmo::OPERATION::ROTATE;
-	ImGuizmo::OPERATION m_PointLightGuizmoOperation  = ImGuizmo::OPERATION::TRANSLATE | ImGuizmo::OPERATION::SCALE;
-	ImGuizmo::OPERATION m_SpotLightGuizmoOperation   = ImGuizmo::OPERATION::TRANSLATE | ImGuizmo::OPERATION::ROTATE | ImGuizmo::OPERATION::SCALE;
+	ImGuizmo::OPERATION m_PointLightGuizmoOperation  = ImGuizmo::OPERATION::TRANSLATE;
+	ImGuizmo::OPERATION m_SpotLightGuizmoOperation   = ImGuizmo::OPERATION::TRANSLATE;
 
 
 	ImVec2 m_SceneViewPort = {0, 0};
@@ -34,6 +34,7 @@ private:
 	shade::Shared<shade::Shader> m_GridShader;
 	shade::Shared<shade::Shader> m_FrustumShader;
 	shade::Shared<shade::Shader> m_BoxShader;
+	shade::Shared<shade::Shader> m_SpriteShader;
 	
 
 
@@ -54,6 +55,7 @@ private:
 	shade::Shared<shade::Mesh>       m_SelectedMesh;
 	/* Editor assets */
 	shade::Shared<shade::Texture>	 m_IconsTexture;
+	shade::Shared<shade::Texture>	 m_LogoTexture;
 
 
 	void MainMenu(const shade::Shared<shade::Scene>& scene);
@@ -78,5 +80,8 @@ private:
 	void DarkVineTheme();
 
 
+	/* Test section */
+	shade::Shared<shade::Texture>  m_SpriteTexture;
+	shade::Transform3D   		   m_SpriteTransform;
 };
 

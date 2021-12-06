@@ -38,6 +38,7 @@ namespace shade
 		AssetData				Parent();
 		std::vector<AssetData>	Dependencies() const;
 
+		// Has to be removed ?
 		virtual bool Serialize(std::ostream& stream) const override;
 		virtual bool Deserialize(std::istream& stream) override;
 		virtual bool Serialize() const override;

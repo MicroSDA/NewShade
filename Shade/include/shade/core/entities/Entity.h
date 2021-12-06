@@ -53,6 +53,7 @@ namespace shade
 		operator bool() const { return m_EntityHandle != entt::null; }
 		operator entt::entity() const { return m_EntityHandle; }
 		operator uint32_t() const { return (uint32_t)m_EntityHandle; }
+		operator uint64_t() const { return (uint64_t)m_EntityHandle; }
 
 		bool operator==(const Entity& other) const
 		{
@@ -68,9 +69,31 @@ namespace shade
 		}
 		operator std::string () { return std::to_string(static_cast<uint32_t>(m_EntityHandle)); }
 		operator const std::string () const { return std::to_string(static_cast<uint32_t>(m_EntityHandle)); }
+
+		std::vector<shade::Entity>& GetChildren();
+		void AddChild(shade::Entity& entity);
+		void RemoveChild(shade::Entity& entity);
+		bool HasChildren();
+
+		void SetParent(shade::Entity& entity);
+		void UnsetParent();
+		shade::Entity GetParent();
 	private:
 		entt::entity m_EntityHandle { entt::null };
-		shade::EntitiesDocker* m_pDocker = nullptr;
+		shade::EntitiesDocker*		m_pDocker = nullptr;
 	};
 
+	// Parent - Child component
+	struct PCComponent
+	{
+		shade::Entity Parent;
+		std::vector<shade::Entity> Children;
+
+		PCComponent() = default;
+		PCComponent(const PCComponent& other) = default;
+		PCComponent(shade::Entity parent)
+			: Parent(parent)
+		{}
+
+	};
 }

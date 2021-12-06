@@ -79,8 +79,11 @@ shade::AssetData shade::AssetManager::GetAssetData(const std::string& id)
 		return AssetData(assetData->second);
 	else
 	{
-		SHADE_CORE_WARNING("Couldn't find specified asset data by asset id :{0}", id);
-		return AssetData();
+		assetData = instance.m_PrefabDataList.find(id);
+		if(assetData == instance.m_PrefabDataList.end())
+			SHADE_CORE_WARNING("Couldn't find specified asset data by asset id : {0}", id)
+		else
+			return AssetData();
 	}
 }
 

@@ -3,6 +3,10 @@
 
 #include <glad/glad.h>
 
+#define GL_GPU_MEM_INFO_TOTAL_AVAILABLE_MEM_NVX 0x9048
+#define GL_GPU_MEM_INFO_CURRENT_AVAILABLE_MEM_NVX 0x9049
+
+
 void OpenGLMessageCallback(
 	unsigned source,
 	unsigned type,
@@ -44,6 +48,20 @@ void shade::OpenGLRenderAPI::Init()
 
 void shade::OpenGLRenderAPI::ShutDown()
 {
+}
+
+unsigned int shade::OpenGLRenderAPI::GetVideoMemoryUsage()
+{
+	// Nvidia only !
+	GLint nTotalMemoryInKB = 0;
+	glGetIntegerv(GL_GPU_MEM_INFO_TOTAL_AVAILABLE_MEM_NVX,
+		&nTotalMemoryInKB);
+
+	GLint nCurAvailMemoryInKB = 0;
+	glGetIntegerv(GL_GPU_MEM_INFO_CURRENT_AVAILABLE_MEM_NVX,
+		&nCurAvailMemoryInKB);
+
+	return  (nTotalMemoryInKB - nCurAvailMemoryInKB) / 1024;
 }
 
 void shade::OpenGLRenderAPI::SetClearColor(const float& r, const float& g, const float& b, const float& a)

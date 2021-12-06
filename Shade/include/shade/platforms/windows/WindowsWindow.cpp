@@ -46,9 +46,10 @@ bool shade::WindowsWindow::IsVSync() const
 
 void shade::WindowsWindow::Init(const WindowConfig& config)
 {
-	m_Data.Title  = config.Title;
-	m_Data.Width  = config.Width;
-	m_Data.Height = config.Height;
+	m_Data.Title		= config.Title;
+	m_Data.Width		= config.Width;
+	m_Data.Height		= config.Height;
+	m_Data.Fullscreen	= config.Fullscreen;
 
 	SHADE_CORE_INFO("Creating window {0} ({1}, {2})", config.Title, config.Width, config.Height);
 
@@ -64,7 +65,19 @@ void shade::WindowsWindow::Init(const WindowConfig& config)
 	#if defined(SHADE_DEBUG)
 		glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
 	#endif
-		m_Window = glfwCreateWindow((int)config.Width, (int)config.Height, m_Data.Title.c_str(), nullptr, nullptr);
+
+		if (config.Fullscreen)
+		{
+			GLFWmonitor* monitor = glfwGetPrimaryMonitor();
+			const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+
+			m_Window = glfwCreateWindow(mode->width, mode->height, m_Data.Title.c_str(), monitor, nullptr);
+		}
+		else
+		{
+			m_Window = glfwCreateWindow(config.Width, config.Height, m_Data.Title.c_str(), nullptr, nullptr);
+		}
+		
 		++s_GLFWWindowCount;
 
 		m_Context = RenderContext::Create(m_Window);
