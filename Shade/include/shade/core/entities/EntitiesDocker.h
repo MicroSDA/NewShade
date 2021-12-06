@@ -14,7 +14,7 @@ namespace shade
 
 		shade::Entity CreateEntity(const std::string& name = "Entity");
 	
-		void DestroyEntity(const Entity& entity);
+		void DestroyEntity(Entity& entity);
 		void DestroyEntities();
 		const entt::registry& GetEntities() const;
 		entt::registry& GetEntities();

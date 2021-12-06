@@ -17,8 +17,19 @@ shade::Entity shade::EntitiesDocker::CreateEntity(const std::string& name)
     tag = (name == "Entity") ? "Entity" : name;
     return entity;
 }
-void shade::EntitiesDocker::DestroyEntity(const Entity& entity)
+void shade::EntitiesDocker::DestroyEntity(Entity& entity)
 {
+    auto& pc = entity.GetComponent<PCComponent>();
+    if (pc.Parent.IsValid())
+    {
+        /* Remove me from parent */
+        pc.Parent.RemoveChild(entity);
+    }
+    
+    /* Destroy all childrens */
+    for(auto c : pc.Children)
+        m_Registry.destroy(c);
+    /* Destory current entity */
     m_Registry.destroy(entity);
 }
 
