@@ -434,3 +434,16 @@ bool shade::ImGuiLayer::DrawButtonImage(const char* id, const Shared<Texture>& t
 	ImGui::PopID();
 	return isUsed;
 }
+
+void shade::ImGuiLayer::AddChild(const char* title, Entity& entity)
+{
+	if (entity.IsValid())
+	{
+		if (ImGui::MenuItem(title))
+		{
+			entity.AddChild(entity.GetDocker().CreateEntity());
+		}
+			
+	}
+	
+}

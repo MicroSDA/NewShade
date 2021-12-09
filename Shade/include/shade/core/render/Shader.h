@@ -26,10 +26,10 @@ namespace shade
 		virtual void SendInt2(const std::string& name,		const int* value) = 0;
 		virtual void SendInt3(const std::string& name,		const int* value) = 0;
 		virtual void SendInt4(const std::string& name,		const int* value) = 0;
-		virtual void SendFlaot(const std::string& name,		const float& value) = 0;
-		virtual void SendFlaot2(const std::string& name,	const float* value) = 0;
-		virtual void SendFlaot3(const std::string& name,	const float* value) = 0;
-		virtual void SendFlaot4(const std::string& name,	const float* value) = 0;
+		virtual void SendFloat(const std::string& name,		const float& value) = 0;
+		virtual void SendFloat2(const std::string& name,	const float* value) = 0;
+		virtual void SendFloat3(const std::string& name,	const float* value) = 0;
+		virtual void SendFloat4(const std::string& name,	const float* value) = 0;
 		virtual void SendMat3(const std::string& name,		const bool& isTransponse, const float* value) = 0;
 		virtual void SendMat4(const std::string& name,		const bool& isTransponse, const float* value) = 0;
 		virtual void ExecuteSubrutines() = 0;

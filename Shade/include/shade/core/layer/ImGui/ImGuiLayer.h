@@ -61,21 +61,7 @@ namespace shade
 		bool DrawButtonTrinagle(const char* label, const ImVec2& size_arg, ImGuiButtonFlags flags = ImGuiButtonFlags_None);
 		bool DrawButtonSquare(const char* label, const ImVec2& size_arg, ImGuiButtonFlags flags = ImGuiButtonFlags_None);
 		bool DrawButtonImage(const char* id, const Shared<Texture>& texture, const ImVec2& buttonSize, const ImVec2& imageSize, const ImVec2& start = ImVec2(0,0), int frame_padding = -1, const ImVec4& tint_col = ImVec4(1, 1, 1, 1));
-		/*ImVec2 start = {892, 614};
-		ImVec2 size = { 26,  26 };
-		ImVec2 textureSize = { (float)m_IconsTexture->GetImageData().Width, (float)m_IconsTexture->GetImageData().Height };
-
-		ImVec2 uv1 = ImVec2(start.x / textureSize.x, start.y / textureSize.y);
-		ImVec2 uv2 = ImVec2((start.x + size.x) / textureSize.x, (start.y + size.y) / textureSize.y);
-
-		ImGui::ImageButton(reinterpret_cast<void*>(m_IconsTexture->GetRenderID()),
-			ImVec2{ 26, 26 }, uv1, uv2);*/
-		/*ImGui::Image(reinterpret_cast<void*>(m_IconsTexture->GetRenderID()),
-			ImVec2{26, 26}, uv1, uv2);*/
-		/*
-		* 
-		*/
-
+		void AddChild(const char* title, Entity& entity);
 	};
 
 	template<typename Callback, typename ...Args>
@@ -148,11 +134,13 @@ namespace shade
 	inline void ImGuiLayer::DrawTreeNode(const char* title, Call callback, Args && ...args)
 	{
 		ImGui::AlignTextToFramePadding();
-		if (ImGui::TreeNodeEx(title, ImGuiTreeNodeFlags_KeppFramedWhenOpen))
+		//ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 10.0f);
+		if (ImGui::TreeNodeEx(title, ImGuiTreeNodeFlags_KeppFramedWhenOpen | ImGuiTreeNodeFlags_AllowItemOverlap))
 		{
 			std::invoke(callback, std::forward<Args>(args)...);
 			ImGui::TreePop();
 		}
+		//ImGui::PopStyleVar();
 	}
 	template<typename Comp, typename Call, typename ...Args>
 	inline void ImGuiLayer::AddComponent(const char* title, const bool& isMenu, Entity& entity, Call callback, Args && ...args)

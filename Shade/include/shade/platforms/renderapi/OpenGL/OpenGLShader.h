@@ -17,10 +17,10 @@ namespace shade
 		virtual void SendInt2(const std::string& name, const int* value) override;
 		virtual void SendInt3(const std::string& name, const int* value) override;
 		virtual void SendInt4(const std::string& name, const int* value) override;
-		virtual void SendFlaot(const std::string& name, const float& value) override;
-		virtual void SendFlaot2(const std::string& name, const float* value) override;
-		virtual void SendFlaot3(const std::string& name, const float* value) override;
-		virtual void SendFlaot4(const std::string& name, const float* value) override;
+		virtual void SendFloat(const std::string& name, const float& value) override;
+		virtual void SendFloat2(const std::string& name, const float* value) override;
+		virtual void SendFloat3(const std::string& name, const float* value) override;
+		virtual void SendFloat4(const std::string& name, const float* value) override;
 		virtual void SendMat3(const std::string& name, const bool& isTransponse, const float* value) override;
 		virtual void SendMat4(const std::string& name, const bool& isTransponse, const float* value) override;
 		virtual void SelectSubrutine(const std::string& sUniformName, const std::string& subrutine, const Shader::Type& type) override;

@@ -64,22 +64,22 @@ void shade::OpenGLShader::SendInt4(const std::string& name, const int* value)
 	glUniform4i(GetUniformLocation(name), value[0], value[1], value[2], value[3]);
 }
 
-void shade::OpenGLShader::SendFlaot(const std::string& name, const float& value)
+void shade::OpenGLShader::SendFloat(const std::string& name, const float& value)
 {
 	glUniform1f(GetUniformLocation(name), value);
 }
 
-void shade::OpenGLShader::SendFlaot2(const std::string& name, const float* value)
+void shade::OpenGLShader::SendFloat2(const std::string& name, const float* value)
 {
 	glUniform2f(GetUniformLocation(name), value[0], value[1]);
 }
 
-void shade::OpenGLShader::SendFlaot3(const std::string& name, const float* value)
+void shade::OpenGLShader::SendFloat3(const std::string& name, const float* value)
 {
 	glUniform3f(GetUniformLocation(name), value[0], value[1], value[2]);
 }
 
-void shade::OpenGLShader::SendFlaot4(const std::string& name, const float* value)
+void shade::OpenGLShader::SendFloat4(const std::string& name, const float* value)
 {
 	glUniform4f(GetUniformLocation(name), value[0], value[1], value[2], value[3]);
 }

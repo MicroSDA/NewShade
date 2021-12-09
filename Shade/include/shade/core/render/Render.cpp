@@ -156,15 +156,15 @@ void shade::Render::BeginScene(const Shared<Camera>& camera, const Shared<Enviro
 		switch (env[i]->GetType())
 		{
 		case Environment::Type::DirectLight:
-			m_sDirectLightsBuffer->SetData(env[i]->ReciveRenderData<DirectLight>(), sizeof(DirectLight::RenderData), sizeof(DirectLight::RenderData) * dLightIndex);
+			m_sDirectLightsBuffer->SetData(&env[i]->As<DirectLight>().GetRenderData(), sizeof(DirectLight::RenderData), sizeof(DirectLight::RenderData) * dLightIndex);
 			dLightIndex++;
 			break;
 		case Environment::Type::PointLight:
-			m_sPointLightsBuffer->SetData(env[i]->ReciveRenderData<PointLight>(), sizeof(PointLight::RenderData), sizeof(PointLight::RenderData) * pLighIndex);
+			m_sPointLightsBuffer->SetData(&env[i]->As<PointLight>().GetRenderData(), sizeof(PointLight::RenderData), sizeof(PointLight::RenderData) * pLighIndex);
 			pLighIndex++;
 			break;
 		case Environment::Type::SpotLight:
-			m_sSpotLightsBuffer->SetData(env[i]->ReciveRenderData<SpotLight>(), sizeof(SpotLight::RenderData), sizeof(SpotLight::RenderData) * sLightIndex);
+			m_sSpotLightsBuffer->SetData(&env[i]->As<SpotLight>().GetRenderData(), sizeof(SpotLight::RenderData), sizeof(SpotLight::RenderData) * sLightIndex);
 			sLightIndex++;
 			break;
 		}
@@ -257,15 +257,15 @@ void shade::Render::DrawInstances(const Shared<Shader>& shader)
 			if (instance.second.Material)
 			{
 				/* Send material */
-				shader->SendFlaot3("u_Material.AmbientColor", glm::value_ptr(instance.second.Material->ColorAmbient));
-				shader->SendFlaot3("u_Material.DiffuseColor", glm::value_ptr(instance.second.Material->ColorDiffuse));
-				shader->SendFlaot3("u_Material.SpecularColor", glm::value_ptr(instance.second.Material->ColorSpecular));
-				shader->SendFlaot3("u_Material.TransparentColor", glm::value_ptr(instance.second.Material->ColorTransparent));
-				shader->SendFlaot("u_Material.Emissive", instance.second.Material->Emmisive);
-				shader->SendFlaot("u_Material.Shinines", instance.second.Material->Shininess);
-				shader->SendFlaot("u_Material.ShininesStrength", instance.second.Material->ShininessStrength);
-				shader->SendFlaot("u_Material.Opacity", instance.second.Material->Opacity);
-				shader->SendFlaot("u_Material.Refracti", instance.second.Material->Refracti);
+				shader->SendFloat3("u_Material.AmbientColor", glm::value_ptr(instance.second.Material->ColorAmbient));
+				shader->SendFloat3("u_Material.DiffuseColor", glm::value_ptr(instance.second.Material->ColorDiffuse));
+				shader->SendFloat3("u_Material.SpecularColor", glm::value_ptr(instance.second.Material->ColorSpecular));
+				shader->SendFloat3("u_Material.TransparentColor", glm::value_ptr(instance.second.Material->ColorTransparent));
+				shader->SendFloat("u_Material.Emissive", instance.second.Material->Emmisive);
+				shader->SendFloat("u_Material.Shinines", instance.second.Material->Shininess);
+				shader->SendFloat("u_Material.ShininesStrength", instance.second.Material->ShininessStrength);
+				shader->SendFloat("u_Material.Opacity", instance.second.Material->Opacity);
+				shader->SendFloat("u_Material.Refracti", instance.second.Material->Refracti);
 
 				/*TODO select subrutine depends on materail*/
 
@@ -310,15 +310,15 @@ void shade::Render::DrawSubmited(const Shared<Shader>& shader)
 				if (std::get<1>(instance.second.MaterialTransforms[i]))
 				{
 					/* Send material */
-					shader->SendFlaot3("u_Material.AmbientColor",		glm::value_ptr(material->ColorAmbient));
-					shader->SendFlaot3("u_Material.DiffuseColor",		glm::value_ptr(material->ColorDiffuse));
-					shader->SendFlaot3("u_Material.SpecularColor",		glm::value_ptr(material->ColorSpecular));
-					shader->SendFlaot3("u_Material.TransparentColor",	glm::value_ptr(material->ColorTransparent));
-					shader->SendFlaot("u_Material.Emissiv",			    material->Emmisive);
-					shader->SendFlaot("u_Material.Shinines",			material->Shininess);
-					shader->SendFlaot("u_Material.ShininesStrength",	material->ShininessStrength);
-					shader->SendFlaot("u_Material.Opacity",				material->Opacity);
-					shader->SendFlaot("u_Material.Refracti",			material->Refracti);
+					shader->SendFloat3("u_Material.AmbientColor",		glm::value_ptr(material->ColorAmbient));
+					shader->SendFloat3("u_Material.DiffuseColor",		glm::value_ptr(material->ColorDiffuse));
+					shader->SendFloat3("u_Material.SpecularColor",		glm::value_ptr(material->ColorSpecular));
+					shader->SendFloat3("u_Material.TransparentColor",	glm::value_ptr(material->ColorTransparent));
+					shader->SendFloat("u_Material.Emissiv",			    material->Emmisive);
+					shader->SendFloat("u_Material.Shinines",			material->Shininess);
+					shader->SendFloat("u_Material.ShininesStrength",	material->ShininessStrength);
+					shader->SendFloat("u_Material.Opacity",				material->Opacity);
+					shader->SendFloat("u_Material.Refracti",			material->Refracti);
 
 					/*TODO select subrutine depends on materail*/
 

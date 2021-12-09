@@ -10,8 +10,8 @@ void shade::OpenGL_PColorCorrection::Process()
 	std::uint32_t groups[2] = { ceil((float)m_InputFrameBuffer->GetLayout().Width / 16.0f), ceil((float)m_InputFrameBuffer->GetLayout().Height / 16.0f) };
 
 	m_Shader->Bind();
-	m_Shader->SendFlaot("u_Settings.Gamma",    m_Gamma);
-	m_Shader->SendFlaot("u_Settings.Exposure", m_Exposure);
+	m_Shader->SendFloat("u_Settings.Gamma",    m_Gamma);
+	m_Shader->SendFloat("u_Settings.Exposure", m_Exposure);
 
 
 	/* Getting hdr picture */

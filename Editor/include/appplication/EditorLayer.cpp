@@ -39,16 +39,16 @@ void EditorLayer::OnCreate()
 	m_LogoTexture->Deserialize();
 	m_LogoTexture->AssetInit();
 
-	m_InstancedShader		= shade::ShadersLibrary::Get("General");
-	m_GridShader			= shade::ShadersLibrary::Get("Grid");
-	m_FrustumShader			= shade::ShadersLibrary::Get("Frustum");
-	m_BloomShader			= shade::ShadersLibrary::Get("Bloom");
+	m_InstancedShader = shade::ShadersLibrary::Get("General");
+	m_GridShader = shade::ShadersLibrary::Get("Grid");
+	m_FrustumShader = shade::ShadersLibrary::Get("Frustum");
+	m_BloomShader = shade::ShadersLibrary::Get("Bloom");
 	m_ColorCorrectionShader = shade::ShadersLibrary::Get("ColorCorrection");
-	m_BoxShader				= shade::ShadersLibrary::Get("Box");
-	m_SpriteShader			= shade::ShadersLibrary::Get("Sprite");
+	m_BoxShader = shade::ShadersLibrary::Get("Box");
+	m_SpriteShader = shade::ShadersLibrary::Get("Sprite");
 
-	m_Grid					= shade::Grid::Create(0, 0, 0);
-	m_Box					= shade::Box::Create(glm::vec3(-1.f), glm::vec3(1.f));
+	m_Grid = shade::Grid::Create(0, 0, 0);
+	m_Box = shade::Box::Create(glm::vec3(-1.f), glm::vec3(1.f));
 
 	m_PPBloom = shade::PPBloom::Create();
 	m_PPBloom->SetInOutTargets(m_FrameBuffer, m_FrameBuffer, m_BloomShader);
@@ -68,8 +68,8 @@ void EditorLayer::OnUpdate(const shade::Shared<shade::Scene>& scene, const shade
 	auto frustum = m_TestEditorCamera->GetFrustum();
 
 	/* Materials always nullptr for this*/
-	shade::Render::Submit(m_GridShader,    m_Grid, m_Grid->GetMaterial(),  glm::mat4(1));
-	shade::Render::Submit(m_FrustumShader, m_Box,  m_Box->GetMaterial(),   glm::inverse(m_TestEditorCamera->GetViewProjection()));
+	shade::Render::Submit(m_GridShader, m_Grid, m_Grid->GetMaterial(), glm::mat4(1));
+	shade::Render::Submit(m_FrustumShader, m_Box, m_Box->GetMaterial(), glm::inverse(m_TestEditorCamera->GetViewProjection()));
 
 	scene->GetEntities().view<shade::Model3DComponent, shade::Transform3DComponent>().each([&](auto& entity, shade::Model3DComponent& model, shade::Transform3DComponent& transform)
 		{
@@ -80,7 +80,7 @@ void EditorLayer::OnUpdate(const shade::Shared<shade::Scene>& scene, const shade
 					shade::Render::SubmitInstance(m_InstancedShader, mesh, mesh->GetMaterial(), transform.GetModelMatrix());
 					shade::Render::Submit(m_BoxShader, shade::Box::Create(mesh->GetMinHalfExt(), mesh->GetMaxHalfExt()), nullptr, transform.GetModelMatrix());
 				}
-					
+
 			}
 		});
 }
@@ -119,9 +119,11 @@ void EditorLayer::OnRender(const shade::Shared<shade::Scene>& scene, const shade
 	} ImGui::End(); // Begin("DockSpace")
 
 	{
-		auto environments = scene->GetEntities().view<shade::EnvironmentComponent>();
+		auto str = scene->GetEntities().view<shade::Tag>();
+		auto& environments = scene->GetEntities().view<shade::EnvironmentComponent>();
+
 		shade::Render::Begin(m_FrameBuffer);
-	
+
 
 		shade::Render::BeginScene(m_EditorCamera, environments.raw(), environments.size());
 		shade::Render::DrawInstances(m_InstancedShader);
@@ -133,7 +135,7 @@ void EditorLayer::OnRender(const shade::Shared<shade::Scene>& scene, const shade
 			shade::Render::PProcess::Process(m_PPColorCorrection);
 
 		shade::Render::BeginScene(m_EditorCamera);
-		
+
 		shade::Render::DrawSubmited(m_GridShader);
 		shade::Render::DrawSubmited(m_FrustumShader);
 		shade::Render::DrawSubmited(m_BoxShader);
@@ -142,10 +144,10 @@ void EditorLayer::OnRender(const shade::Shared<shade::Scene>& scene, const shade
 		shade::Transform2D transform;
 		// Fixed aspect ratio
 		float scale = 1.0f;
-		transform.SetScale(glm::vec2(10.f / 120.f, 10.f /199.f));
+		transform.SetScale(glm::vec2(10.f / 120.f, 10.f / 199.f));
 		transform.SetPostition(-0.9f, -0.9f);
 
-		shade::Render::DrawSprite(m_SpriteShader, m_LogoTexture, transform.GetModelMatrix(), glm::vec4{120, 199.0f, 574, 167});
+		shade::Render::DrawSprite(m_SpriteShader, m_LogoTexture, transform.GetModelMatrix(), glm::vec4{ 120, 199.0f, 574, 167 });
 		///
 
 		shade::Render::EndScene();
@@ -197,9 +199,9 @@ void EditorLayer::OnEvent(const shade::Shared<shade::Scene>& scene, shade::Event
 		{
 			for (auto i = 0; i < 1; i++)
 			{
-				shade::AssetManager::HoldPrefab<shade::Model3D>("Nanosuit", [&](auto& asset) mutable 
+				shade::AssetManager::HoldPrefab<shade::Model3D>("Nanosuit", [&](auto& asset) mutable
 					{
-						
+
 						auto entity = scene->CreateEntity("Cube");
 						entity.AddComponent<shade::Model3DComponent>(shade::AssetManager::Receive<shade::Model3D>(asset));
 						entity.AddComponent<shade::Transform3DComponent>();
@@ -260,7 +262,10 @@ void EditorLayer::Entities(shade::Scene* scene)
 
 			ImGui::EndPopup();
 		}
-		scene->GetEntities().view<std::string>().each([&]
+
+		EntitiesList(search, scene);
+
+		/*scene->GetEntities().view<std::string>().each([&]
 		(auto entity_id, std::string& tag)
 			{
 				shade::Entity	entity = { entity_id, scene };
@@ -268,7 +273,7 @@ void EditorLayer::Entities(shade::Scene* scene)
 				if (tag.find(search) != std::string::npos)
 					if (ImGui::Selectable(_tag.c_str(), m_SelectedEntity == entity))
 						m_SelectedEntity = entity;
-			});
+			});*/
 
 		ImGui::ListBoxFooter();
 
@@ -277,12 +282,13 @@ void EditorLayer::Entities(shade::Scene* scene)
 			if (ImGui::BeginPopupContextItem("##ComponentPopup"))
 			{
 
+				AddChild("New entity as child", m_SelectedEntity);
+
+				ImGui::Separator();
 				AddComponent<shade::Transform3DComponent>("Transform3D", false, m_SelectedEntity, [](shade::Entity& entity)
 					{
 						entity.AddComponent<shade::Transform3DComponent>();
-
 					}, m_SelectedEntity);
-
 				AddComponent<shade::Model3DComponent>("Model3D", true, m_SelectedEntity, [&](shade::Entity& entity)
 					{
 						for (auto& asset : shade::AssetManager::GetPrefabsDataList())
@@ -295,14 +301,13 @@ void EditorLayer::Entities(shade::Scene* scene)
 										{
 											m_SelectedEntity.AddComponent<shade::Model3DComponent>(shade::AssetManager::Receive<shade::Model3D>(model));
 										});
-
 								}
 						}
 					}, m_SelectedEntity);
 
-				AddComponent<shade::DirectLightComponent>("DirectLight", false,   m_SelectedEntity, [](shade::Entity& entity) { entity.AddComponent<shade::DirectLightComponent>(shade::CreateShared<shade::DirectLight>()); }, m_SelectedEntity);
-				AddComponent<shade::EnvironmentComponent>("PointLight",  false,   m_SelectedEntity, [](shade::Entity& entity) { entity.AddComponent<shade::DirectLightComponent>(shade::CreateShared<shade::DirectLight>()); }, m_SelectedEntity);
-				AddComponent<shade::EnvironmentComponent>("SpotLight",   false,   m_SelectedEntity, [](shade::Entity& entity) { entity.AddComponent<shade::DirectLightComponent>(shade::CreateShared<shade::DirectLight>()); }, m_SelectedEntity);
+				AddComponent<shade::EnvironmentComponent>("DirectLight",	false, m_SelectedEntity, [&](shade::Entity& entity)	 { entity.AddComponent<shade::EnvironmentComponent>(shade::CreateShared<shade::DirectLight>()); }, m_SelectedEntity);
+				AddComponent<shade::EnvironmentComponent>("PointLight",		false, m_SelectedEntity, [&](shade::Entity& entity)  { entity.AddComponent<shade::EnvironmentComponent>(shade::CreateShared<shade::PointLight>()); }, m_SelectedEntity);
+				AddComponent<shade::EnvironmentComponent>("SpotLight",		false, m_SelectedEntity, [&](shade::Entity& entity)  { entity.AddComponent<shade::EnvironmentComponent>(shade::CreateShared<shade::SpotLight>()); }, m_SelectedEntity);
 
 				/*if (!m_SelectedEntity.HasComponent<shade::EnvironmentComponent>() && !m_SelectedEntity.HasComponent<shade::CameraComponent>())
 				{
@@ -349,9 +354,49 @@ void EditorLayer::Entities(shade::Scene* scene)
 	}
 }
 
+void EditorLayer::EntitiesList(const char* search, shade::Scene* scene)
+{
+	scene->GetEntities().view<std::string>().each([&]
+	(auto entity_id, std::string& tag)
+		{
+			shade::Entity	entity = { entity_id, scene };
+			std::string		_tag = tag + "##" + entity;
+
+			if (!entity.GetParent().IsValid())
+			{
+				if (tag.find(search) != std::string::npos)
+				{
+					DrawTreeNode(_tag.c_str(), [&]() 
+						{
+							m_SelectedEntity = entity;
+							EntitiesList(search, entity);
+						});
+				}
+			}	
+		});
+}
+
+void EditorLayer::EntitiesList(const char* search, shade::Entity& entity)
+{
+	for (auto& child : entity.GetChildren())
+	{
+		std::string& tag = child.GetComponent<shade::Tag>();
+		std::string	_tag = tag + "##" + child;
+
+		if (tag.find(search) != std::string::npos)
+		{
+			DrawTreeNode(_tag.c_str(), [&]()
+				{
+					m_SelectedEntity = child;
+					EntitiesList(search, child);
+				});
+		}
+	}
+}
+
 void EditorLayer::Inspector(shade::Entity& entity)
 {
-	ImVec4 editIcon = ImVec4{ 128, 128, 897, 750 };
+	static ImVec4 editIcon = ImVec4{ 128, 128, 897, 750 };
 
 	/*DrawComponent2<shade::Tag>("Tag", entity, &EditorLayer::TagComponent, [&](auto isTreeOpen)->bool
 		{
@@ -439,7 +484,7 @@ void EditorLayer::Scene(const shade::Shared<shade::Scene>& scene)
 
 		//FpsOverlay(ImGui::GetWindowViewport());
 		ImGui::SetNextWindowSize(ImVec2{ ImGui::GetWindowSize().x - 20.0f,0 }, ImGuiCond_Always);
-		ShowWindowBarOverlay("Overlay", ImGui::GetWindowViewport(), [&]() 
+		ShowWindowBarOverlay("Overlay", ImGui::GetWindowViewport(), [&]()
 			{
 				ScenePlayStop(scene);
 			});
@@ -512,7 +557,7 @@ void EditorLayer::Scene(const shade::Shared<shade::Scene>& scene)
 				default:
 					break;
 				}
-				
+
 			}
 		}
 	}
@@ -598,14 +643,14 @@ void EditorLayer::MainMenu(const shade::Shared<shade::Scene>& scene)
 			ImGui::EndMenu();
 		}
 
-	
-		
-	
+
+
+
 
 		ImGui::EndMenuBar();
 	}
 
-	
+
 }
 
 void EditorLayer::AssetsExplorer(shade::AssetManager::AssetsDataList& data)
@@ -728,7 +773,7 @@ void EditorLayer::Model3dComponent(shade::Entity& entity)
 
 	if (ImGui::BeginMenu(model->GetAssetData().Attribute("Id").as_string()))
 	{
-		for (auto& asset : shade::AssetManager::GetAssetsDataList())
+		for (auto& asset : shade::AssetManager::GetPrefabsDataList())
 		{
 			if (strcmp(asset.second.Attribute("Type").as_string(), "Model3D") == 0)
 			{
@@ -834,9 +879,9 @@ void EditorLayer::Render()
 	{
 
 		ImGui::Checkbox("Enable", &m_isBloomEnabled);
-		DrawFlaot("Threshold", &m_PPBloom->GetThreshold(),  1.f, 0.f, FLT_MAX, 80.f);
-		DrawFlaot("Knee", &m_PPBloom->GetKnee(),            1.f, 0.f, FLT_MAX, 80.f);
-		DrawFlaot("Exposure", &m_PPBloom->GetExposure(),    1.f, 1.f, FLT_MAX, 80.f);
+		DrawFlaot("Threshold", &m_PPBloom->GetThreshold(), 1.f, 0.f, FLT_MAX, 80.f);
+		DrawFlaot("Knee", &m_PPBloom->GetKnee(), 1.f, 0.f, FLT_MAX, 80.f);
+		DrawFlaot("Exposure", &m_PPBloom->GetExposure(), 1.f, 1.f, FLT_MAX, 80.f);
 		DrawInt("Samples", (int*)&m_PPBloom->GetSamplesCount(), 5, 1, 10, 80.f);
 		DrawCurve("Curve", glm::value_ptr(m_PPBloom->GetCurve()), 3, ImVec2{ ImGui::GetContentRegionAvail().x, 70 });
 		ImGui::TreePop();
@@ -845,8 +890,8 @@ void EditorLayer::Render()
 	{
 
 		ImGui::Checkbox("Enable", &m_isColorCorrectionmEnabled);
-		DrawFlaot("Gamma",        &m_PPColorCorrection->GetGamma(),    1.f, 0.f, FLT_MAX, 80.f);
-		DrawFlaot("Exposure",     &m_PPColorCorrection->GetExposure(), 1.f, 0.f, FLT_MAX, 80.f);
+		DrawFlaot("Gamma", &m_PPColorCorrection->GetGamma(), 1.f, 0.f, FLT_MAX, 80.f);
+		DrawFlaot("Exposure", &m_PPColorCorrection->GetExposure(), 1.f, 0.f, FLT_MAX, 80.f);
 		ImGui::TreePop();
 	}
 
@@ -855,7 +900,7 @@ void EditorLayer::Render()
 
 void EditorLayer::ShadersLibrary()
 {
-	
+
 	for (auto& [key, val] : shade::ShadersLibrary::GetLibrary())
 	{
 		// TODO not sure if button has coorect id in stack!
@@ -894,7 +939,7 @@ void EditorLayer::Material(const shade::Shared<shade::Material3D>& material)
 
 		ImGui::EndMenu();
 	}
-	
+
 	ImGui::Columns(1);
 	/*
 	for (auto& asset : shade::AssetManager::GetAssetsDataList())
@@ -923,7 +968,7 @@ void EditorLayer::Material(const shade::Shared<shade::Material3D>& material)
 
 		if (ImGui::TreeNodeEx("Map: Albedo", ImGuiTreeNodeFlags_Framed))
 		{
-			if(material->TextureDiffuse)
+			if (material->TextureDiffuse)
 				DrawImage(material->TextureDiffuse->GetRenderID(), 100, 100, true);
 			ImGui::TreePop();
 		}
@@ -1042,7 +1087,7 @@ void EditorLayer::Mesh(const shade::Shared<shade::Mesh>& mesh)
 			}
 			ImGui::TreePop();
 		}
-		
+
 	}
 }
 

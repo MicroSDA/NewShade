@@ -1,4 +1,5 @@
 #pragma once
+#pragma once
 #include <shade/core/layer/ImGui/ImGuiLayer.h>
 
 class EditorLayer : public shade::ImGuiLayer
@@ -62,6 +63,8 @@ private:
 	void AssetsExplorer(shade::AssetManager::AssetsDataList& data);
 	void FileExplorer(const std::string& rootPath);
 	void Entities(shade::Scene* scene);
+	void EntitiesList(const char* search, shade::Scene* scene);
+	void EntitiesList(const char* search, shade::Entity& entity);
 	void Inspector(shade::Entity& entity);
 	void ScenePlayStop(const shade::Shared<shade::Scene>& scene);
 	void Scene(const shade::Shared<shade::Scene>& scene);

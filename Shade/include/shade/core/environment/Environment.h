@@ -19,14 +19,16 @@ namespace shade
 		virtual ~Environment() = default;
 		const Environment::Type& GetType() const;
 		template<typename T>
-		void* ReciveRenderData();
+		T& As();
 	protected:
 		const Environment::Type m_Type;
 	private:
 	};
 	template<typename T>
-	inline void* Environment::ReciveRenderData()
+	inline T& Environment::As()
 	{
-		return (void*)&static_cast<T*>(this)->GetRenderData(); //  Upcast
+		static_assert(std::is_base_of<Environment, T>::value, "");
+
+		return static_cast<T&>(*this); //  Upcast
 	}
 }

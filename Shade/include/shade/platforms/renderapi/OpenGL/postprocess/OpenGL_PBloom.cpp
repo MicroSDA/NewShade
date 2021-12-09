@@ -25,10 +25,10 @@ void shade::OpenGL_PBloom::Process()
 
 	m_BloomShader->Bind();
 	// Calc curve
-	m_BloomShader->SendFlaot3("u_Bloom.Curve",    glm::value_ptr(GetCurve()));
-	m_BloomShader->SendFlaot("u_Bloom.Exposure",  m_Exposure);
-	m_BloomShader->SendFlaot("u_Bloom.Threshold", m_Threshold);
-	m_BloomShader->SendFlaot("u_Bloom.Knee",      m_Knee);
+	m_BloomShader->SendFloat3("u_Bloom.Curve",    glm::value_ptr(GetCurve()));
+	m_BloomShader->SendFloat("u_Bloom.Exposure",  m_Exposure);
+	m_BloomShader->SendFloat("u_Bloom.Threshold", m_Threshold);
+	m_BloomShader->SendFloat("u_Bloom.Knee",      m_Knee);
 
 	/* Getting hdr picture */
 	m_InputFrameBuffer->BindAsImage(0, 1, 0, FrameBuffer::Texture::Format::RGBA16F, FrameBuffer::Texture::Access::Read);

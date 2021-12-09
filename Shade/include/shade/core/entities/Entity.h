@@ -47,6 +47,7 @@ namespace shade
 		{
 			return m_pDocker->GetEntities().any_of<T...>(m_EntityHandle);
 		}*/
+
 		bool IsValid();
 		void Destroy();
 		shade::EntitiesDocker& GetDocker();
@@ -77,7 +78,7 @@ namespace shade
 
 		void SetParent(shade::Entity& entity);
 		void UnsetParent();
-		shade::Entity GetParent();
+		shade::Entity& GetParent();
 	private:
 		entt::entity m_EntityHandle { entt::null };
 		shade::EntitiesDocker*		m_pDocker = nullptr;
