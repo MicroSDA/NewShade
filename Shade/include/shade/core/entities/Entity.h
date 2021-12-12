@@ -71,14 +71,16 @@ namespace shade
 		operator std::string () { return std::to_string(static_cast<uint32_t>(m_EntityHandle)); }
 		operator const std::string () const { return std::to_string(static_cast<uint32_t>(m_EntityHandle)); }
 
-		std::vector<shade::Entity>& GetChildren();
+		
 		void AddChild(shade::Entity& entity);
 		void RemoveChild(shade::Entity& entity);
-		bool HasChildren();
-
+		bool HasChildren() const;
+		std::vector<shade::Entity>& GetChildren();
 		void SetParent(shade::Entity& entity);
-		void UnsetParent();
+		void UnsetParent(const bool& isRecursive = false);
+		bool HasParent() const;
 		shade::Entity& GetParent();
+		bool IsChildOf(shade::Entity& entity);
 	private:
 		entt::entity m_EntityHandle { entt::null };
 		shade::EntitiesDocker*		m_pDocker = nullptr;

@@ -17,7 +17,7 @@ void GameLayer::OnCreate()
 
 void GameLayer::OnUpdate(const shade::Shared<shade::Scene>& scene, const shade::Timer& deltaTime)
 {
-
+	std::cout << shade::Render::GetVideoMemoryUsage() <<	std::endl;
 }
 
 void GameLayer::OnRenderBegin()

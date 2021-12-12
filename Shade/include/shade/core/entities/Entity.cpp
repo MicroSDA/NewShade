@@ -32,32 +32,18 @@ std::vector<shade::Entity>& shade::Entity::GetChildren()
 	return GetComponent<PCComponent>().Children;
 }
 
-void shade::Entity::AddChild(shade::Entity& entity)
-{
-	if (entity != *this)
-	{
-		entity.SetParent(*this);
-		GetComponent<PCComponent>().Children.push_back(entity);
-	}
-	else
-	{
-		SHADE_CORE_ERROR("Couldn't add child, parent and child are the same!");
-	}
-	
-}
-
 void shade::Entity::RemoveChild(shade::Entity& entity)
 {
 	auto& children = GetComponent<PCComponent>().Children;
  	auto it = std::find(children.begin(), children.end(), entity);
 	if (it != children.end())
 	{
-		entity.UnsetParent();
+		it->UnsetParent(true);
 		children.erase(it);
 	}
 }
 
-bool shade::Entity::HasChildren()
+bool shade::Entity::HasChildren() const
 {
 	return GetComponent<PCComponent>().Children.size();
 }
@@ -67,12 +53,57 @@ shade::Entity& shade::Entity::GetParent()
 	return GetComponent<PCComponent>().Parent;
 }
 
+void shade::Entity::AddChild(shade::Entity& entity)
+{
+	if (entity != *this)
+	{
+		if (!IsChildOf(entity))
+		{
+			entity.SetParent(*this);
+			GetComponent<PCComponent>().Children.push_back(entity);
+		}
+	}
+	else
+	{
+		SHADE_CORE_ERROR("Couldn't add child, parent and child are the same!");
+	}
+}
+
+bool shade::Entity::IsChildOf(shade::Entity& entity)
+{
+	if (HasParent())
+	{
+		if (GetParent() == entity)
+			return true;
+		
+		if (GetParent().IsChildOf(entity))
+			return true;
+	}
+
+	return false;
+}
+
 void shade::Entity::SetParent(shade::Entity& entity)
 {
+	if (HasParent())
+	{
+		GetParent().RemoveChild(*this);
+	}
+
 	GetComponent<PCComponent>().Parent = entity;
 }
 
-void shade::Entity::UnsetParent()
+void shade::Entity::UnsetParent(const bool& isRecursive)
 {
+	if (HasParent() && !isRecursive)
+	{
+		GetParent().RemoveChild(*this);
+	}
+
 	GetComponent<PCComponent>().Parent = shade::Entity();
+}
+
+bool shade::Entity::HasParent() const
+{
+	return GetComponent<PCComponent>().Parent.IsValid();
 }

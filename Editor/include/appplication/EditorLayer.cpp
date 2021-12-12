@@ -78,7 +78,7 @@ void EditorLayer::OnUpdate(const shade::Shared<shade::Scene>& scene, const shade
 				if (frustum.IsInFrustum(transform, mesh->GetMinHalfExt(), mesh->GetMaxHalfExt()))
 				{
 					shade::Render::SubmitInstance(m_InstancedShader, mesh, mesh->GetMaterial(), transform.GetModelMatrix());
-					shade::Render::Submit(m_BoxShader, shade::Box::Create(mesh->GetMinHalfExt(), mesh->GetMaxHalfExt()), nullptr, transform.GetModelMatrix());
+					//shade::Render::Submit(m_BoxShader, shade::Box::Create(mesh->GetMinHalfExt(), mesh->GetMaxHalfExt()), nullptr, transform.GetModelMatrix());
 				}
 
 			}
@@ -114,7 +114,7 @@ void EditorLayer::OnRender(const shade::Shared<shade::Scene>& scene, const shade
 		}
 
 		ShowWindowBar("Scene", &EditorLayer::Scene, this, scene);
-		//ShowDemoWindow();
+		ShowDemoWindow();
 
 	} ImGui::End(); // Begin("DockSpace")
 
@@ -305,9 +305,9 @@ void EditorLayer::Entities(shade::Scene* scene)
 						}
 					}, m_SelectedEntity);
 
-				AddComponent<shade::EnvironmentComponent>("DirectLight",	false, m_SelectedEntity, [&](shade::Entity& entity)	 { entity.AddComponent<shade::EnvironmentComponent>(shade::CreateShared<shade::DirectLight>()); }, m_SelectedEntity);
-				AddComponent<shade::EnvironmentComponent>("PointLight",		false, m_SelectedEntity, [&](shade::Entity& entity)  { entity.AddComponent<shade::EnvironmentComponent>(shade::CreateShared<shade::PointLight>()); }, m_SelectedEntity);
-				AddComponent<shade::EnvironmentComponent>("SpotLight",		false, m_SelectedEntity, [&](shade::Entity& entity)  { entity.AddComponent<shade::EnvironmentComponent>(shade::CreateShared<shade::SpotLight>()); }, m_SelectedEntity);
+				AddComponent<shade::EnvironmentComponent>("DirectLight", false, m_SelectedEntity, [&](shade::Entity& entity) { entity.AddComponent<shade::EnvironmentComponent>(shade::CreateShared<shade::DirectLight>()); }, m_SelectedEntity);
+				AddComponent<shade::EnvironmentComponent>("PointLight", false, m_SelectedEntity, [&](shade::Entity& entity) { entity.AddComponent<shade::EnvironmentComponent>(shade::CreateShared<shade::PointLight>()); }, m_SelectedEntity);
+				AddComponent<shade::EnvironmentComponent>("SpotLight", false, m_SelectedEntity, [&](shade::Entity& entity) { entity.AddComponent<shade::EnvironmentComponent>(shade::CreateShared<shade::SpotLight>()); }, m_SelectedEntity);
 
 				/*if (!m_SelectedEntity.HasComponent<shade::EnvironmentComponent>() && !m_SelectedEntity.HasComponent<shade::CameraComponent>())
 				{
@@ -356,6 +356,7 @@ void EditorLayer::Entities(shade::Scene* scene)
 
 void EditorLayer::EntitiesList(const char* search, shade::Scene* scene)
 {
+	static ImGuiTreeNodeFlags base_flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_SpanAvailWidth;
 	scene->GetEntities().view<std::string>().each([&]
 	(auto entity_id, std::string& tag)
 		{
@@ -366,18 +367,45 @@ void EditorLayer::EntitiesList(const char* search, shade::Scene* scene)
 			{
 				if (tag.find(search) != std::string::npos)
 				{
-					DrawTreeNode(_tag.c_str(), [&]() 
-						{
-							m_SelectedEntity = entity;
-							EntitiesList(search, entity);
-						});
+					ImGuiTreeNodeFlags node_flags = base_flags;
+					if (entity.GetChildren().size() == 0)
+						node_flags |= ImGuiTreeNodeFlags_Leaf;
+
+					if (m_SelectedEntity == entity)
+						node_flags |= ImGuiTreeNodeFlags_Selected;
+
+					bool node_open = ImGui::TreeNodeEx(_tag.c_str(), node_flags);
+					if (ImGui::IsItemClicked())
+						m_SelectedEntity = entity;
+
+					if (ImGui::BeginDragDropTarget())
+					{
+						const auto payload = ImGui::AcceptDragDropPayload("_ENTITY_DRAG_AND_DROP");
+						if (payload)
+							entity.AddChild(*(shade::Entity*)payload->Data);
+						ImGui::EndDragDropTarget();
+					}
+
+					if (ImGui::BeginDragDropSource())
+					{
+						ImGui::SetDragDropPayload("_ENTITY_DRAG_AND_DROP", &m_SelectedEntity, sizeof(shade::Entity));
+						ImGui::Text("Add as child");
+						ImGui::EndDragDropSource();
+					}
+
+					if (node_open)
+					{
+						EntitiesList(search, entity);
+						ImGui::TreePop();
+					}
 				}
-			}	
+			}
 		});
 }
 
 void EditorLayer::EntitiesList(const char* search, shade::Entity& entity)
 {
+	static ImGuiTreeNodeFlags base_flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_SpanAvailWidth;
 	for (auto& child : entity.GetChildren())
 	{
 		std::string& tag = child.GetComponent<shade::Tag>();
@@ -385,11 +413,37 @@ void EditorLayer::EntitiesList(const char* search, shade::Entity& entity)
 
 		if (tag.find(search) != std::string::npos)
 		{
-			DrawTreeNode(_tag.c_str(), [&]()
-				{
-					m_SelectedEntity = child;
-					EntitiesList(search, child);
-				});
+			ImGuiTreeNodeFlags node_flags = base_flags;
+			if (child.GetChildren().size() == 0)
+				node_flags |= ImGuiTreeNodeFlags_Leaf;
+
+			if (m_SelectedEntity == child)
+				node_flags |= ImGuiTreeNodeFlags_Selected;
+
+			bool node_open = ImGui::TreeNodeEx(_tag.c_str(), node_flags);
+			if (ImGui::IsItemClicked())
+				m_SelectedEntity = child;
+
+			if (ImGui::BeginDragDropTarget())
+			{
+				const auto payload = ImGui::AcceptDragDropPayload("_ENTITY_DRAG_AND_DROP");
+				if (payload)
+					child.AddChild(*(shade::Entity*)payload->Data);
+				ImGui::EndDragDropTarget();
+			}
+
+			if (ImGui::BeginDragDropSource())
+			{
+				ImGui::SetDragDropPayload("_ENTITY_DRAG_AND_DROP", &m_SelectedEntity, sizeof(shade::Entity));
+				ImGui::Text("Add as child");
+				ImGui::EndDragDropSource();
+			}
+
+			if (node_open)
+			{
+				EntitiesList(search, child);
+				ImGui::TreePop();
+			}
 		}
 	}
 }
@@ -398,10 +452,10 @@ void EditorLayer::Inspector(shade::Entity& entity)
 {
 	static ImVec4 editIcon = ImVec4{ 128, 128, 897, 750 };
 
-	/*DrawComponent2<shade::Tag>("Tag", entity, &EditorLayer::TagComponent, [&](auto isTreeOpen)->bool
+	DrawComponent2<shade::Tag>("Tag", entity, &EditorLayer::TagComponent, [&](auto isTreeOpen)->bool
 		{
 			return EditComponentButton<shade::Tag>(entity, m_IconsTexture, editIcon, isTreeOpen);
-		}, this, entity);*/
+		}, this, entity);
 	DrawComponent2<shade::Transform3DComponent>("Transform", entity, &EditorLayer::Transform3DComponent, [&](auto isTreeOpen)->bool
 		{
 			return EditComponentButton<shade::Transform3DComponent>(entity, m_IconsTexture, editIcon, isTreeOpen);
