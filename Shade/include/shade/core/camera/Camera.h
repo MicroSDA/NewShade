@@ -23,7 +23,7 @@ namespace shade
 			const float& zNear,
 			const float& zFar);
 		virtual ~Camera() = default;
-		inline RenderData GetData() const { return RenderData{ GetViewProjection(), GetView(), GetProjection(), GetPosition(), GetForwardDirrection()}; }
+		inline RenderData GetRenderData() const { return RenderData{ GetViewProjection(), GetView(), GetProjection(), GetPosition(), GetForwardDirrection()}; }
 		inline glm::mat4 GetView()                     const { return glm::lookAt(m_Position, m_Position + m_Forward, m_Up); };
 		inline glm::mat4 GetView() { return glm::lookAt(m_Position, m_Position + m_Forward, m_Up); };
 		inline const glm::mat4& GetProjection()        const { return m_Perpective; };
@@ -74,7 +74,7 @@ namespace shade
 		inline void SetRoll(float angle) { /* TODO:*/ }
 		void Resize(const float& aspect = 0);
 
-		void SetPrimary(const bool& isPrimary);
+		void SetAsPrimary(const bool& isPrimary);
 		const bool& IsPrimary() const { return m_IsPrimary; }
 	private:
 		void _RecalculatePerpective();

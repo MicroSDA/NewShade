@@ -138,7 +138,7 @@ void shade::Render::BeginScene(const Shared<Camera>& camera, const Shared<Enviro
 {
 	m_sRenderAPI->BeginScene(camera, env, envCount);
 	/* Set data to uniforsm buffetrs */
-	m_sCameraUniformBuffer->SetData(&camera->GetData(), sizeof(Camera::RenderData), 0);
+	m_sCameraUniformBuffer->SetData(&camera->GetRenderData(), sizeof(Camera::RenderData), 0);
 	m_sClippingUniformBuffer->SetData(glm::value_ptr(clipping), sizeof(glm::vec4), 0);
 
 	/* Process SSBO buffers */

@@ -15,7 +15,7 @@ const glm::vec4& shade::Frustum::GetSide(const Frustum::Side& size) const
 	return m_Frustum[(std::uint32_t)size];
 }
 
-bool shade::Frustum::IsInFrustum(const Transform3D& transform, const glm::vec3& minHalfExt, const glm::vec3& maxHalfExt)
+bool shade::Frustum::IsInFrustum(const glm::mat4& transform, const glm::vec3& minHalfExt, const glm::vec3& maxHalfExt)
 {
 	// Set min and max ext in world possition by transform GetPosition()
 	//return _AABBTest(glm::vec3(transform.GetPosition() - halfExt), glm::vec3(transform.GetPosition() + halfExt)); // In this case that we using position and + half extension need to be tested
@@ -71,14 +71,14 @@ bool shade::Frustum::_AABBTest(const glm::vec3& minHalfExt, const glm::vec3& max
 	return inside;
 }
 
-bool shade::Frustum::_OBBTest(const Transform3D& transform, const glm::vec3& minHalfExt, const glm::vec3& maxHalfExt)
+bool shade::Frustum::_OBBTest(const glm::mat4& transform, const glm::vec3& minHalfExt, const glm::vec3& maxHalfExt)
 {
 	//transform all 8 box points to clip space
 	//clip space because we easily can test points outside required unit cube
 	//NOTE: for DirectX we should test z coordinate from 0 to w (-w..w - for OpenGL), look for transformations / clipping box differences
 
 	//matrix to transfrom points to clip space
-	glm::mat4 clipSpaceMatrix = m_VP_Matrix * transform.GetModelMatrix();
+	glm::mat4 clipSpaceMatrix = m_VP_Matrix * transform;
 
 	//transform all 8 box points to clip space
 	glm::vec4 points[8];
@@ -122,9 +122,9 @@ bool shade::Frustum::_OBBTest(const Transform3D& transform, const glm::vec3& min
 	return !outside;
 }
 
-bool shade::Frustum::_SSE_OBBTest(const Transform3D& transform, const glm::vec3& minHalfExt, const glm::vec3& maxHalfExt)
+bool shade::Frustum::_SSE_OBBTest(const glm::mat4& transform, const glm::vec3& minHalfExt, const glm::vec3& maxHalfExt)
 {
-	math::sse_mat4f clipSpaceMatrix = math::sse_mat4f(m_VP_Matrix) * math::sse_mat4f(transform.GetModelMatrix());
+	math::sse_mat4f clipSpaceMatrix = math::sse_mat4f(m_VP_Matrix) * math::sse_mat4f(transform);
 	//box points in local space
 	math::sse_vec4f obb_points_sse[8];
 	obb_points_sse[0] = _mm_set_ps(1.f, minHalfExt.z, maxHalfExt.y, minHalfExt.x);

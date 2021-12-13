@@ -188,3 +188,19 @@ bool shade::Scene::Deserialize()
 void shade::Scene::AssetInit()
 {
 }
+
+glm::mat4 shade::Scene::ComputePCTransform(shade::Entity& entity)
+{
+	glm::mat4 transform(1.0f);
+
+	if (entity.HasParent())
+	{
+		shade::Entity& parent = entity.GetParent();
+		transform = ComputePCTransform(parent);
+	}
+	
+	if (entity.HasComponent<shade::Transform3DComponent>())
+		return transform * entity.GetComponent<shade::Transform3DComponent>().GetModelMatrix();
+	else
+		return transform;
+}

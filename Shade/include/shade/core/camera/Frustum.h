@@ -19,14 +19,14 @@ namespace shade
 		const glm::vec4*  GetFrustum() const;
 
 		//For AABB 
-		bool IsInFrustum(const Transform3D& transform, const glm::vec3& minHalfExt, const glm::vec3& maxHalfExt);
+		bool IsInFrustum(const glm::mat4& transform, const glm::vec3& minHalfExt, const glm::vec3& maxHalfExt);
 	private:
 		void _CalculateFrustum(const glm::mat4& viewMatrix, const glm::mat4& projMatrix);
 		void _Normalize(glm::vec4& side);
 		bool _AABBTest(const glm::vec3& minHalfExt, const glm::vec3& maxHalfExt);
 		bool _SSE_AABBTest(const glm::vec3& minHalfExt, const glm::vec3& maxHalfExt);
-		bool _OBBTest(const Transform3D& transform, const glm::vec3& minHalfExt, const glm::vec3& maxHalfExt);
-		bool _SSE_OBBTest(const Transform3D& transform, const glm::vec3& minHalfExt, const glm::vec3& maxHalfExt);
+		bool _OBBTest(const glm::mat4& transform, const glm::vec3& minHalfExt, const glm::vec3& maxHalfExt);
+		bool _SSE_OBBTest(const glm::mat4& transform, const glm::vec3& minHalfExt, const glm::vec3& maxHalfExt);
 	private:
 		glm::mat4 m_VP_Matrix; // Camera View and Projection product
 		glm::vec4 m_Frustum[6];

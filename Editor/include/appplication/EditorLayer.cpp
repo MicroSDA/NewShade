@@ -22,6 +22,7 @@ EditorLayer::~EditorLayer()
 void EditorLayer::OnCreate()
 {
 	shade::Application::Get().GetEntities().view<shade::CameraComponent>().each([&](auto entity, auto& camera) { m_EditorCamera = camera; });
+
 	m_TestEditorCamera = shade::CreateShared<shade::Camera>();
 	m_TestEditorCamera->SetFar(500);
 
@@ -65,20 +66,27 @@ void EditorLayer::OnCreate()
 void EditorLayer::OnUpdate(const shade::Shared<shade::Scene>& scene, const shade::Timer& deltaTime)
 {
 
-	auto frustum = m_TestEditorCamera->GetFrustum();
+	auto frustum = m_EditorCamera->GetFrustum();
 
 	/* Materials always nullptr for this*/
-	shade::Render::Submit(m_GridShader, m_Grid, m_Grid->GetMaterial(), glm::mat4(1));
-	shade::Render::Submit(m_FrustumShader, m_Box, m_Box->GetMaterial(), glm::inverse(m_TestEditorCamera->GetViewProjection()));
+	if(m_IsShowGrid)
+		shade::Render::Submit(m_GridShader, m_Grid, m_Grid->GetMaterial(), glm::mat4(1));
+
+	if(m_IsShowFrustum)
+		shade::Render::Submit(m_FrustumShader, m_Box, m_Box->GetMaterial(), glm::inverse(m_EditorCamera->GetViewProjection()));
 
 	scene->GetEntities().view<shade::Model3DComponent, shade::Transform3DComponent>().each([&](auto& entity, shade::Model3DComponent& model, shade::Transform3DComponent& transform)
 		{
 			for (auto& mesh : model->GetMeshes())
 			{
-				if (frustum.IsInFrustum(transform, mesh->GetMinHalfExt(), mesh->GetMaxHalfExt()))
+				auto cpcTransform = scene->ComputePCTransform(shade::Entity{ entity, scene.get() });
+
+				if (frustum.IsInFrustum(cpcTransform, mesh->GetMinHalfExt(), mesh->GetMaxHalfExt()))
 				{
-					shade::Render::SubmitInstance(m_InstancedShader, mesh, mesh->GetMaterial(), transform.GetModelMatrix());
-					//shade::Render::Submit(m_BoxShader, shade::Box::Create(mesh->GetMinHalfExt(), mesh->GetMaxHalfExt()), nullptr, transform.GetModelMatrix());
+					shade::Render::SubmitInstance(m_InstancedShader, mesh, mesh->GetMaterial(), cpcTransform);
+
+					if(m_IsShowFrustum)
+						shade::Render::Submit(m_BoxShader, shade::Box::Create(mesh->GetMinHalfExt(), mesh->GetMaxHalfExt()), nullptr, cpcTransform);
 				}
 
 			}
@@ -114,7 +122,6 @@ void EditorLayer::OnRender(const shade::Shared<shade::Scene>& scene, const shade
 		}
 
 		ShowWindowBar("Scene", &EditorLayer::Scene, this, scene);
-		ShowDemoWindow();
 
 	} ImGui::End(); // Begin("DockSpace")
 
@@ -169,7 +176,7 @@ void EditorLayer::OnEvent(const shade::Shared<shade::Scene>& scene, shade::Event
 	{
 		shade::KeyCode keyCode = static_cast<shade::KeyEvent*>(&event)->GetKeyCode();
 
-		if (keyCode == shade::Key::Home)
+		if (keyCode == shade::Key::Delete)
 		{
 			scene->DestroyEntities();
 		}
@@ -187,13 +194,6 @@ void EditorLayer::OnEvent(const shade::Shared<shade::Scene>& scene, shade::Event
 				if (m_AllowedGuizmoOperation & ImGuizmo::OPERATION::TRANSLATE)
 					m_GuizmoOperation = ImGuizmo::OPERATION::TRANSLATE; break;
 			}
-		}
-		else if (keyCode == shade::Key::F9)
-		{
-			m_InstancedShader->Recompile();
-			m_GridShader->Recompile();
-			m_BloomShader->Recompile();
-			m_ColorCorrectionShader->Recompile();
 		}
 		else if (keyCode == shade::Key::F1)
 		{
@@ -244,15 +244,15 @@ void EditorLayer::Entities(shade::Scene* scene)
 			}
 			if (ImGui::BeginMenu("Lighting"))
 			{
-				if (ImGui::MenuItem("Add dirrect light"))
+				if (ImGui::MenuItem("Dirrect"))
 				{
 					scene->CreateEntity("Direct light").AddComponent<shade::EnvironmentComponent>(shade::CreateShared<shade::DirectLight>());
 				}
-				if (ImGui::MenuItem("Add point light"))
+				if (ImGui::MenuItem("Point"))
 				{
 					scene->CreateEntity("Point light").AddComponent<shade::EnvironmentComponent>(shade::CreateShared<shade::PointLight>());
 				}
-				if (ImGui::MenuItem("Add spot light"))
+				if (ImGui::MenuItem("Spot"))
 				{
 					scene->CreateEntity("Spot light").AddComponent<shade::EnvironmentComponent>(shade::CreateShared<shade::SpotLight>());
 				}
@@ -531,10 +531,23 @@ void EditorLayer::Scene(const shade::Shared<shade::Scene>& scene)
 
 		m_EditorCamera->Resize(m_SceneViewPort.x / m_SceneViewPort.y);
 	}
-	else
-	{
-		ImGui::Image(reinterpret_cast<void*>(m_FrameBuffer->GetAttachment(0)),
-			m_SceneViewPort, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
+
+		static ImVec4 focusColor = { 0, 0, 0, 1 };
+
+		if (ImGui::IsWindowFocused())
+		{
+			/* Trying to enable and disable camera for now, need to redisign, see camera script */
+			m_EditorCamera->SetAsPrimary(true);
+			focusColor = { 0.995f, 0.857f, 0.420f, 1.000f };
+		}
+		else
+		{
+			m_EditorCamera->SetAsPrimary(false);
+			focusColor = { 0, 0, 0, 1 };
+		}
+			
+	
+		ImGui::Image(reinterpret_cast<void*>(m_FrameBuffer->GetAttachment(0)), m_SceneViewPort, ImVec2{ 0, 1 }, ImVec2{ 1, 0 }, ImVec4{1, 1, 1, 1}, focusColor);
 
 		//FpsOverlay(ImGui::GetWindowViewport());
 		ImGui::SetNextWindowSize(ImVec2{ ImGui::GetWindowSize().x - 20.0f,0 }, ImGuiCond_Always);
@@ -543,16 +556,21 @@ void EditorLayer::Scene(const shade::Shared<shade::Scene>& scene)
 				ScenePlayStop(scene);
 			});
 
-
 		if (m_SelectedEntity.IsValid())
 		{
 			if (m_SelectedEntity.HasComponent<shade::Transform3DComponent>())
 			{
 				m_AllowedGuizmoOperation = m_BasicGuizmoOperation;
-				auto transform = m_SelectedEntity.GetComponent<shade::Transform3DComponent>().GetModelMatrix();
+				auto transform = scene->ComputePCTransform(m_SelectedEntity);
 
 				if (DrawImGuizmo(transform, m_EditorCamera, m_GuizmoOperation, ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, ImGui::GetWindowSize().x, ImGui::GetWindowSize().y))
 				{
+					if (m_SelectedEntity.HasParent())
+					{
+						auto parentTransform = scene->ComputePCTransform(m_SelectedEntity.GetParent());
+						transform = glm::inverse(parentTransform) * transform;
+					}
+
 					glm::vec3 position, rotation, scale;
 					ImGuizmo::DecomposeMatrixToComponents(glm::value_ptr(transform), glm::value_ptr(position), glm::value_ptr(rotation), glm::value_ptr(scale));
 					m_SelectedEntity.GetComponent<shade::Transform3DComponent>().SetPostition(position);
@@ -614,7 +632,7 @@ void EditorLayer::Scene(const shade::Shared<shade::Scene>& scene)
 
 			}
 		}
-	}
+	
 }
 
 void EditorLayer::TagComponent(shade::Entity& entity)
@@ -949,6 +967,8 @@ void EditorLayer::Render()
 		ImGui::TreePop();
 	}
 
+	ImGui::Checkbox("Show grid", &m_IsShowGrid);
+	ImGui::Checkbox("Show frustum", &m_IsShowFrustum);
 	ImGui::Text("Video memory in usage: %d(mbs)", shade::Render::GetVideoMemoryUsage());
 }
 

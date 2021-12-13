@@ -57,7 +57,7 @@ namespace shade
 			sse_vec4f col3;
 
 			sse_mat4f() = default;
-			sse_mat4f(glm::mat4& other)
+			sse_mat4f(const glm::mat4& other)
 			{
 				col0 = _mm_loadu_ps(glm::value_ptr(other)); // + 0
 				col1 = _mm_loadu_ps(glm::value_ptr(other) + 4);

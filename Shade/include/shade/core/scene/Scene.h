@@ -29,6 +29,7 @@ namespace shade
 		virtual bool Deserialize() override;
 		virtual void AssetInit() override;
 
+		glm::mat4 ComputePCTransform(shade::Entity& entity);
 	private:
 		Scene();
 		std::string m_Name;

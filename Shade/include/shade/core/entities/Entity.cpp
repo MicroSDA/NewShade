@@ -32,7 +32,7 @@ std::vector<shade::Entity>& shade::Entity::GetChildren()
 	return GetComponent<PCComponent>().Children;
 }
 
-void shade::Entity::RemoveChild(shade::Entity& entity)
+bool shade::Entity::RemoveChild(shade::Entity& entity)
 {
 	auto& children = GetComponent<PCComponent>().Children;
  	auto it = std::find(children.begin(), children.end(), entity);
@@ -40,7 +40,9 @@ void shade::Entity::RemoveChild(shade::Entity& entity)
 	{
 		it->UnsetParent(true);
 		children.erase(it);
+		return true;
 	}
+	return false;
 }
 
 bool shade::Entity::HasChildren() const
@@ -53,7 +55,7 @@ shade::Entity& shade::Entity::GetParent()
 	return GetComponent<PCComponent>().Parent;
 }
 
-void shade::Entity::AddChild(shade::Entity& entity)
+bool shade::Entity::AddChild(shade::Entity& entity)
 {
 	if (entity != *this)
 	{
@@ -61,11 +63,13 @@ void shade::Entity::AddChild(shade::Entity& entity)
 		{
 			entity.SetParent(*this);
 			GetComponent<PCComponent>().Children.push_back(entity);
+			return true;
 		}
 	}
 	else
 	{
 		SHADE_CORE_ERROR("Couldn't add child, parent and child are the same!");
+		return false;
 	}
 }
 

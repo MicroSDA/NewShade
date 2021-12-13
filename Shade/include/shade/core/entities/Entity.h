@@ -72,8 +72,8 @@ namespace shade
 		operator const std::string () const { return std::to_string(static_cast<uint32_t>(m_EntityHandle)); }
 
 		
-		void AddChild(shade::Entity& entity);
-		void RemoveChild(shade::Entity& entity);
+		bool AddChild(shade::Entity& entity);
+		bool RemoveChild(shade::Entity& entity);
 		bool HasChildren() const;
 		std::vector<shade::Entity>& GetChildren();
 		void SetParent(shade::Entity& entity);

@@ -48,7 +48,7 @@ void shade::Camera::Resize(const float& aspect)
 //TODO Zoom
 }
 
-void shade::Camera::SetPrimary(const bool& isPrimary)
+void shade::Camera::SetAsPrimary(const bool& isPrimary)
 {
 	m_IsPrimary = isPrimary;
 }

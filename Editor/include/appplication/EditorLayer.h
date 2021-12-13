@@ -48,6 +48,8 @@ private:
 	shade::Shared<shade::Shader>  m_ColorCorrectionShader;
 	////////////////////////////////////
 
+	bool m_IsShowGrid		= true;
+	bool m_IsShowFrustum	= true;
 	shade::Shared<shade::Grid>   m_Grid;
 	shade::Shared<shade::Box>    m_Box;
 	shade::Entity				 m_SelectedEntity;
