@@ -118,6 +118,7 @@ void main()
 	vec3 ToCameraDirection 	= normalize(u_Camera.Position - a_Vertex);
 	// Do lighting calculation;
 	vec4 Color 			= u_sLighting(ToCameraDirection);
+
 	FrameBuffer 		= vec4(Color.rgb + (u_Material.DiffuseColor * u_Material.Emissive), 1.0);
 }
 // !End of fragment shader

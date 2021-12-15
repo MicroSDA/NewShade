@@ -1,5 +1,5 @@
 #type vertex
-#version 460 core
+#version 460 compatibility
 #include "resources/shaders/General/Structures.glsl"
 // Input attributes
 layout (location = 0) in    vec3 a_Position;

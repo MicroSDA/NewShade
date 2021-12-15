@@ -265,16 +265,6 @@ void EditorLayer::Entities(shade::Scene* scene)
 
 		EntitiesList(search, scene);
 
-		/*scene->GetEntities().view<std::string>().each([&]
-		(auto entity_id, std::string& tag)
-			{
-				shade::Entity	entity = { entity_id, scene };
-				std::string		_tag = tag + "##" + entity;
-				if (tag.find(search) != std::string::npos)
-					if (ImGui::Selectable(_tag.c_str(), m_SelectedEntity == entity))
-						m_SelectedEntity = entity;
-			});*/
-
 		ImGui::ListBoxFooter();
 
 		if (m_SelectedEntity.IsValid())
@@ -283,6 +273,7 @@ void EditorLayer::Entities(shade::Scene* scene)
 			{
 
 				AddChild("New entity as child", m_SelectedEntity);
+				UnsetParent("Unset parent", m_SelectedEntity);
 
 				ImGui::Separator();
 				AddComponent<shade::Transform3DComponent>("Transform3D", false, m_SelectedEntity, [](shade::Entity& entity)
@@ -452,19 +443,16 @@ void EditorLayer::Inspector(shade::Entity& entity)
 {
 	static ImVec4 editIcon = ImVec4{ 128, 128, 897, 750 };
 
-	DrawComponent2<shade::Tag>("Tag", entity, &EditorLayer::TagComponent, [&](auto isTreeOpen)->bool
-		{
-			return EditComponentButton<shade::Tag>(entity, m_IconsTexture, editIcon, isTreeOpen);
-		}, this, entity);
-	DrawComponent2<shade::Transform3DComponent>("Transform", entity, &EditorLayer::Transform3DComponent, [&](auto isTreeOpen)->bool
+	TagComponent(entity);
+	DrawComponent<shade::Transform3DComponent>("Transform", entity, &EditorLayer::Transform3DComponent, [&](auto isTreeOpen)->bool
 		{
 			return EditComponentButton<shade::Transform3DComponent>(entity, m_IconsTexture, editIcon, isTreeOpen);
 		}, this, entity);
-	DrawComponent2<shade::Model3DComponent>("Model", entity, &EditorLayer::Model3dComponent, [&](auto isTreeOpen)->bool
+	DrawComponent<shade::Model3DComponent>("Model", entity, &EditorLayer::Model3dComponent, [&](auto isTreeOpen)->bool
 		{
 			return EditComponentButton<shade::Model3DComponent>(entity, m_IconsTexture, editIcon, isTreeOpen);
 		}, this, entity);
-	DrawComponent2<shade::EnvironmentComponent>("Environment", entity, &EditorLayer::EnvironmentComponent, [&](auto isTreeOpen)->bool
+	DrawComponent<shade::EnvironmentComponent>("Environment", entity, &EditorLayer::EnvironmentComponent, [&](auto isTreeOpen)->bool
 		{
 			return EditComponentButton<shade::EnvironmentComponent>(entity, m_IconsTexture, editIcon, isTreeOpen);
 		}, this, entity);
@@ -519,6 +507,10 @@ void EditorLayer::ScenePlayStop(const shade::Shared<shade::Scene>& scene)
 		if (DrawButtonImage("##Stop", m_IconsTexture, { buttonProps.x, buttonProps.y }, { buttonProps.z, buttonProps.w }, { 602, 898 }, -1, ImVec4(0.7, 0.2, 0.2, 1.0)))
 			scene->SetPlaying(false);
 	}
+	
+	ImGuiIO& io = ImGui::GetIO();
+	ImGui::SameLine(ImGui::GetContentRegionAvailWidth() - ImGui::CalcItemWidth() - 15);
+	ImGui::Text("Application average %.1f ms/frame (%.0f FPS)", 1000.0f / io.Framerate, io.Framerate);
 }
 
 void EditorLayer::Scene(const shade::Shared<shade::Scene>& scene)
@@ -549,7 +541,7 @@ void EditorLayer::Scene(const shade::Shared<shade::Scene>& scene)
 	
 		ImGui::Image(reinterpret_cast<void*>(m_FrameBuffer->GetAttachment(0)), m_SceneViewPort, ImVec2{ 0, 1 }, ImVec2{ 1, 0 }, ImVec4{1, 1, 1, 1}, focusColor);
 
-		//FpsOverlay(ImGui::GetWindowViewport());
+		
 		ImGui::SetNextWindowSize(ImVec2{ ImGui::GetWindowSize().x - 20.0f,0 }, ImGuiCond_Always);
 		ShowWindowBarOverlay("Overlay", ImGui::GetWindowViewport(), [&]()
 			{
@@ -637,12 +629,19 @@ void EditorLayer::Scene(const shade::Shared<shade::Scene>& scene)
 
 void EditorLayer::TagComponent(shade::Entity& entity)
 {
-	static char buffer[256]; memset(buffer, 0, sizeof(buffer));
-	auto& tag = entity.GetComponent<shade::Tag>();
-	std::strncpy(buffer, tag.c_str(), sizeof(buffer));
+	if (entity.IsValid())
+	{
+		static char buffer[256]; memset(buffer, 0, sizeof(buffer));
+		auto& tag = entity.GetComponent<shade::Tag>();
+		std::strncpy(buffer, tag.c_str(), sizeof(buffer));
 
-	if (ImGui::InputTextWithHint("##Tag", tag.c_str(), buffer, sizeof(buffer)))
-		tag = std::string(buffer);
+		ImGui::AlignTextToFramePadding();
+		ImGui::Text("Name");
+		ImGui::SameLine(50);
+		ImGui::SetNextItemWidth(ImGui::GetContentRegionAvailWidth());
+		if (ImGui::InputTextWithHint("##Tag", tag.c_str(), buffer, sizeof(buffer)))
+			tag = std::string(buffer);
+	}
 }
 
 void EditorLayer::FileExplorer(const std::string& rootPath)
@@ -967,6 +966,7 @@ void EditorLayer::Render()
 		ImGui::TreePop();
 	}
 
+	ImGui::Separator();
 	ImGui::Checkbox("Show grid", &m_IsShowGrid);
 	ImGui::Checkbox("Show frustum", &m_IsShowFrustum);
 	ImGui::Text("Video memory in usage: %d(mbs)", shade::Render::GetVideoMemoryUsage());

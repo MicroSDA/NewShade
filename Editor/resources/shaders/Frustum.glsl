@@ -20,7 +20,9 @@ void main()
 #type fragment
 #version 460 core
 
+layout (location = 0)  out vec4 FrameBuffer;
+
 void main()
 {
-	gl_FragColor = vec4(0.612, 0.098, 0.220, 1.0);
+	FrameBuffer = vec4(0.612, 0.098, 0.220, 1.0);
 }

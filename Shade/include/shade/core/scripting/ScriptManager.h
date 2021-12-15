@@ -12,7 +12,6 @@ namespace shade
 			Native,
 			Lua
 		};
-
 	public:
 		Script(HMODULE module)
 		{

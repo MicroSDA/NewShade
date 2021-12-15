@@ -3,23 +3,24 @@
 #include "shade/core/application/Application.h"
 
 extern "C"
-{
-	SHADE_SCRIPT_API shade::ScriptableEntity* Instantiate(int& argc, char* argv[])
+{	/* Only one arg is avalible at this moment !*/
+	SHADE_SCRIPT_API shade::ScriptableEntity* Instantiate(int argc, void* argv[])
 	{
-		return new Script();
+		if(strcmp((char*)argv[0], "EditorCamera") == 0)
+			return new EditorCameraScript();
 	}
 }
 
-void Script::OnCreate()
+void EditorCameraScript::OnCreate()
 {
 	
 }
 
-void Script::OnDestroy()
+void EditorCameraScript::OnDestroy()
 {
 }
 
-void Script::OnUpdate(const shade::Timer& deltaTime)
+void EditorCameraScript::OnUpdate(const shade::Timer& deltaTime)
 {
 	auto _Camera = GetComponent<shade::CameraComponent>();
 	/* Need change this */

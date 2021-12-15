@@ -34,10 +34,10 @@ namespace shade
 		void ShowWindowBar(const char* title, Callback callback, Args&& ...args);
 		template<typename Callback, typename ...Args>
 		void ShowWindowBarOverlay(const char* title, ImGuiViewport* veiwport, Callback callback, Args && ...args);
-		template<typename Comp, typename Call, typename ...Args>
-		void DrawComponent(const char* title, Entity& entity, Call callback, Args&& ...args);
+		/*template<typename Comp, typename Call, typename ...Args>
+		void DrawComponent(const char* title, Entity& entity, Call callback, Args&& ...args);*/
 		template<typename Comp, typename Call, typename EditCall, typename ...Args>
-		void DrawComponent2(const char* title, Entity& entity, Call callback, EditCall editCall, Args&& ...args);
+		void DrawComponent(const char* title, Entity& entity, Call callback, EditCall editCall, Args&& ...args);
 		template<typename Comp>
 		bool EditComponentButton(Entity& entity, const shade::Shared<Texture>& icon, ImVec4 imageProps, const bool& isTreeOpend);
 		template<typename Call, typename ...Args>
@@ -62,6 +62,7 @@ namespace shade
 		bool DrawButtonSquare(const char* label, const ImVec2& size_arg, ImGuiButtonFlags flags = ImGuiButtonFlags_None);
 		bool DrawButtonImage(const char* id, const Shared<Texture>& texture, const ImVec2& buttonSize, const ImVec2& imageSize, const ImVec2& start = ImVec2(0,0), int frame_padding = -1, const ImVec4& tint_col = ImVec4(1, 1, 1, 1));
 		void AddChild(const char* title, Entity& entity);
+		void UnsetParent(const char* title, Entity& entity);
 	};
 
 	template<typename Callback, typename ...Args>
@@ -86,7 +87,7 @@ namespace shade
 		}
 		ImGui::End();
 	}
-	template<typename Comp, typename Call, typename ...Args>
+	/*template<typename Comp, typename Call, typename ...Args>
 	inline void ImGuiLayer::DrawComponent(const char* title, Entity& entity, Call callback, Args && ...args)
 	{
 		if (entity.IsValid())
@@ -102,12 +103,12 @@ namespace shade
 				{
 					std::invoke(callback, std::forward<Args>(args)...);
 					ImGui::TreePop();
-				}*/
+				}
 			}
 		}
-	}
+	}*/
 	template<typename Comp, typename Call, typename EditCall, typename ...Args>
-	inline void ImGuiLayer::DrawComponent2(const char* title, Entity& entity, Call callback, EditCall editCall, Args&& ...args)
+	inline void ImGuiLayer::DrawComponent(const char* title, Entity& entity, Call callback, EditCall editCall, Args&& ...args)
 	{
 		if (entity.IsValid())
 		{

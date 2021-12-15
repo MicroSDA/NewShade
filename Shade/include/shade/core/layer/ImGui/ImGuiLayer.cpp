@@ -445,5 +445,15 @@ void shade::ImGuiLayer::AddChild(const char* title, Entity& entity)
 		}
 			
 	}
-	
+}
+
+void shade::ImGuiLayer::UnsetParent(const char* title, Entity& entity)
+{
+	if (entity.IsValid() && entity.HasParent())
+	{
+		if (ImGui::MenuItem(title))
+		{
+			entity.UnsetParent();
+		}
+	}
 }

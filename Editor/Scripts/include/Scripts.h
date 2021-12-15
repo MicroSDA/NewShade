@@ -5,7 +5,7 @@
 #include <shade/core/scripting/Scripting.h>
 #include <shade/core/components/Components.h>
 
-class Script : public shade::ScriptableEntity
+class EditorCameraScript : public shade::ScriptableEntity
 {
 public:
 	void OnCreate();
