@@ -30,6 +30,7 @@ namespace shade
 		virtual void AssetInit() override;
 
 		glm::mat4 ComputePCTransform(shade::Entity& entity);
+		glm::mat4 ComputePCTransform(const entt::entity& id);
 	private:
 		Scene();
 		std::string m_Name;

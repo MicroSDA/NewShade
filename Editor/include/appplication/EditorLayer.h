@@ -72,7 +72,12 @@ private:
 	void Scene(const shade::Shared<shade::Scene>& scene);
 	void TagComponent(shade::Entity& entity);
 	void Transform3DComponent(shade::Entity& entity);
-	void EnvironmentComponent(shade::Entity& entity);
+	//void EnvironmentComponent(shade::Entity& entity);
+
+	void DirectLightComponent(shade::Entity& entity);
+	void PointLightComponent(shade::Entity& entity);
+	void SpotLightComponent(shade::Entity& entity);
+
 	void Model3dComponent(shade::Entity& entity);
 	void AssetDataExpader(shade::AssetData& data);
 	void LogsExplorer();

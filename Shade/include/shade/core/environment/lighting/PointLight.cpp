@@ -31,7 +31,6 @@ std::uint32_t  shade::PointLight::m_TotalCount = 0;
 
 
 shade::PointLight::PointLight() : shade::Light(shade::Environment::Type::PointLight),
-	m_Position(0.0f, 0.0f, 0.0f),
 	m_Constant(1.0f),
 	m_Linear(0.7f),
 	m_Qaudratic(1.8f)
@@ -44,26 +43,6 @@ shade::PointLight::~PointLight()
 {
 	// Decrease light count
 	m_TotalCount--;
-}
-
- void shade::PointLight::SetPosition(const float& x, const float& y, const float& z)
-{
-	m_Position = glm::vec3(x, y, z);
-}
-
- void shade::PointLight::SetPosition(const glm::vec3& position)
-{
-	m_Position = position;
-}
-
- const glm::vec3& shade::PointLight::GetPosition() const
-{
-	return m_Position;
-}
-
-glm::vec3& shade::PointLight::GetPosition()
-{
-	return const_cast<glm::vec3&>(const_cast<const shade::PointLight*>(this)->GetPosition());
 }
 
  void shade::PointLight::SetConstant(const float& constant)
@@ -111,9 +90,9 @@ float& shade::PointLight::GetQaudratic()
 	return const_cast<float&>(const_cast<const shade::PointLight*>(this)->GetQaudratic());
 }
 
-shade::PointLight::RenderData shade::PointLight::GetRenderData()
+shade::PointLight::RenderData shade::PointLight::GetRenderData(const glm::vec3& position)
 {
-	return RenderData{ m_Position, m_AmbientColor, m_DiffuseColor, m_SpecularColor, m_Constant, m_Linear, m_Qaudratic};
+	return RenderData{ position, m_AmbientColor, m_DiffuseColor, m_SpecularColor, m_Constant, m_Linear, m_Qaudratic};
 }
 
 std::uint32_t shade::PointLight::GetTotalCount()

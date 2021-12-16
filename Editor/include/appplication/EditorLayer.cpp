@@ -91,6 +91,20 @@ void EditorLayer::OnUpdate(const shade::Shared<shade::Scene>& scene, const shade
 
 			}
 		});
+
+	/* Light */
+	scene->GetEntities().view<shade::DirectLightComponent, shade::Transform3DComponent>().each([&](auto& entity, shade::DirectLightComponent& enviroment, shade::Transform3DComponent& transform)
+		{
+			shade::Render::Submit(enviroment, scene->ComputePCTransform(entity));
+		});
+	scene->GetEntities().view<shade::PointLightComponent, shade::Transform3DComponent>().each([&](auto& entity, shade::PointLightComponent& enviroment, shade::Transform3DComponent& transform)
+		{
+			shade::Render::Submit(enviroment, scene->ComputePCTransform(entity));
+		});
+	scene->GetEntities().view<shade::SpotLightComponent, shade::Transform3DComponent>().each([&](auto& entity, shade::SpotLightComponent& enviroment, shade::Transform3DComponent& transform)
+		{
+			shade::Render::Submit(enviroment, scene->ComputePCTransform(entity));
+		});
 }
 
 void EditorLayer::OnRender(const shade::Shared<shade::Scene>& scene, const shade::Timer& deltaTime)
@@ -124,15 +138,14 @@ void EditorLayer::OnRender(const shade::Shared<shade::Scene>& scene, const shade
 		ShowWindowBar("Scene", &EditorLayer::Scene, this, scene);
 
 	} ImGui::End(); // Begin("DockSpace")
-
 	{
-		auto str = scene->GetEntities().view<shade::Tag>();
-		auto& environments = scene->GetEntities().view<shade::EnvironmentComponent>();
+		auto environments = scene->GetEntities().group<shade::EnvironmentComponent>(entt::get<shade::Transform3DComponent>);
+	
+		auto l = environments.size();
+		auto t = environments.raw<shade::Transform3DComponent>();
 
 		shade::Render::Begin(m_FrameBuffer);
-
-
-		shade::Render::BeginScene(m_EditorCamera, environments.raw(), environments.size());
+		//shade::Render::BeginScene(m_EditorCamera, environments.raw(), environments.size());
 		shade::Render::DrawInstances(m_InstancedShader);
 		shade::Render::EndScene();
 
@@ -142,7 +155,6 @@ void EditorLayer::OnRender(const shade::Shared<shade::Scene>& scene, const shade
 			shade::Render::PProcess::Process(m_PPColorCorrection);
 
 		shade::Render::BeginScene(m_EditorCamera);
-
 		shade::Render::DrawSubmited(m_GridShader);
 		shade::Render::DrawSubmited(m_FrustumShader);
 		shade::Render::DrawSubmited(m_BoxShader);
@@ -156,9 +168,7 @@ void EditorLayer::OnRender(const shade::Shared<shade::Scene>& scene, const shade
 
 		shade::Render::DrawSprite(m_SpriteShader, m_LogoTexture, transform.GetModelMatrix(), glm::vec4{ 120, 199.0f, 574, 167 });
 		///
-
 		shade::Render::EndScene();
-
 		shade::Render::End(m_FrameBuffer);
 	}
 }
@@ -202,7 +212,7 @@ void EditorLayer::OnEvent(const shade::Shared<shade::Scene>& scene, shade::Event
 				shade::AssetManager::HoldPrefab<shade::Model3D>("Nanosuit", [&](auto& asset) mutable
 					{
 
-						auto entity = scene->CreateEntity("Cube");
+						auto entity = scene->CreateEntity("Nanosuit");
 						entity.AddComponent<shade::Model3DComponent>(shade::AssetManager::Receive<shade::Model3D>(asset));
 						entity.AddComponent<shade::Transform3DComponent>();
 
@@ -246,15 +256,15 @@ void EditorLayer::Entities(shade::Scene* scene)
 			{
 				if (ImGui::MenuItem("Dirrect"))
 				{
-					scene->CreateEntity("Direct light").AddComponent<shade::EnvironmentComponent>(shade::CreateShared<shade::DirectLight>());
+					scene->CreateEntity("Direct light").AddComponent<shade::DirectLightComponent>(shade::CreateShared<shade::DirectLight>());
 				}
 				if (ImGui::MenuItem("Point"))
 				{
-					scene->CreateEntity("Point light").AddComponent<shade::EnvironmentComponent>(shade::CreateShared<shade::PointLight>());
+					scene->CreateEntity("Point light").AddComponent<shade::PointLightComponent>(shade::CreateShared<shade::PointLight>());
 				}
 				if (ImGui::MenuItem("Spot"))
 				{
-					scene->CreateEntity("Spot light").AddComponent<shade::EnvironmentComponent>(shade::CreateShared<shade::SpotLight>());
+					scene->CreateEntity("Spot light").AddComponent<shade::SpotLightComponent>(shade::CreateShared<shade::SpotLight>());
 				}
 
 				ImGui::EndMenu();
@@ -296,44 +306,11 @@ void EditorLayer::Entities(shade::Scene* scene)
 						}
 					}, m_SelectedEntity);
 
-				AddComponent<shade::EnvironmentComponent>("DirectLight", false, m_SelectedEntity, [&](shade::Entity& entity) { entity.AddComponent<shade::EnvironmentComponent>(shade::CreateShared<shade::DirectLight>()); }, m_SelectedEntity);
-				AddComponent<shade::EnvironmentComponent>("PointLight", false, m_SelectedEntity, [&](shade::Entity& entity) { entity.AddComponent<shade::EnvironmentComponent>(shade::CreateShared<shade::PointLight>()); }, m_SelectedEntity);
-				AddComponent<shade::EnvironmentComponent>("SpotLight", false, m_SelectedEntity, [&](shade::Entity& entity) { entity.AddComponent<shade::EnvironmentComponent>(shade::CreateShared<shade::SpotLight>()); }, m_SelectedEntity);
+				AddComponent<shade::DirectLightComponent>("Direct light", false, m_SelectedEntity, [&](shade::Entity& entity) { entity.AddComponent<shade::DirectLightComponent>(shade::CreateShared<shade::DirectLight>()); }, m_SelectedEntity);
+				AddComponent<shade::PointLightComponent>("Point light", false, m_SelectedEntity, [&](shade::Entity& entity) { entity.AddComponent<shade::PointLightComponent>(shade::CreateShared<shade::PointLight>()); }, m_SelectedEntity);
+				AddComponent<shade::SpotLightComponent>("Spot light", false, m_SelectedEntity, [&](shade::Entity& entity) { entity.AddComponent<shade::SpotLightComponent>(shade::CreateShared<shade::SpotLight>()); }, m_SelectedEntity);
 
-				/*if (!m_SelectedEntity.HasComponent<shade::EnvironmentComponent>() && !m_SelectedEntity.HasComponent<shade::CameraComponent>())
-				{
-					AddComponent<shade::Transform3DComponent>("Transform3D", false, m_SelectedEntity, [](shade::Entity& entity)
-						{
-							entity.AddComponent<shade::Transform3DComponent>();
-
-						}, m_SelectedEntity);
-
-					AddComponent<shade::Model3DComponent>("Model3D", true, m_SelectedEntity, [&](shade::Entity& entity)
-						{
-							for (auto& asset : shade::AssetManager::GetPrefabsDataList())
-							{
-								if (strcmp(asset.second.Attribute("Type").as_string(), "Model3D") == 0)
-									if (ImGui::MenuItem(asset.first.c_str()))
-									{
-										shade::AssetManager::HoldPrefab<shade::Model3D>(asset.first,
-											[&](auto& model) mutable
-											{
-												m_SelectedEntity.AddComponent<shade::Model3DComponent>(shade::AssetManager::Receive<shade::Model3D>(model));
-											});
-
-									}
-							}
-						}, m_SelectedEntity);
-				}*/
-
-				/*if (!m_SelectedEntity.HasComponent<shade::Transform3DComponent>() &&
-					!m_SelectedEntity.HasComponent<shade::Model3DComponent>() &&
-					!m_SelectedEntity.HasComponent<shade::CameraComponent>())
-				{
-					/*AddComponent<shade::EnvironmentComponent>("DirectLight", m_SelectedEntity, &EditorLayer::AddDirectLight);
-					AddComponent<shade::EnvironmentComponent>("PointLight", m_SelectedEntity, &EditorLayer::AddPointLight);
-					AddComponent<shade::EnvironmentComponent>("SpotLight", m_SelectedEntity, &EditorLayer::AddSpotLight);
-				}*/
+				
 				// Remove, need to create specific fucntion ?
 				ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.7, 0, 0, 1));
 				if (ImGui::MenuItem("Remove entity"))
@@ -452,9 +429,17 @@ void EditorLayer::Inspector(shade::Entity& entity)
 		{
 			return EditComponentButton<shade::Model3DComponent>(entity, m_IconsTexture, editIcon, isTreeOpen);
 		}, this, entity);
-	DrawComponent<shade::EnvironmentComponent>("Environment", entity, &EditorLayer::EnvironmentComponent, [&](auto isTreeOpen)->bool
+	DrawComponent<shade::DirectLightComponent>("Direct light", entity, &EditorLayer::DirectLightComponent, [&](auto isTreeOpen)->bool
 		{
-			return EditComponentButton<shade::EnvironmentComponent>(entity, m_IconsTexture, editIcon, isTreeOpen);
+			return EditComponentButton<shade::DirectLightComponent>(entity, m_IconsTexture, editIcon, isTreeOpen);
+		}, this, entity);
+	DrawComponent<shade::PointLightComponent>("Point light", entity, &EditorLayer::PointLightComponent, [&](auto isTreeOpen)->bool
+		{
+			return EditComponentButton<shade::PointLightComponent>(entity, m_IconsTexture, editIcon, isTreeOpen);
+		}, this, entity);
+	DrawComponent<shade::SpotLightComponent>("Spot light", entity, &EditorLayer::SpotLightComponent, [&](auto isTreeOpen)->bool
+		{
+			return EditComponentButton<shade::SpotLightComponent>(entity, m_IconsTexture, editIcon, isTreeOpen);
 		}, this, entity);
 }
 
@@ -570,59 +555,47 @@ void EditorLayer::Scene(const shade::Shared<shade::Scene>& scene)
 					m_SelectedEntity.GetComponent<shade::Transform3DComponent>().SetScale(scale);
 				}
 			}
-			else if (m_SelectedEntity.HasComponent<shade::EnvironmentComponent>())
+			/*if (m_SelectedEntity.HasComponent<shade::DirectLightComponent>())
 			{
-				auto& env = m_SelectedEntity.GetComponent<shade::EnvironmentComponent>();
-				switch (env->GetType())
-				{
-				case shade::Environment::Type::DirectLight:
-				{
-					m_AllowedGuizmoOperation = m_DirectLightGuizmoOperation;
-					m_GuizmoOperation = ImGuizmo::OPERATION::ROTATE;
-					auto light = static_cast<shade::DirectLight*>(env.get());
-					glm::mat4 transform = glm::toMat4(glm::quat((light->GetDirection())));
-					if (DrawImGuizmo(transform, m_EditorCamera, m_GuizmoOperation, ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, ImGui::GetWindowSize().x, ImGui::GetWindowSize().y))
-					{
-						glm::vec3 position, rotation, scale;
-						ImGuizmo::DecomposeMatrixToComponents(glm::value_ptr(transform), glm::value_ptr(position), glm::value_ptr(rotation), glm::value_ptr(scale));
-						light->SetDirection(glm::radians(rotation)); // TODO: Normalize
-					}
-					break;
-				}
-				case shade::Environment::Type::PointLight:
-				{
-					m_AllowedGuizmoOperation = m_PointLightGuizmoOperation;
-					//m_GuizmoOperation = ImGuizmo::OPERATION::TRANSLATE | ImGuizmo::OPERATION::SCALE;
-					auto light = static_cast<shade::PointLight*>(env.get());
-					glm::mat4 transform = glm::translate(light->GetPosition());
-					if (DrawImGuizmo(transform, m_EditorCamera, m_GuizmoOperation, ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, ImGui::GetWindowSize().x, ImGui::GetWindowSize().y))
-					{
-						glm::vec3 position, rotation, scale;
-						ImGuizmo::DecomposeMatrixToComponents(glm::value_ptr(transform), glm::value_ptr(position), glm::value_ptr(rotation), glm::value_ptr(scale));
-						light->SetPosition(position); // TODO: Normalize
-					}
-					break;
-				}
-				case shade::Environment::Type::SpotLight:
-				{
-					m_AllowedGuizmoOperation = m_SpotLightGuizmoOperation;
-					//m_GuizmoOperation = ImGuizmo::OPERATION::TRANSLATE | ImGuizmo::OPERATION::SCALE;
-					auto light = static_cast<shade::SpotLight*>(env.get());
-					glm::mat4 transform = glm::translate(light->GetPosition()) * glm::toMat4(glm::quat((light->GetDirection())));
-					if (DrawImGuizmo(transform, m_EditorCamera, m_GuizmoOperation, ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, ImGui::GetWindowSize().x, ImGui::GetWindowSize().y))
-					{
-						glm::vec3 position, rotation, scale;
-						ImGuizmo::DecomposeMatrixToComponents(glm::value_ptr(transform), glm::value_ptr(position), glm::value_ptr(rotation), glm::value_ptr(scale));
-						light->SetPosition(position); // TODO: Normalize
-						light->SetDirection(glm::radians(rotation)); // TODO: Normalize
-					}
-					break;
-				}
-				default:
-					break;
-				}
+				m_AllowedGuizmoOperation = m_DirectLightGuizmoOperation;
+				m_GuizmoOperation = ImGuizmo::OPERATION::ROTATE;
 
+				auto light = static_cast<shade::DirectLight*>(env.get());
+				glm::mat4 transform = glm::toMat4(glm::quat((light->GetDirection())));
+				if (DrawImGuizmo(transform, m_EditorCamera, m_GuizmoOperation, ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, ImGui::GetWindowSize().x, ImGui::GetWindowSize().y))
+				{
+					glm::vec3 position, rotation, scale;
+					ImGuizmo::DecomposeMatrixToComponents(glm::value_ptr(transform), glm::value_ptr(position), glm::value_ptr(rotation), glm::value_ptr(scale));
+					light->SetDirection(glm::radians(rotation)); // TODO: Normalize
+				}
 			}
+			if (m_SelectedEntity.HasComponent<shade::PointLightComponent>())
+			{
+				m_AllowedGuizmoOperation = m_PointLightGuizmoOperation;
+				//m_GuizmoOperation = ImGuizmo::OPERATION::TRANSLATE | ImGuizmo::OPERATION::SCALE;
+				auto light = static_cast<shade::PointLight*>(env.get());
+				glm::mat4 transform = glm::translate(light->GetPosition());
+				if (DrawImGuizmo(transform, m_EditorCamera, m_GuizmoOperation, ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, ImGui::GetWindowSize().x, ImGui::GetWindowSize().y))
+				{
+					glm::vec3 position, rotation, scale;
+					ImGuizmo::DecomposeMatrixToComponents(glm::value_ptr(transform), glm::value_ptr(position), glm::value_ptr(rotation), glm::value_ptr(scale));
+					light->SetPosition(position); // TODO: Normalize
+				}
+			}
+			if (m_SelectedEntity.HasComponent<shade::SpotLightComponent>())
+			{
+				m_AllowedGuizmoOperation = m_SpotLightGuizmoOperation;
+				//m_GuizmoOperation = ImGuizmo::OPERATION::TRANSLATE | ImGuizmo::OPERATION::SCALE;
+				auto light = static_cast<shade::SpotLight*>(env.get());
+				glm::mat4 transform = glm::translate(light->GetPosition()) * glm::toMat4(glm::quat((light->GetDirection())));
+				if (DrawImGuizmo(transform, m_EditorCamera, m_GuizmoOperation, ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, ImGui::GetWindowSize().x, ImGui::GetWindowSize().y))
+				{
+					glm::vec3 position, rotation, scale;
+					ImGuizmo::DecomposeMatrixToComponents(glm::value_ptr(transform), glm::value_ptr(position), glm::value_ptr(rotation), glm::value_ptr(scale));
+					light->SetPosition(position); // TODO: Normalize
+					light->SetDirection(glm::radians(rotation)); // TODO: Normalize
+				}
+			}*/
 		}
 	
 }
@@ -737,13 +710,48 @@ void EditorLayer::AssetsExplorer(shade::AssetManager::AssetsDataList& data)
 
 	}
 }
-
+/* Удвлить старый функционал с лайта*/
 void EditorLayer::Transform3DComponent(shade::Entity& entity)
 {
 	auto& transform = entity.GetComponent<shade::Transform3DComponent>();
 	DrawVec3F("Position", glm::value_ptr(transform.GetPosition()));
 	DrawVec3F("Roatation", glm::value_ptr(transform.GetRotation()));
 	DrawVec3F("Scale", glm::value_ptr(transform.GetScale()), 1.0f);
+}
+
+void EditorLayer::DirectLightComponent(shade::Entity& entity)
+{
+	auto& light = entity.GetComponent<shade::DirectLightComponent>();
+
+	DrawColor3("Ambient", glm::value_ptr(light->GetAmbientColor()));
+	DrawColor3("Diffuse", glm::value_ptr(light->GetDiffuseColor()));
+	DrawColor3("Specular", glm::value_ptr(light->GetSpecularColor()));
+}
+
+void EditorLayer::PointLightComponent(shade::Entity& entity)
+{
+	auto& light = entity.GetComponent<shade::PointLightComponent>();
+
+	DrawColor3("Ambient", glm::value_ptr(light->GetAmbientColor()));
+	DrawColor3("Diffuse", glm::value_ptr(light->GetDiffuseColor()));
+	DrawColor3("Specular", glm::value_ptr(light->GetSpecularColor()));
+	DrawFlaot("Constant", &light->GetConstant());
+	DrawFlaot("Liner", &light->GetLinear());
+	DrawFlaot("Qaudratic", &light->GetQaudratic());
+}
+
+void EditorLayer::SpotLightComponent(shade::Entity& entity)
+{
+	auto& light = entity.GetComponent<shade::SpotLightComponent>();
+	
+	DrawColor3("Ambient", glm::value_ptr(light->GetAmbientColor()));
+	DrawColor3("Diffuse", glm::value_ptr(light->GetDiffuseColor()));
+	DrawColor3("Specular", glm::value_ptr(light->GetSpecularColor()));
+	DrawFlaot("Constant", &light->GetConstant());
+	DrawFlaot("Liner", &light->GetLinear());
+	DrawFlaot("Qaudratic", &light->GetQaudratic());
+	DrawFlaot("Min", &light->GetMinAngle());
+	DrawFlaot("Max", &light->GetMaxAngle());
 }
 
 void EditorLayer::AssetDataExpader(shade::AssetData& data)
@@ -1165,7 +1173,7 @@ void EditorLayer::Mesh(const shade::Shared<shade::Mesh>& mesh)
 	}
 }
 
-void EditorLayer::EnvironmentComponent(shade::Entity& entity)
+/*void EditorLayer::EnvironmentComponent(shade::Entity& entity)
 {
 
 	auto& environment = entity.GetComponent<shade::EnvironmentComponent>();
@@ -1211,7 +1219,7 @@ void EditorLayer::EnvironmentComponent(shade::Entity& entity)
 	default:
 		break;
 	}
-}
+}*/
 
 void EditorLayer::DarkVineTheme()
 {

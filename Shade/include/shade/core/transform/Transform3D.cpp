@@ -9,8 +9,11 @@ shade::Transform3D::Transform3D():
 
 }
 
+shade::Transform3D::Transform3D(const glm::vec3& position, const glm::vec3& rotation, const glm::vec3& scale):
+	m_Possition(position), m_Rotation(rotation), m_Scale(scale)
+{ }
+
 glm::mat4 shade::Transform3D::GetModelMatrix() const
 {
-	glm::mat4 RoataionMatrix = glm::toMat4(glm::quat((m_Rotation))); // m_Rotation to radians
-	return glm::translate(glm::mat4(1.0f), m_Possition) * RoataionMatrix * glm::scale(glm::mat4(1.0f), m_Scale);
+	return glm::translate(glm::mat4(1.0f), m_Possition) * glm::toMat4(glm::quat((m_Rotation))) * glm::scale(glm::mat4(1.0f), m_Scale);
 }

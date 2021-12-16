@@ -204,3 +204,20 @@ glm::mat4 shade::Scene::ComputePCTransform(shade::Entity& entity)
 	else
 		return transform;
 }
+glm::mat4 shade::Scene::ComputePCTransform(const entt::entity& id)
+{
+	glm::mat4 transform(1.0f);
+
+	shade::Entity entity{ id, this };
+
+	if (entity.HasParent())
+	{
+		shade::Entity& parent = entity.GetParent();
+		transform = ComputePCTransform(parent);
+	}
+
+	if (entity.HasComponent<shade::Transform3DComponent>())
+		return transform * entity.GetComponent<shade::Transform3DComponent>().GetModelMatrix();
+	else
+		return transform;
+}

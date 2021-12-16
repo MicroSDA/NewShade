@@ -4,7 +4,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtx/transform.hpp>
 #include <glm/gtx/quaternion.hpp>
-#include <glm/gtx/matrix_decompose.hpp>
+#include "shade/core/math/Math.h"
 
 namespace shade
 {
@@ -13,6 +13,7 @@ namespace shade
 	{
 	public:
 		Transform3D();
+		Transform3D(const glm::vec3& position, const glm::vec3& rotation, const glm::vec3& scale);
 		~Transform3D() = default;
 		inline void SetPostition(const float& x, const float& y, const float& z) { m_Possition.x = x; m_Possition.y = y; m_Possition.z = z; };
 		inline void SetPostition(const glm::vec3& position)                      { m_Possition = position;};
@@ -30,7 +31,16 @@ namespace shade
 		inline glm::vec3& GetScale()    { return const_cast<glm::vec3&>(const_cast<const shade::Transform3D*>(this)->GetScale()); };
 
 		glm::mat4 GetModelMatrix() const;
-	
+		void	  SetTrnsform(const glm::mat4& matrix)
+		{
+			math::DecomposeMatrix(matrix, m_Possition, m_Rotation, m_Scale);
+		}
+		static Transform3D GetTransformFromMatrix(const glm::mat4& matrix)
+		{
+			Transform3D transform;
+			math::DecomposeMatrix(matrix, transform.m_Possition, transform.m_Rotation, transform.m_Scale);
+			return transform;
+		}
 	private:
 		glm::vec3 m_Possition;
 		glm::vec3 m_Rotation;

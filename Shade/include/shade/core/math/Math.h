@@ -2,6 +2,8 @@
 #include <glm/glm.hpp>
 #include <glm/gtx/transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <glm/gtx/matrix_decompose.hpp>
+#include "shade/config/API.h"
 
 namespace shade
 {
@@ -88,5 +90,7 @@ namespace shade
 				return mat;
 			}
 		};
+
+		SHADE_API void DecomposeMatrix(const glm::mat4& matrix, glm::vec3& translation, glm::vec3& rotation, glm::vec3& scale);
 	}
 }

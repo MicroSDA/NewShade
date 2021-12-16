@@ -21,14 +21,10 @@ namespace shade
 		virtual ~PointLight();
 		static std::uint32_t GetTotalCount();
 
-		void SetPosition(const float& x, const float& y, const float& z);
-		void SetPosition(const   glm::vec3& position);
 		void SetConstant(const float& constant);
 		void SetLinear(const float& linear);
 		void SetQaudratic(const float& qaudratic);
 
-		const glm::vec3& GetPosition() const;
-		glm::vec3& GetPosition();
 		const float& GetConstant() const;
 		float& GetConstant();
 		const float& GetLinear()  const;
@@ -36,9 +32,8 @@ namespace shade
 		const float& GetQaudratic() const;
 		float& GetQaudratic();
 
-		RenderData GetRenderData();
+		RenderData GetRenderData(const glm::vec3& position);
 	protected:
-		glm::vec3	m_Position;
 		float		m_Constant;
 		float		m_Linear;
 		float		m_Qaudratic;

@@ -29,8 +29,6 @@
 std::uint32_t  shade::SpotLight::m_TotalCount = 0;
 
 shade::SpotLight::SpotLight() : shade::Light(shade::Environment::Type::SpotLight),
-	m_Direction(0.0, 0.0f, 1.0f),
-	m_Position(0.0f, 0.0f, 0.0f),
 	m_Constant(1.0f),
 	m_Linear(0.007f),
 	m_Qaudratic(0.00007f),
@@ -45,36 +43,6 @@ shade::SpotLight::~SpotLight()
 {
 	// Decrease light count
 	m_TotalCount--;
-}
-
- void shade::SpotLight::SetPosition(const float& x, const float& y, const float& z)
-{
-	m_Position = glm::vec3(x, y, z);
-}
-
- void shade::SpotLight::SetPosition(const glm::vec3& position)
-{
-	m_Position = position;
-}
-
- const glm::vec3& shade::SpotLight::GetPosition() const
-{
-	return m_Position;
-}
-
- glm::vec3& shade::SpotLight::GetPosition()
- {
-	 return const_cast<glm::vec3&>(const_cast<const shade::SpotLight*>(this)->GetPosition());
- }
-
- void shade::SpotLight::SetDirection(const float& x, const float& y, const float& z)
-{
-	m_Direction = glm::vec3(x, y, z);
-}
-
- void shade::SpotLight::SetDirection(const glm::vec3& direction)
-{
-	m_Direction = direction;
 }
 
  void shade::SpotLight::SetMinAngle(const float& angle)
@@ -105,16 +73,6 @@ shade::SpotLight::~SpotLight()
  float& shade::SpotLight::GetMaxAngle()
  {
 	 return const_cast<float&>(const_cast<const shade::SpotLight*>(this)->GetMaxAngle());
- }
-
- const glm::fvec3& shade::SpotLight::GetDirection() const
-{
-	return m_Direction;
-}
-
- glm::fvec3& shade::SpotLight::GetDirection()
- {
-	 return const_cast<glm::fvec3&>(const_cast<const shade::SpotLight*>(this)->GetDirection());
  }
 
  void shade::SpotLight::SetConstant(const float& constant)
@@ -162,11 +120,11 @@ float& shade::SpotLight::GetQaudratic()
 	return const_cast<float&>(const_cast<const shade::SpotLight*>(this)->GetQaudratic());
 }
 
-shade::SpotLight::RenderData shade::SpotLight::GetRenderData() const
+shade::SpotLight::RenderData shade::SpotLight::GetRenderData(const glm::vec3& position, const glm::vec3& derection) const
 {
 	return RenderData { 
-		m_Position,
-		m_Direction,
+		position,
+		glm::normalize(derection),
 		m_AmbientColor,
 		m_DiffuseColor,
 		m_SpecularColor,

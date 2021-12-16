@@ -11,6 +11,7 @@ namespace shade
 	Render::InstancePool		Render::m_sInstancePool;
 	Render::SubmitedPool		Render::m_sSubmitedPool;
 	Render::Sprites				Render::m_sSprites;
+	Render::LightEnviroment		Render::m_sLightEnviroment;
 	/* Buffers */
 	Shared<UniformBuffer>		Render::m_sCameraUniformBuffer;
 	Shared<UniformBuffer>		Render::m_sClippingUniformBuffer;
@@ -63,6 +64,8 @@ void shade::Render::ShutDown()
 	m_sRenderAPI->ShutDown();
 	m_sSubmitedPool.clear();
 	m_sInstancePool.clear();
+
+	m_sLightEnviroment.Clear();
 }
 
 unsigned int shade::Render::GetVideoMemoryUsage()
@@ -132,44 +135,30 @@ void shade::Render::Begin(Shared<FrameBuffer> framebuffer)
 void shade::Render::End(Shared<FrameBuffer> framebuffer)
 {
 	m_sRenderAPI->End(framebuffer);
+	m_sLightEnviroment.Clear();
 }
 
 void shade::Render::BeginScene(const Shared<Camera>& camera, const Shared<Environment>* env, const std::size_t& envCount, const glm::vec4& clipping)
 {
-	m_sRenderAPI->BeginScene(camera, env, envCount);
+	//m_sRenderAPI->BeginScene(camera, env, envCount);
 	/* Set data to uniforsm buffetrs */
 	m_sCameraUniformBuffer->SetData(&camera->GetRenderData(), sizeof(Camera::RenderData), 0);
 	m_sClippingUniformBuffer->SetData(glm::value_ptr(clipping), sizeof(glm::vec4), 0);
 
 	/* Process SSBO buffers */
-	std::uint32_t dLightIndex = 0, pLighIndex = 0, sLightIndex = 0;
-
-	if (m_sDirectLightsBuffer->GetSize() != sizeof(DirectLight::RenderData) * DirectLight::GetTotalCount())
-		m_sDirectLightsBuffer->Resize(sizeof(DirectLight::RenderData) * DirectLight::GetTotalCount());
-	if (m_sPointLightsBuffer->GetSize() != sizeof(PointLight::RenderData) * PointLight::GetTotalCount())
-		m_sPointLightsBuffer->Resize(sizeof(PointLight::RenderData) * PointLight::GetTotalCount());
-	if (m_sSpotLightsBuffer->GetSize() != sizeof(SpotLight::RenderData) * SpotLight::GetTotalCount())
-		m_sSpotLightsBuffer->Resize(sizeof(SpotLight::RenderData) * SpotLight::GetTotalCount());
-
-	for (auto i = 0; i < envCount; i++)
-	{
-		switch (env[i]->GetType())
-		{
-		case Environment::Type::DirectLight:
-			m_sDirectLightsBuffer->SetData(&env[i]->As<DirectLight>().GetRenderData(), sizeof(DirectLight::RenderData), sizeof(DirectLight::RenderData) * dLightIndex);
-			dLightIndex++;
-			break;
-		case Environment::Type::PointLight:
-			m_sPointLightsBuffer->SetData(&env[i]->As<PointLight>().GetRenderData(), sizeof(PointLight::RenderData), sizeof(PointLight::RenderData) * pLighIndex);
-			pLighIndex++;
-			break;
-		case Environment::Type::SpotLight:
-			m_sSpotLightsBuffer->SetData(&env[i]->As<SpotLight>().GetRenderData(), sizeof(SpotLight::RenderData), sizeof(SpotLight::RenderData) * sLightIndex);
-			sLightIndex++;
-			break;
-		}
-
-	}
+	std::uint32_t dLightCount = m_sLightEnviroment.DirectLightSources.size(), pLighCount = m_sLightEnviroment.PointLightSources.size(), sLightCount = m_sLightEnviroment.SpotLightSources.size();
+	/* Direct light */
+	if (m_sDirectLightsBuffer->GetSize() != sizeof(DirectLight::RenderData) * dLightCount)
+		m_sDirectLightsBuffer->Resize(sizeof(DirectLight::RenderData) * dLightCount);
+	m_sDirectLightsBuffer->SetData(m_sLightEnviroment.DirectLightSources.data(), sizeof(DirectLight::RenderData) * dLightCount);
+	/* Point light */
+	if (m_sPointLightsBuffer->GetSize() != sizeof(PointLight::RenderData) * pLighCount)
+		m_sPointLightsBuffer->Resize(sizeof(PointLight::RenderData) * pLighCount);
+	m_sPointLightsBuffer->SetData(m_sLightEnviroment.PointLightSources.data(), sizeof(PointLight::RenderData) * pLighCount);
+	/* Spot light */
+	if (m_sSpotLightsBuffer->GetSize() != sizeof(SpotLight::RenderData) * sLightCount)
+		m_sSpotLightsBuffer->Resize(sizeof(SpotLight::RenderData) * sLightCount);
+	m_sSpotLightsBuffer->SetData(m_sLightEnviroment.SpotLightSources.data(), sizeof(SpotLight::RenderData) * sLightCount);
 	/*!Process SSBO buffers*/
 }
 
@@ -229,6 +218,22 @@ void shade::Render::Submit(const Shared<Shader>& shader, const Shared<Drawable>&
 			_drawablePool->second.MaterialTransforms.push_back(std::make_tuple(transform, material));
 		}
 	}
+}
+
+void shade::Render::Submit(const Shared<DirectLight>& light, const glm::mat4& transform)
+{
+	m_sLightEnviroment.DirectLightSources.push_back(light->GetRenderData(Transform3D::GetTransformFromMatrix(transform).GetRotation()));
+}
+
+void shade::Render::Submit(const Shared<PointLight>& light, const glm::mat4& transform)
+{
+	m_sLightEnviroment.PointLightSources.push_back(light->GetRenderData(Transform3D::GetTransformFromMatrix(transform).GetPosition()));
+}
+
+void shade::Render::Submit(const Shared<SpotLight>& light, const glm::mat4& transform)
+{
+	auto _transform = Transform3D::GetTransformFromMatrix(transform);
+	m_sLightEnviroment.SpotLightSources.push_back(light->GetRenderData(_transform.GetPosition(), _transform.GetRotation()));
 }
 
 void shade::Render::Submit(const Shared<Shader>& shader, const Shared<Texture>& texture, const glm::mat4& transform)

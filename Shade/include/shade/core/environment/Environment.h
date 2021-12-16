@@ -28,7 +28,13 @@ namespace shade
 	inline T& Environment::As()
 	{
 		static_assert(std::is_base_of<Environment, T>::value, "");
-
 		return static_cast<T&>(*this); //  Upcast
 	}
+	//////////////////////
+	struct LightEnviroment
+	{
+		Environment*			Sources;
+		//Transform3DComponent*	Transforms;
+		std::size_t				Count;
+	};
 }

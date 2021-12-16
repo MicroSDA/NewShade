@@ -25,6 +25,18 @@ namespace shade
 	class SHADE_API Render
 	{
 	public:
+		struct LightEnviroment
+		{
+			std::vector<DirectLight::RenderData> DirectLightSources;
+			std::vector<PointLight::RenderData>  PointLightSources;
+			std::vector<SpotLight::RenderData>   SpotLightSources;
+			void Clear()
+			{
+				DirectLightSources.clear();
+				PointLightSources.clear();
+				SpotLightSources.clear();
+			}
+		};
 		struct Sprites
 		{
 			Shared<VertexArray>				VAO;
@@ -78,6 +90,10 @@ namespace shade
 
 		static void SubmitInstance(const Shared<Shader>& shader, const Shared<Drawable>& drawable, const Shared<Material3D>& material, const glm::mat4& transform);
 		static void Submit(const Shared<Shader>& shader, const Shared<Drawable>& drawable, const Shared<Material3D>& material, const glm::mat4& transform);
+		/* Light */
+		static void Submit(const Shared<DirectLight>& light,  const glm::mat4& transform);
+		static void Submit(const Shared<PointLight>&  light,  const glm::mat4& transform);
+		static void Submit(const Shared<SpotLight>&   light,  const glm::mat4& transform);
 
 		/* Has to be reworked */
 		static void Submit(const Shared<Shader>& shader, const Shared<Texture>&  texture,  const glm::mat4& transform);
@@ -95,12 +111,13 @@ namespace shade
 		static Unique<RenderAPI> m_sRenderAPI;
 		static bool				m_sIsInit;
 
-		static Render::InstancePool   m_sInstancePool;
-		static Render::SubmitedPool   m_sSubmitedPool;
-		static Render::Sprites		  m_sSprites;
+		static Render::InstancePool			m_sInstancePool;
+		static Render::SubmitedPool			m_sSubmitedPool;
+		static Render::Sprites				m_sSprites;
+		static Render::LightEnviroment		m_sLightEnviroment;
 
-		static Shared<UniformBuffer> m_sCameraUniformBuffer;
-		static Shared<UniformBuffer> m_sClippingUniformBuffer;
+		static Shared<UniformBuffer>		m_sCameraUniformBuffer;
+		static Shared<UniformBuffer>		m_sClippingUniformBuffer;
 
 		static Shared<ShaderStorageBuffer>	m_sDirectLightsBuffer;
 		static Shared<ShaderStorageBuffer>	m_sPointLightsBuffer;

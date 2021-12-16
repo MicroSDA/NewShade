@@ -24,25 +24,17 @@ namespace shade
 		 virtual ~SpotLight();
 		 static std::uint32_t GetTotalCount();
 
-		 void SetPosition(const float& x, const float& y, const float& z);
-		 void SetPosition(const   glm::vec3& position);
-		 void SetDirection(const float& x, const float& y, const float& z);
-		 void SetDirection(const glm::vec3& direction);
 		 void SetMinAngle(const float& angle);
 		 void SetMaxAngle(const float& angle);
 		 void SetConstant(const float& constant);
 		 void SetLinear(const float& linear);
 		 void SetQaudratic(const float& qaudratic);
 
-		 const glm::vec3& GetPosition() const;
-		 glm::vec3& GetPosition();
 		
 		 const float& GetMinAngle() const;
 		 float& GetMinAngle();
 		 const float& GetMaxAngle() const;
 		 float& GetMaxAngle();
-		 const glm::fvec3& GetDirection() const;
-		 glm::fvec3& GetDirection();
 
 		 const float& GetConstant() const;
 		 float& GetConstant();
@@ -51,18 +43,14 @@ namespace shade
 		 const float& GetQaudratic() const;
 		 float& GetQaudratic();
 
-		 RenderData GetRenderData() const;
+		 RenderData GetRenderData(const glm::vec3& position, const glm::vec3& derection) const;
 	private:
-		glm::fvec3	m_Direction;
-		glm::fvec3	m_Position;
 		float		m_Constant;
 		float		m_Linear;
 		float		m_Qaudratic;
 		float		m_MinAngle;
 		float		m_MaxAngle;
-		static std::uint32_t  m_TotalCount;
-		
+		static std::uint32_t  m_TotalCount;	
 	};
-
 }
 
