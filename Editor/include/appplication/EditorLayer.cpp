@@ -88,7 +88,6 @@ void EditorLayer::OnUpdate(const shade::Shared<shade::Scene>& scene, const shade
 					if(m_IsShowFrustum)
 						shade::Render::Submit(m_BoxShader, shade::Box::Create(mesh->GetMinHalfExt(), mesh->GetMaxHalfExt()), nullptr, cpcTransform);
 				}
-
 			}
 		});
 
@@ -256,15 +255,21 @@ void EditorLayer::Entities(shade::Scene* scene)
 			{
 				if (ImGui::MenuItem("Dirrect"))
 				{
-					scene->CreateEntity("Direct light").AddComponent<shade::DirectLightComponent>(shade::CreateShared<shade::DirectLight>());
+					auto entity = scene->CreateEntity("Direct light");
+					entity.AddComponent<shade::DirectLightComponent>(shade::CreateShared<shade::DirectLight>());
+					entity.AddComponent<shade::Transform3DComponent>();
 				}
 				if (ImGui::MenuItem("Point"))
 				{
-					scene->CreateEntity("Point light").AddComponent<shade::PointLightComponent>(shade::CreateShared<shade::PointLight>());
+					auto entity = scene->CreateEntity("Point light");
+					entity.AddComponent<shade::PointLightComponent>(shade::CreateShared<shade::PointLight>());
+					entity.AddComponent<shade::Transform3DComponent>();
 				}
 				if (ImGui::MenuItem("Spot"))
 				{
-					scene->CreateEntity("Spot light").AddComponent<shade::SpotLightComponent>(shade::CreateShared<shade::SpotLight>());
+					auto entity = scene->CreateEntity("Spot light");
+					entity.AddComponent<shade::SpotLightComponent>(shade::CreateShared<shade::SpotLight>());
+					entity.AddComponent<shade::Transform3DComponent>();
 				}
 
 				ImGui::EndMenu();
@@ -306,11 +311,6 @@ void EditorLayer::Entities(shade::Scene* scene)
 						}
 					}, m_SelectedEntity);
 
-				AddComponent<shade::DirectLightComponent>("Direct light", false, m_SelectedEntity, [&](shade::Entity& entity) { entity.AddComponent<shade::DirectLightComponent>(shade::CreateShared<shade::DirectLight>()); }, m_SelectedEntity);
-				AddComponent<shade::PointLightComponent>("Point light", false, m_SelectedEntity, [&](shade::Entity& entity) { entity.AddComponent<shade::PointLightComponent>(shade::CreateShared<shade::PointLight>()); }, m_SelectedEntity);
-				AddComponent<shade::SpotLightComponent>("Spot light", false, m_SelectedEntity, [&](shade::Entity& entity) { entity.AddComponent<shade::SpotLightComponent>(shade::CreateShared<shade::SpotLight>()); }, m_SelectedEntity);
-
-				
 				// Remove, need to create specific fucntion ?
 				ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.7, 0, 0, 1));
 				if (ImGui::MenuItem("Remove entity"))
@@ -551,8 +551,9 @@ void EditorLayer::Scene(const shade::Shared<shade::Scene>& scene)
 					glm::vec3 position, rotation, scale;
 					ImGuizmo::DecomposeMatrixToComponents(glm::value_ptr(transform), glm::value_ptr(position), glm::value_ptr(rotation), glm::value_ptr(scale));
 					m_SelectedEntity.GetComponent<shade::Transform3DComponent>().SetPostition(position);
-					m_SelectedEntity.GetComponent<shade::Transform3DComponent>().SetRotation(glm::radians(rotation));
 					m_SelectedEntity.GetComponent<shade::Transform3DComponent>().SetScale(scale);
+					m_SelectedEntity.GetComponent<shade::Transform3DComponent>().SetRotation(glm::radians(rotation));
+					
 				}
 			}
 			/*if (m_SelectedEntity.HasComponent<shade::DirectLightComponent>())

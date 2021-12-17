@@ -222,7 +222,8 @@ void shade::Render::Submit(const Shared<Shader>& shader, const Shared<Drawable>&
 
 void shade::Render::Submit(const Shared<DirectLight>& light, const glm::mat4& transform)
 {
-	m_sLightEnviroment.DirectLightSources.push_back(light->GetRenderData(Transform3D::GetTransformFromMatrix(transform).GetRotation()));
+	/* Getting direction */
+	m_sLightEnviroment.DirectLightSources.push_back(light->GetRenderData(-glm::normalize(glm::mat3(transform) * glm::vec3(1.0f))));
 }
 
 void shade::Render::Submit(const Shared<PointLight>& light, const glm::mat4& transform)
@@ -232,8 +233,8 @@ void shade::Render::Submit(const Shared<PointLight>& light, const glm::mat4& tra
 
 void shade::Render::Submit(const Shared<SpotLight>& light, const glm::mat4& transform)
 {
-	auto _transform = Transform3D::GetTransformFromMatrix(transform);
-	m_sLightEnviroment.SpotLightSources.push_back(light->GetRenderData(_transform.GetPosition(), _transform.GetRotation()));
+	/* Getting position and direction */
+	m_sLightEnviroment.SpotLightSources.push_back(light->GetRenderData(Transform3D::GetTransformFromMatrix(transform).GetPosition(), -glm::normalize(glm::mat3(transform) * glm::vec3(1.0f))));
 }
 
 void shade::Render::Submit(const Shared<Shader>& shader, const Shared<Texture>& texture, const glm::mat4& transform)

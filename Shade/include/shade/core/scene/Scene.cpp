@@ -198,7 +198,7 @@ glm::mat4 shade::Scene::ComputePCTransform(shade::Entity& entity)
 		shade::Entity& parent = entity.GetParent();
 		transform = ComputePCTransform(parent);
 	}
-	
+
 	if (entity.HasComponent<shade::Transform3DComponent>())
 		return transform * entity.GetComponent<shade::Transform3DComponent>().GetModelMatrix();
 	else

@@ -281,7 +281,7 @@ bool shade::ImGuiLayer::DrawImGuizmo(glm::mat4& transform, const Shared<Camera>&
 	auto cameraView = camera->GetView();
 	auto cameraProjection = camera->GetProjection();
 
-	ImGuizmo::Manipulate(glm::value_ptr(cameraView), glm::value_ptr(cameraProjection), operation, ImGuizmo::LOCAL, glm::value_ptr(transform));
+	ImGuizmo::Manipulate(glm::value_ptr(cameraView), glm::value_ptr(cameraProjection), operation, ImGuizmo::WORLD, glm::value_ptr(transform));
 
 	if (ImGuizmo::IsUsing())
 		return true;
