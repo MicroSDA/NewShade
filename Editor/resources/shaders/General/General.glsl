@@ -81,7 +81,7 @@ subroutine vec4 LightingCalculation(vec3 toCameraDirection);
 subroutine (LightingCalculation) 
 vec4 FlatColor(vec3 toCameraDirection)
 {
-	// Without noremal map and textures
+	// Without normal map and textures
 	vec4 Color = vec4(0.0, 0.0, 0.0, 0.0);
 
 	for(int i = 0;i < u_DirectLight.length(); i++)

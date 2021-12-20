@@ -43,7 +43,7 @@ vec4 BilinPhongPointLight(vec3 normal, PointLight light, Material material, vec3
 
 vec4 BilinPhongSpotLight(vec3 normal, SpotLight light, Material material, vec3 vertex, vec3 toCameraDirection, vec4 diffuseTexture, vec4 specularTexture)
 {
-	const float Smooth				= 2.5; // Harcoded 
+	const float Smooth				= 2.0; // Harcoded 
     vec3  lightDirection			= normalize(vertex - light.Position);
     float spotFactor				= dot(lightDirection, light.Direction);
     

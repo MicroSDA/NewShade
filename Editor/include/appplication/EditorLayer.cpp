@@ -79,7 +79,7 @@ void EditorLayer::OnUpdate(const shade::Shared<shade::Scene>& scene, const shade
 		{
 			for (auto& mesh : model->GetMeshes())
 			{
-				auto cpcTransform = scene->ComputePCTransform(shade::Entity{ entity, scene.get() });
+				auto cpcTransform = scene->ComputePCTransform(entity);
 
 				if (frustum.IsInFrustum(cpcTransform, mesh->GetMinHalfExt(), mesh->GetMaxHalfExt()))
 				{
@@ -538,65 +538,20 @@ void EditorLayer::Scene(const shade::Shared<shade::Scene>& scene)
 			if (m_SelectedEntity.HasComponent<shade::Transform3DComponent>())
 			{
 				m_AllowedGuizmoOperation = m_BasicGuizmoOperation;
-				auto transform = scene->ComputePCTransform(m_SelectedEntity);
+				auto& transform   = m_SelectedEntity.GetComponent<shade::Transform3DComponent>();
+				auto pcTransform  = scene->ComputePCTransform(m_SelectedEntity);
 
-				if (DrawImGuizmo(transform, m_EditorCamera, m_GuizmoOperation, ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, ImGui::GetWindowSize().x, ImGui::GetWindowSize().y))
+				if (DrawImGuizmo(pcTransform, m_EditorCamera, m_GuizmoOperation, ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, ImGui::GetWindowSize().x, ImGui::GetWindowSize().y))
 				{
 					if (m_SelectedEntity.HasParent())
 					{
 						auto parentTransform = scene->ComputePCTransform(m_SelectedEntity.GetParent());
-						transform = glm::inverse(parentTransform) * transform;
+						pcTransform = glm::inverse(parentTransform) * pcTransform;
 					}
 
-					glm::vec3 position, rotation, scale;
-					ImGuizmo::DecomposeMatrixToComponents(glm::value_ptr(transform), glm::value_ptr(position), glm::value_ptr(rotation), glm::value_ptr(scale));
-					m_SelectedEntity.GetComponent<shade::Transform3DComponent>().SetPostition(position);
-					m_SelectedEntity.GetComponent<shade::Transform3DComponent>().SetScale(scale);
-					m_SelectedEntity.GetComponent<shade::Transform3DComponent>().SetRotation(glm::radians(rotation));
-					
+					transform.SetTransform(pcTransform);
 				}
 			}
-			/*if (m_SelectedEntity.HasComponent<shade::DirectLightComponent>())
-			{
-				m_AllowedGuizmoOperation = m_DirectLightGuizmoOperation;
-				m_GuizmoOperation = ImGuizmo::OPERATION::ROTATE;
-
-				auto light = static_cast<shade::DirectLight*>(env.get());
-				glm::mat4 transform = glm::toMat4(glm::quat((light->GetDirection())));
-				if (DrawImGuizmo(transform, m_EditorCamera, m_GuizmoOperation, ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, ImGui::GetWindowSize().x, ImGui::GetWindowSize().y))
-				{
-					glm::vec3 position, rotation, scale;
-					ImGuizmo::DecomposeMatrixToComponents(glm::value_ptr(transform), glm::value_ptr(position), glm::value_ptr(rotation), glm::value_ptr(scale));
-					light->SetDirection(glm::radians(rotation)); // TODO: Normalize
-				}
-			}
-			if (m_SelectedEntity.HasComponent<shade::PointLightComponent>())
-			{
-				m_AllowedGuizmoOperation = m_PointLightGuizmoOperation;
-				//m_GuizmoOperation = ImGuizmo::OPERATION::TRANSLATE | ImGuizmo::OPERATION::SCALE;
-				auto light = static_cast<shade::PointLight*>(env.get());
-				glm::mat4 transform = glm::translate(light->GetPosition());
-				if (DrawImGuizmo(transform, m_EditorCamera, m_GuizmoOperation, ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, ImGui::GetWindowSize().x, ImGui::GetWindowSize().y))
-				{
-					glm::vec3 position, rotation, scale;
-					ImGuizmo::DecomposeMatrixToComponents(glm::value_ptr(transform), glm::value_ptr(position), glm::value_ptr(rotation), glm::value_ptr(scale));
-					light->SetPosition(position); // TODO: Normalize
-				}
-			}
-			if (m_SelectedEntity.HasComponent<shade::SpotLightComponent>())
-			{
-				m_AllowedGuizmoOperation = m_SpotLightGuizmoOperation;
-				//m_GuizmoOperation = ImGuizmo::OPERATION::TRANSLATE | ImGuizmo::OPERATION::SCALE;
-				auto light = static_cast<shade::SpotLight*>(env.get());
-				glm::mat4 transform = glm::translate(light->GetPosition()) * glm::toMat4(glm::quat((light->GetDirection())));
-				if (DrawImGuizmo(transform, m_EditorCamera, m_GuizmoOperation, ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, ImGui::GetWindowSize().x, ImGui::GetWindowSize().y))
-				{
-					glm::vec3 position, rotation, scale;
-					ImGuizmo::DecomposeMatrixToComponents(glm::value_ptr(transform), glm::value_ptr(position), glm::value_ptr(rotation), glm::value_ptr(scale));
-					light->SetPosition(position); // TODO: Normalize
-					light->SetDirection(glm::radians(rotation)); // TODO: Normalize
-				}
-			}*/
 		}
 	
 }

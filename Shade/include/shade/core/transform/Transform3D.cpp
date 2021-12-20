@@ -15,5 +15,5 @@ shade::Transform3D::Transform3D(const glm::vec3& position, const glm::vec3& rota
 
 glm::mat4 shade::Transform3D::GetModelMatrix() const
 {
-	return glm::translate(glm::mat4(1.f), m_Possition) * glm::toMat4(glm::quat(m_Rotation)) * glm::scale(glm::mat4(1.f), m_Scale);
+	return glm::translate(glm::mat4(1.f), m_Possition) * glm::toMat4(glm::quat((m_Rotation))) * glm::scale(glm::mat4(1.f), m_Scale);
 }

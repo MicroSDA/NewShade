@@ -32,6 +32,15 @@ void shade::Drawable::GenerateHalfExt()
         }
     }
 
+    // TODO
+    /*m_BoundingBox.Min.x = glm::min(m_BoundingBox.Min.x, min.x);
+    m_BoundingBox.Min.y = glm::min(m_BoundingBox.Min.y, min.y);
+    m_BoundingBox.Min.z = glm::min(m_BoundingBox.Min.z, min.z);
+    m_BoundingBox.Max.x = glm::max(m_BoundingBox.Max.x, max.x);
+    m_BoundingBox.Max.y = glm::max(m_BoundingBox.Max.y, max.y);
+    m_BoundingBox.Max.z = glm::max(m_BoundingBox.Max.z, max.z);*/
+
+
     // Some optimization 
     m_MinHalfExt = glm::vec3(std::min(GetVertices()[ixMax].Position.x, GetVertices()[jxMax].Position.x),
                              std::min(GetVertices()[iyMax].Position.y, GetVertices()[jyMax].Position.y),
