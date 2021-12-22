@@ -46,13 +46,14 @@ const std::string& shade::Scene::GetName() const
 
 shade::Entity shade::Scene::GetPrimaryCamera()
 {
+	shade::Entity _entity;
 	this->GetEntities().view<shade::CameraComponent>().each([&](auto entity, auto& camera)
 		{
 			if(camera->IsPrimary())
-				return Entity{ entity, this };
+				_entity = Entity{ entity, this };
 		});
 
-	return Entity(); // Make use that entity is valid !
+	return _entity; // Make use that entity is valid !
 }
 
 void shade::Scene::OnPlayStart()

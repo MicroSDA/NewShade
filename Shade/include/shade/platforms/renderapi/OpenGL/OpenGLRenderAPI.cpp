@@ -39,7 +39,7 @@ void shade::OpenGLRenderAPI::Init()
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CLIP_DISTANCE0);
 	glEnable(GL_CLIP_DISTANCE1);
-
+	glLineWidth(5.f);
 	m_BloomFrameBuffer = shade::FrameBuffer::Create(shade::FrameBuffer::Layout(1, 1,
 		{ shade::FrameBuffer::Texture::Format::RGBA8,
 		  shade::FrameBuffer::Texture::Format::RGBA8, 

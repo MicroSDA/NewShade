@@ -30,7 +30,8 @@ private:
 	shade::Shared<shade::FrameBuffer>	m_FrameBuffer;
 
 	shade::Shared<shade::Camera> m_EditorCamera;
-	shade::Shared<shade::Camera> m_TestEditorCamera;
+	shade::Shared<shade::Camera> m_Camera;
+
 	shade::Shared<shade::Shader> m_InstancedShader;
 	shade::Shared<shade::Shader> m_GridShader;
 	shade::Shared<shade::Shader> m_FrustumShader;
@@ -44,12 +45,14 @@ private:
 	shade::Shared<shade::Shader>  m_BloomShader;
 	bool						  m_isBloomEnabled = true;
 	shade::Shared<shade::PPColorCorrection> m_PPColorCorrection;
-	bool						  m_isColorCorrectionmEnabled = true;
+	bool						  m_isColorCorrectionEnabled = true;
 	shade::Shared<shade::Shader>  m_ColorCorrectionShader;
 	////////////////////////////////////
 
+	/* Debug */
 	bool m_IsShowGrid		= true;
 	bool m_IsShowFrustum	= true;
+	unsigned int m_SubmitedMeshCount = 0;
 	shade::Shared<shade::Grid>   m_Grid;
 	shade::Shared<shade::Box>    m_Box;
 	shade::Entity				 m_SelectedEntity;
@@ -77,6 +80,7 @@ private:
 	void DirectLightComponent(shade::Entity& entity);
 	void PointLightComponent(shade::Entity& entity);
 	void SpotLightComponent(shade::Entity& entity);
+	void CameraComponent(shade::Entity& entity);
 
 	void Model3dComponent(shade::Entity& entity);
 	void AssetDataExpader(shade::AssetData& data);

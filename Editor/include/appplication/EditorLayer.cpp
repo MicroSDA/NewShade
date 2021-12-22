@@ -23,9 +23,6 @@ void EditorLayer::OnCreate()
 {
 	shade::Application::Get().GetEntities().view<shade::CameraComponent>().each([&](auto entity, auto& camera) { m_EditorCamera = camera; });
 
-	m_TestEditorCamera = shade::CreateShared<shade::Camera>();
-	m_TestEditorCamera->SetFar(500);
-
 	m_FrameBuffer = shade::FrameBuffer::Create(shade::FrameBuffer::Layout(100, 100, {
 		shade::FrameBuffer::Texture::Format::RGBA16F,
 		shade::FrameBuffer::Texture::Format::DEPTH24STENCIL8 }));
@@ -65,15 +62,31 @@ void EditorLayer::OnCreate()
 
 void EditorLayer::OnUpdate(const shade::Shared<shade::Scene>& scene, const shade::Timer& deltaTime)
 {
+	/* Set curret camera */
+	if (scene->IsPlaying())
+	{
+		auto camera = scene->GetPrimaryCamera();
+		if (camera)
+			m_Camera = camera.GetComponent<shade::CameraComponent>();
+		else
+			m_Camera = m_EditorCamera;
+	}
+	else
+		m_Camera = m_EditorCamera;
+	/*------------------------------------*/
 
-	auto frustum = m_EditorCamera->GetFrustum();
-
+	auto frustum = m_Camera->GetFrustum();
+	
 	/* Materials always nullptr for this*/
 	if(m_IsShowGrid)
 		shade::Render::Submit(m_GridShader, m_Grid, m_Grid->GetMaterial(), glm::mat4(1));
 
-	if(m_IsShowFrustum)
-		shade::Render::Submit(m_FrustumShader, m_Box, m_Box->GetMaterial(), glm::inverse(m_EditorCamera->GetViewProjection()));
+	scene->GetEntities().view<shade::CameraComponent>().each([&](auto& entity, shade::CameraComponent& camera)
+		{
+			shade::Render::SubmitInstance(m_FrustumShader, m_Box, nullptr, glm::inverse(camera->GetViewProjection()));
+		});
+		
+	m_SubmitedMeshCount = 0;
 
 	scene->GetEntities().view<shade::Model3DComponent, shade::Transform3DComponent>().each([&](auto& entity, shade::Model3DComponent& model, shade::Transform3DComponent& transform)
 		{
@@ -87,7 +100,10 @@ void EditorLayer::OnUpdate(const shade::Shared<shade::Scene>& scene, const shade
 
 					if(m_IsShowFrustum)
 						shade::Render::Submit(m_BoxShader, shade::Box::Create(mesh->GetMinHalfExt(), mesh->GetMaxHalfExt()), nullptr, cpcTransform);
+
+					m_SubmitedMeshCount++;
 				}
+				
 			}
 		});
 
@@ -138,24 +154,20 @@ void EditorLayer::OnRender(const shade::Shared<shade::Scene>& scene, const shade
 
 	} ImGui::End(); // Begin("DockSpace")
 	{
-		auto environments = scene->GetEntities().group<shade::EnvironmentComponent>(entt::get<shade::Transform3DComponent>);
-	
-		auto l = environments.size();
-		auto t = environments.raw<shade::Transform3DComponent>();
-
 		shade::Render::Begin(m_FrameBuffer);
-		//shade::Render::BeginScene(m_EditorCamera, environments.raw(), environments.size());
+		shade::Render::BeginScene(m_Camera->GetRenderData());
+
 		shade::Render::DrawInstances(m_InstancedShader);
 		shade::Render::EndScene();
 
 		if (m_isBloomEnabled)
 			shade::Render::PProcess::Process(m_PPBloom);
-		if (m_isColorCorrectionmEnabled)
+		if (m_isColorCorrectionEnabled)
 			shade::Render::PProcess::Process(m_PPColorCorrection);
 
-		shade::Render::BeginScene(m_EditorCamera);
+		shade::Render::BeginScene(m_Camera->GetRenderData());
 		shade::Render::DrawSubmited(m_GridShader);
-		shade::Render::DrawSubmited(m_FrustumShader);
+		shade::Render::DrawInstances(m_FrustumShader);
 		shade::Render::DrawSubmited(m_BoxShader);
 
 		// Sprite
@@ -219,22 +231,10 @@ void EditorLayer::OnEvent(const shade::Shared<shade::Scene>& scene, shade::Event
 			}
 
 		}
-
-		if (keyCode == shade::Key::Left)
-			m_TestEditorCamera->SetPosition(m_TestEditorCamera->GetPosition().x + 1, m_TestEditorCamera->GetPosition().y, 0);
-		if (keyCode == shade::Key::Right)
-			m_TestEditorCamera->SetPosition(m_TestEditorCamera->GetPosition().x - 1, m_TestEditorCamera->GetPosition().y, 0);
-
-		if (keyCode == shade::Key::Up)
-			m_TestEditorCamera->SetPosition(m_TestEditorCamera->GetPosition().x, m_TestEditorCamera->GetPosition().y + 1, 0);
-		if (keyCode == shade::Key::Down)
-			m_TestEditorCamera->SetPosition(m_TestEditorCamera->GetPosition().x, m_TestEditorCamera->GetPosition().y - 1, 0);
-
-		if (keyCode == shade::Key::PageUp)
-			m_InstancedShader->SelectSubrutine("u_sLighting", "BillinPhong", shade::Shader::Type::Fragment);
-		if (keyCode == shade::Key::PageDown)
-			m_InstancedShader->SelectSubrutine("u_sLighting", "FlatColor", shade::Shader::Type::Fragment);
-
+	}
+	else if (event.GetEventType() == shade::EventType::WindowResize)
+	{
+		auto& window = shade::Application::Get().GetWindow();
 	}
 }
 
@@ -273,6 +273,11 @@ void EditorLayer::Entities(shade::Scene* scene)
 				}
 
 				ImGui::EndMenu();
+			}
+			if (ImGui::MenuItem("Camera"))
+			{
+				auto entity = scene->CreateEntity("Camera");
+				entity.AddComponent<shade::CameraComponent>(shade::CreateShared<shade::Camera>());
 			}
 
 			ImGui::EndPopup();
@@ -441,6 +446,10 @@ void EditorLayer::Inspector(shade::Entity& entity)
 		{
 			return EditComponentButton<shade::SpotLightComponent>(entity, m_IconsTexture, editIcon, isTreeOpen);
 		}, this, entity);
+	DrawComponent<shade::CameraComponent>("Camera", entity, &EditorLayer::CameraComponent, [&](auto isTreeOpen)->bool
+		{
+			return EditComponentButton<shade::CameraComponent>(entity, m_IconsTexture, editIcon, isTreeOpen);
+		}, this, entity);
 }
 
 void EditorLayer::ScenePlayStop(const shade::Shared<shade::Scene>& scene)
@@ -496,6 +505,7 @@ void EditorLayer::ScenePlayStop(const shade::Shared<shade::Scene>& scene)
 	ImGuiIO& io = ImGui::GetIO();
 	ImGui::SameLine(ImGui::GetContentRegionAvailWidth() - ImGui::CalcItemWidth() - 15);
 	ImGui::Text("Application average %.1f ms/frame (%.0f FPS)", 1000.0f / io.Framerate, io.Framerate);
+	ImGui::Text("Submited meshes [%d]", m_SubmitedMeshCount);
 }
 
 void EditorLayer::Scene(const shade::Shared<shade::Scene>& scene)
@@ -506,21 +516,23 @@ void EditorLayer::Scene(const shade::Shared<shade::Scene>& scene)
 		m_SceneViewPort = ImGui::GetContentRegionAvail();
 		m_FrameBuffer->Resize(m_SceneViewPort.x, m_SceneViewPort.y);
 
-		m_EditorCamera->Resize(m_SceneViewPort.x / m_SceneViewPort.y);
+		m_Camera->Resize(m_SceneViewPort.x / m_SceneViewPort.y);
 	}
 
 		static ImVec4 focusColor = { 0, 0, 0, 1 };
 
 		if (ImGui::IsWindowFocused())
 		{
-			/* Trying to enable and disable camera for now, need to redisign, see camera script */
-			m_EditorCamera->SetAsPrimary(true);
 			focusColor = { 0.995f, 0.857f, 0.420f, 1.000f };
+			if (m_Camera == m_EditorCamera)
+				m_EditorCamera->SetAsPrimary(true);
+			else
+				m_EditorCamera->SetAsPrimary(false);
 		}
 		else
 		{
-			m_EditorCamera->SetAsPrimary(false);
 			focusColor = { 0, 0, 0, 1 };
+			m_EditorCamera->SetAsPrimary(false);
 		}
 			
 	
@@ -541,7 +553,7 @@ void EditorLayer::Scene(const shade::Shared<shade::Scene>& scene)
 				auto& transform   = m_SelectedEntity.GetComponent<shade::Transform3DComponent>();
 				auto pcTransform  = scene->ComputePCTransform(m_SelectedEntity);
 
-				if (DrawImGuizmo(pcTransform, m_EditorCamera, m_GuizmoOperation, ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, ImGui::GetWindowSize().x, ImGui::GetWindowSize().y))
+				if (DrawImGuizmo(pcTransform, m_Camera, m_GuizmoOperation, ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, ImGui::GetWindowSize().x, ImGui::GetWindowSize().y))
 				{
 					if (m_SelectedEntity.HasParent())
 					{
@@ -552,8 +564,28 @@ void EditorLayer::Scene(const shade::Shared<shade::Scene>& scene)
 					transform.SetTransform(pcTransform);
 				}
 			}
+			else if (m_SelectedEntity.HasComponent<shade::CameraComponent>())
+			{
+				auto& camera = m_SelectedEntity.GetComponent<shade::CameraComponent>();
+				glm::mat4 transform = camera->GetView();
+				// TODO Camera parent trnasform, в сабмите и он рендер
+				/*if (m_SelectedEntity.HasParent())
+				{
+					auto parentTransform = scene->ComputePCTransform(m_SelectedEntity.GetParent());
+					transform = (parentTransform) * transform;
+				}
+				else*/
+				{
+					transform = glm::inverse(transform);
+				}
+			
+				
+				if (DrawImGuizmo(transform, m_Camera, m_GuizmoOperation, ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, ImGui::GetWindowSize().x, ImGui::GetWindowSize().y))
+				{
+					camera->SetVeiw(transform);
+				}
+			}
 		}
-	
 }
 
 void EditorLayer::TagComponent(shade::Entity& entity)
@@ -708,6 +740,18 @@ void EditorLayer::SpotLightComponent(shade::Entity& entity)
 	DrawFlaot("Qaudratic", &light->GetQaudratic());
 	DrawFlaot("Min", &light->GetMinAngle());
 	DrawFlaot("Max", &light->GetMaxAngle());
+}
+
+void EditorLayer::CameraComponent(shade::Entity& entity)
+{
+	auto& camera = entity.GetComponent<shade::CameraComponent>();
+
+	DrawVec3F("Position",   glm::value_ptr(camera->GetPosition()));
+	DrawVec3F("Diretction", glm::value_ptr(camera->GetForwardDirrection()));
+	bool isPrimary = camera->IsPrimary();
+	if (ImGui::Checkbox("Primary", &isPrimary))
+		camera->SetAsPrimary(isPrimary);
+	
 }
 
 void EditorLayer::AssetDataExpader(shade::AssetData& data)
@@ -924,7 +968,7 @@ void EditorLayer::Render()
 	if (ImGui::TreeNodeEx("Color correction", ImGuiTreeNodeFlags_Framed))
 	{
 
-		ImGui::Checkbox("Enable", &m_isColorCorrectionmEnabled);
+		ImGui::Checkbox("Enable", &m_isColorCorrectionEnabled);
 		DrawFlaot("Gamma", &m_PPColorCorrection->GetGamma(), 1.f, 0.f, FLT_MAX, 80.f);
 		DrawFlaot("Exposure", &m_PPColorCorrection->GetExposure(), 1.f, 0.f, FLT_MAX, 80.f);
 		ImGui::TreePop();
@@ -933,6 +977,7 @@ void EditorLayer::Render()
 	ImGui::Separator();
 	ImGui::Checkbox("Show grid", &m_IsShowGrid);
 	ImGui::Checkbox("Show frustum", &m_IsShowFrustum);
+	ImGui::Text("Submited meshes [%d]", m_SubmitedMeshCount);
 	ImGui::Text("Video memory in usage: %d(mbs)", shade::Render::GetVideoMemoryUsage());
 }
 

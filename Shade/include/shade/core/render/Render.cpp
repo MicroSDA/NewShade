@@ -138,11 +138,11 @@ void shade::Render::End(Shared<FrameBuffer> framebuffer)
 	m_sLightEnviroment.Clear();
 }
 
-void shade::Render::BeginScene(const Shared<Camera>& camera, const Shared<Environment>* env, const std::size_t& envCount, const glm::vec4& clipping)
+void shade::Render::BeginScene(const Camera::RenderData& renderData, const glm::vec4& clipping)
 {
 	//m_sRenderAPI->BeginScene(camera, env, envCount);
 	/* Set data to uniforsm buffetrs */
-	m_sCameraUniformBuffer->SetData(&camera->GetRenderData(), sizeof(Camera::RenderData), 0);
+	m_sCameraUniformBuffer->SetData(&renderData, sizeof(Camera::RenderData), 0);
 	m_sClippingUniformBuffer->SetData(glm::value_ptr(clipping), sizeof(glm::vec4), 0);
 
 	/* Process SSBO buffers */

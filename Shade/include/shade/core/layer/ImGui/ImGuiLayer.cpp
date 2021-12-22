@@ -169,49 +169,19 @@ bool shade::ImGuiLayer::DrawVec3F(const char* title, float* data, const float& r
 	ImGui::Text(title);
 	ImGui::NextColumn();
 
-	/*if (ImGui::Button("X")) { data[0] = resetValue; isUsed = true; }
-
-	const ImGuiStyle& style = ImGui::GetStyle();
-	ImVec2 label_size = ImGui::CalcTextSize("X", NULL, true);
-	ImVec2 button_size = ImGui::CalcItemSize(ImVec2(0, 0), label_size.x + style.FramePadding.x * 2.0f, label_size.y + style.FramePadding.y * 2.0f);
-	float width = (ImGui::GetContentRegionAvailWidth() - ((colw1 + style.FramePadding.x * 3) / 2) - ((button_size.x - style.FramePadding.x) * 3)) / 3;
-
-	ImGui::SameLine();
-	ImGui::PushItemWidth(width);
-	if (ImGui::DragFloat("##X", &data[0], 0.01f, min, max, "%.2f"))
-		isUsed = true;
-
-	ImGui::PopItemWidth();
-	ImGui::SameLine();
-
-	if (ImGui::Button("Y")) { data[1] = resetValue; isUsed = true; } ImGui::SameLine();
-	ImGui::PushItemWidth(width);
-	if (ImGui::DragFloat("##Y", &data[1], 0.01f, min, max, "%.2f"))
-		isUsed = true;
-
-	ImGui::PopItemWidth();
-	ImGui::SameLine();
-
-	if (ImGui::Button("Z")) { data[2] = resetValue; isUsed = true; } ImGui::SameLine();
-	ImGui::PushItemWidth(width);
-	if (ImGui::DragFloat("##Z", &data[2], 0.01f, min, max, "%.2f"))
-		isUsed = true;
-
-	ImGui::PopItemWidth();*/
-
 	const ImGuiStyle& style = ImGui::GetStyle();
 	//ImVec2 label_size		= ImGui::CalcTextSize("X", NULL, true);
 	//ImVec2 button_size		= ImGui::CalcItemSize(ImVec2(0, 0), label_size.x + style.ItemSpacing.x, label_size.y + style.ItemSpacing.y);
 	float width				= (ImGui::GetContentRegionAvailWidth() / 3.0) - ((style.ItemSpacing.x) * 6.0);
 
 	ImGui::PushStyleColor(ImGuiCol_Button, ImVec4{ 0.753f, 0.000f, 0.099f, 0.709f });	ImGui::Button("X"); ImGui::PopStyleColor();
-	ImGui::SameLine();  ImGui::PushItemWidth(width); ImGui::DragFloat("##X", &data[0]); ImGui::PopItemWidth(); ImGui::SameLine();
+	ImGui::SameLine();  ImGui::PushItemWidth(width); ImGui::DragFloat("##X", &data[0], 0.1f); ImGui::PopItemWidth(); ImGui::SameLine();
 
 	ImGui::PushStyleColor(ImGuiCol_Button, ImVec4{ 0.000f, 0.698f, 0.008f, 0.709f });	ImGui::Button("Y"); ImGui::PopStyleColor();
-	ImGui::SameLine();  ImGui::PushItemWidth(width); ImGui::DragFloat("##Y", &data[1]); ImGui::PopItemWidth(); ImGui::SameLine();
+	ImGui::SameLine();  ImGui::PushItemWidth(width); ImGui::DragFloat("##Y", &data[1], 0.1f); ImGui::PopItemWidth(); ImGui::SameLine();
 
 	ImGui::PushStyleColor(ImGuiCol_Button, ImVec4{ 0.257f, 0.542f, 0.852f, 0.709f });	ImGui::Button("Z"); ImGui::PopStyleColor();
-    ImGui::SameLine();  ImGui::PushItemWidth(width); ImGui::DragFloat("##Z", &data[2]); ImGui::PopItemWidth();
+    ImGui::SameLine();  ImGui::PushItemWidth(width); ImGui::DragFloat("##Z", &data[2], 0.1f); ImGui::PopItemWidth();
 
 	ImGui::Columns(1);
 	ImGui::PopID();
@@ -278,8 +248,8 @@ bool shade::ImGuiLayer::DrawImGuizmo(glm::mat4& transform, const Shared<Camera>&
 	ImGuizmo::SetDrawlist();
 	ImGuizmo::SetRect(x, y, width, height);
 
-	auto cameraView = camera->GetView();
-	auto cameraProjection = camera->GetProjection();
+	auto cameraView			= camera->GetView();
+	auto cameraProjection	= camera->GetProjection();
 
 	ImGuizmo::Manipulate(glm::value_ptr(cameraView), glm::value_ptr(cameraProjection), operation, ImGuizmo::WORLD, glm::value_ptr(transform), nullptr);
 

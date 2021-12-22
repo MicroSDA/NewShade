@@ -32,7 +32,7 @@ shade::OpenGLVertexArray::OpenGLVertexArray()
 
 shade::OpenGLVertexArray::~OpenGLVertexArray()
 {
-	//SHADE_CORE_TRACE("~OpenGLVertexArray id: {0}", m_RenderID);
+	//SHADE_CORE_TRACE("Vertex array id = {0} has been deleted.", m_RenderID);
 	glDeleteVertexArrays(1, &m_RenderID);
 }
 

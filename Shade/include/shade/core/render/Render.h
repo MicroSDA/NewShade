@@ -85,7 +85,7 @@ namespace shade
 
 		static void Begin(Shared<FrameBuffer> framebuffer = nullptr);
 		static void End(Shared<FrameBuffer> framebuffer = nullptr);
-		static void BeginScene(const Shared<Camera>& camera, const Shared<Environment>* env = nullptr, const std::size_t& envCount = 0, const glm::vec4& clipping = glm::vec4(0));
+		static void BeginScene(const Camera::RenderData& renderData, const glm::vec4& clipping = glm::vec4(0));
 		static void EndScene();
 
 		static void SubmitInstance(const Shared<Shader>& shader, const Shared<Drawable>& drawable, const Shared<Material3D>& material, const glm::mat4& transform);

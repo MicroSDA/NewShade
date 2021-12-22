@@ -14,6 +14,7 @@ namespace shade
 		};
 	public:
 		Frustum(const glm::mat4& viewMatrix, const glm::mat4& projMatrix);
+		Frustum(const glm::mat4& viewProjectionMatrix);
 		~Frustum() = default;
 		const glm::vec4&  GetSide(const Frustum::Side& size) const;
 		const glm::vec4*  GetFrustum() const;
@@ -21,7 +22,7 @@ namespace shade
 		//For AABB 
 		bool IsInFrustum(const glm::mat4& transform, const glm::vec3& minHalfExt, const glm::vec3& maxHalfExt);
 	private:
-		void _CalculateFrustum(const glm::mat4& viewMatrix, const glm::mat4& projMatrix);
+		void _CalculateFrustum(const glm::mat4& viewProjectionMatrix);
 		void _Normalize(glm::vec4& side);
 		bool _AABBTest(const glm::vec3& minHalfExt, const glm::vec3& maxHalfExt);
 		bool _SSE_AABBTest(const glm::vec3& minHalfExt, const glm::vec3& maxHalfExt);

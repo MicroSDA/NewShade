@@ -3,11 +3,15 @@
 
 shade::Frustum::Frustum(const glm::mat4& viewMatrix, const glm::mat4& projMatrix)
 {
-	_CalculateFrustum(viewMatrix, projMatrix);
+	_CalculateFrustum(viewMatrix *  projMatrix);
+}
+shade::Frustum::Frustum(const glm::mat4& viewProjectionMatrix)
+{
+	_CalculateFrustum(viewProjectionMatrix);
 }
 const glm::vec4* shade::Frustum::GetFrustum() const
 {
-	return &m_Frustum[0];
+	return m_Frustum;
 }
 
 const glm::vec4& shade::Frustum::GetSide(const Frustum::Side& size) const
@@ -25,9 +29,9 @@ bool shade::Frustum::IsInFrustum(const glm::mat4& transform, const glm::vec3& mi
 	return _SSE_OBBTest(transform, minHalfExt, maxHalfExt);
 }
 
-void shade::Frustum::_CalculateFrustum(const glm::mat4& viewMatrix, const glm::mat4& projMatrix)
+void shade::Frustum::_CalculateFrustum(const glm::mat4& viewProjectionMatrix)
 {
-	m_VP_Matrix = projMatrix * viewMatrix;
+	m_VP_Matrix = viewProjectionMatrix;
 	glm::mat4 matrix = glm::transpose(m_VP_Matrix);
 
 	m_Frustum[(std::uint32_t)Side::Left]   = matrix[3] + matrix[0];
