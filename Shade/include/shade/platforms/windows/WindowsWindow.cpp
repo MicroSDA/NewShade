@@ -29,6 +29,23 @@ void shade::WindowsWindow::OnUpdate()
 	m_Context->SwapBuffers();
 }
 
+unsigned int shade::WindowsWindow::GetWidth() const
+{
+	return GetSize().first;
+}
+
+unsigned int shade::WindowsWindow::GetHeight() const
+{
+	return GetSize().second;
+}
+
+std::pair<uint32_t, uint32_t> shade::WindowsWindow::GetSize() const
+{
+	int x, y;
+	glfwGetWindowSize(m_Window, &x, &y);
+	return { x, y };
+}
+
 void shade::WindowsWindow::SetVSync(bool enabled)
 {
 	if (enabled)

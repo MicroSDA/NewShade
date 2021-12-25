@@ -1,5 +1,5 @@
 #type vertex
-#version 460 compatibility
+#version 460 core
 #include "resources/shaders/General/Structures.glsl"
 // Input attributes
 layout (location = 0) in  vec3 Position;
@@ -75,6 +75,7 @@ float ComputeLinearDepth(vec3 pos)
 }
 
 layout (location = 0)   out vec4 FrameBuffer;
+layout (location = 1)   out int  Selected;
 
 void main()
 {
@@ -91,4 +92,6 @@ void main()
 
 	if(FrameBuffer.a <= 0.2)
 		discard;
+		
+		Selected= -1;
 }

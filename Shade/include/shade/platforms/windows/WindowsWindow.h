@@ -13,8 +13,9 @@ namespace shade
 
 		void OnUpdate() override;
 
-		unsigned int GetWidth() const override { return m_Data.Width; }
-		unsigned int GetHeight() const override { return m_Data.Height; }
+		unsigned int GetWidth() const override;
+		unsigned int GetHeight() const override;
+		virtual std::pair<uint32_t, uint32_t> GetSize() const override;
 
 		// Window attributes
 		void SetEventCallback(const EventCallbackFn& callback) override { m_Data.EventCallback = callback; }

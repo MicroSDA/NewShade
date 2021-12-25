@@ -25,6 +25,7 @@ void EditorLayer::OnCreate()
 
 	m_FrameBuffer = shade::FrameBuffer::Create(shade::FrameBuffer::Layout(100, 100, {
 		shade::FrameBuffer::Texture::Format::RGBA16F,
+		shade::FrameBuffer::Texture::Format::RED_INT,
 		shade::FrameBuffer::Texture::Format::DEPTH24STENCIL8 }));
 
 	m_IconsTexture = shade::Texture::Create<shade::Texture>();
@@ -52,12 +53,6 @@ void EditorLayer::OnCreate()
 	m_PPBloom->SetInOutTargets(m_FrameBuffer, m_FrameBuffer, m_BloomShader);
 	m_PPColorCorrection = shade::PPColorCorrection::Create();
 	m_PPColorCorrection->SetInOutTargets(m_FrameBuffer, m_FrameBuffer, m_ColorCorrectionShader);
-
-	/*shade::AssetManager::HoldAsset<shade::Texture>("Sprite", [this](auto& texture) mutable
-		{
-			m_SpriteTexture = shade::AssetManager::Receive<shade::Texture>(texture);
-
-		}, shade::Asset::Lifetime::Destroy);*/
 }
 
 void EditorLayer::OnUpdate(const shade::Shared<shade::Scene>& scene, const shade::Timer& deltaTime)
@@ -76,16 +71,16 @@ void EditorLayer::OnUpdate(const shade::Shared<shade::Scene>& scene, const shade
 	/*------------------------------------*/
 
 	auto frustum = m_Camera->GetFrustum();
-	
+
 	/* Materials always nullptr for this*/
-	if(m_IsShowGrid)
+	if (m_IsShowGrid)
 		shade::Render::Submit(m_GridShader, m_Grid, m_Grid->GetMaterial(), glm::mat4(1));
 
 	scene->GetEntities().view<shade::CameraComponent>().each([&](auto& entity, shade::CameraComponent& camera)
 		{
 			shade::Render::SubmitInstance(m_FrustumShader, m_Box, nullptr, glm::inverse(camera->GetViewProjection()));
 		});
-		
+
 	m_SubmitedMeshCount = 0;
 
 	scene->GetEntities().view<shade::Model3DComponent, shade::Transform3DComponent>().each([&](auto& entity, shade::Model3DComponent& model, shade::Transform3DComponent& transform)
@@ -96,14 +91,14 @@ void EditorLayer::OnUpdate(const shade::Shared<shade::Scene>& scene, const shade
 
 				if (frustum.IsInFrustum(cpcTransform, mesh->GetMinHalfExt(), mesh->GetMaxHalfExt()))
 				{
-					shade::Render::SubmitInstance(m_InstancedShader, mesh, mesh->GetMaterial(), cpcTransform);
+					shade::Render::SubmitInstance(m_InstancedShader, mesh, mesh->GetMaterial(), cpcTransform, (int)entity);
 
-					if(m_IsShowFrustum)
+					if (m_IsShowFrustum)
 						shade::Render::Submit(m_BoxShader, shade::Box::Create(mesh->GetMinHalfExt(), mesh->GetMaxHalfExt()), nullptr, cpcTransform);
 
 					m_SubmitedMeshCount++;
 				}
-				
+
 			}
 		});
 
@@ -124,6 +119,7 @@ void EditorLayer::OnUpdate(const shade::Shared<shade::Scene>& scene, const shade
 
 void EditorLayer::OnRender(const shade::Shared<shade::Scene>& scene, const shade::Timer& deltaTime)
 {
+	
 
 	if (ImGui::Begin("DockSpace", (bool*)(nullptr), m_WindowFlags))
 	{
@@ -154,9 +150,14 @@ void EditorLayer::OnRender(const shade::Shared<shade::Scene>& scene, const shade
 
 	} ImGui::End(); // Begin("DockSpace")
 	{
+		/* Clear select atthacment */
+		
+	
 		shade::Render::Begin(m_FrameBuffer);
-		shade::Render::BeginScene(m_Camera->GetRenderData());
+		m_FrameBuffer->ClearAttachment(1, -1);
+		m_FrameBuffer->Bind();
 
+		shade::Render::BeginScene(m_Camera->GetRenderData());
 		shade::Render::DrawInstances(m_InstancedShader);
 		shade::Render::EndScene();
 
@@ -178,7 +179,7 @@ void EditorLayer::OnRender(const shade::Shared<shade::Scene>& scene, const shade
 		transform.SetPostition(-0.9f, -0.9f);
 
 		shade::Render::DrawSprite(m_SpriteShader, m_LogoTexture, transform.GetModelMatrix(), glm::vec4{ 120, 199.0f, 574, 167 });
-		///
+		
 		shade::Render::EndScene();
 		shade::Render::End(m_FrameBuffer);
 	}
@@ -201,7 +202,7 @@ void EditorLayer::OnEvent(const shade::Shared<shade::Scene>& scene, shade::Event
 		{
 			scene->DestroyEntities();
 		}
-		else if (m_SelectedEntity.IsValid() && keyCode == shade::Key::F)
+		if (m_SelectedEntity.IsValid() && keyCode == shade::Key::F)
 		{
 			switch (m_GuizmoOperation)
 			{
@@ -216,24 +217,31 @@ void EditorLayer::OnEvent(const shade::Shared<shade::Scene>& scene, shade::Event
 					m_GuizmoOperation = ImGuizmo::OPERATION::TRANSLATE; break;
 			}
 		}
-		else if (keyCode == shade::Key::F1)
+		if (keyCode == shade::Key::F1)
 		{
-			for (auto i = 0; i < 1; i++)
-			{
-				shade::AssetManager::HoldPrefab<shade::Model3D>("Nanosuit", [&](auto& asset) mutable
-					{
+			shade::AssetManager::HoldPrefab<shade::Model3D>("Nanosuit", [&](auto& asset) mutable
+				{
+					auto entity = scene->CreateEntity("Nanosuit");
+					entity.AddComponent<shade::Model3DComponent>(shade::AssetManager::Receive<shade::Model3D>(asset));
+					entity.AddComponent<shade::Transform3DComponent>();
+				}, shade::Asset::Lifetime::Destroy);
+		}
 
-						auto entity = scene->CreateEntity("Nanosuit");
-						entity.AddComponent<shade::Model3DComponent>(shade::AssetManager::Receive<shade::Model3D>(asset));
-						entity.AddComponent<shade::Transform3DComponent>();
-
-					}, shade::Asset::Lifetime::Destroy);
-			}
+	}
+	if (event.GetEventType() == shade::EventType::MouseButtonPressed)
+	{
+		if (shade::Input::IsMouseButtonPressed(shade::Mouse::ButtonLeft))
+		{
+			auto id = m_FrameBuffer->GetData(1, m_SceneViewPort.MousePosition.x, m_SceneViewPort.MousePosition.y).R;
+			if(scene->GetEntity(id).IsValid())
+				m_SelectedEntity =  scene->GetEntity(id);
+			SHADE_CORE_TRACE("Selected x :{0}, y :{1} entity ::::::::::Id : {2}", m_SceneViewPort.MousePosition.x, m_SceneViewPort.MousePosition.y, m_FrameBuffer->GetData(1, m_SceneViewPort.MousePosition.x, m_SceneViewPort.MousePosition.y).R);
 
 		}
 	}
-	else if (event.GetEventType() == shade::EventType::WindowResize)
+	if (event.GetEventType() == shade::EventType::WindowResize)
 	{
+
 		auto& window = shade::Application::Get().GetWindow();
 	}
 }
@@ -501,7 +509,7 @@ void EditorLayer::ScenePlayStop(const shade::Shared<shade::Scene>& scene)
 		if (DrawButtonImage("##Stop", m_IconsTexture, { buttonProps.x, buttonProps.y }, { buttonProps.z, buttonProps.w }, { 602, 898 }, -1, ImVec4(0.7, 0.2, 0.2, 1.0)))
 			scene->SetPlaying(false);
 	}
-	
+
 	ImGuiIO& io = ImGui::GetIO();
 	ImGui::SameLine(ImGui::GetContentRegionAvailWidth() - ImGui::CalcItemWidth() - 15);
 	ImGui::Text("Application average %.1f ms/frame (%.0f FPS)", 1000.0f / io.Framerate, io.Framerate);
@@ -510,82 +518,96 @@ void EditorLayer::ScenePlayStop(const shade::Shared<shade::Scene>& scene)
 
 void EditorLayer::Scene(const shade::Shared<shade::Scene>& scene)
 {
+	//SHADE_CORE_TRACE("{0}  {1}", ImGui::GetWindow();
 
-	if (m_SceneViewPort.x != ImGui::GetContentRegionAvail().x || m_SceneViewPort.y != ImGui::GetContentRegionAvail().y)
+	static ImVec4 focusColor = { 0, 0, 0, 1 };
+
+	if (ImGui::IsWindowFocused())
 	{
-		m_SceneViewPort = ImGui::GetContentRegionAvail();
-		m_FrameBuffer->Resize(m_SceneViewPort.x, m_SceneViewPort.y);
-
-		m_Camera->Resize(m_SceneViewPort.x / m_SceneViewPort.y);
+		focusColor = { 0.995f, 0.857f, 0.420f, 1.000f };
+		if (m_Camera == m_EditorCamera)
+			m_EditorCamera->SetAsPrimary(true);
+		else
+			m_EditorCamera->SetAsPrimary(false);
+	}
+	else
+	{
+		focusColor = { 0, 0, 0, 1 };
+		m_EditorCamera->SetAsPrimary(false);
 	}
 
-		static ImVec4 focusColor = { 0, 0, 0, 1 };
-
-		if (ImGui::IsWindowFocused())
-		{
-			focusColor = { 0.995f, 0.857f, 0.420f, 1.000f };
-			if (m_Camera == m_EditorCamera)
-				m_EditorCamera->SetAsPrimary(true);
-			else
-				m_EditorCamera->SetAsPrimary(false);
-		}
-		else
-		{
-			focusColor = { 0, 0, 0, 1 };
-			m_EditorCamera->SetAsPrimary(false);
-		}
-			
 	
-		ImGui::Image(reinterpret_cast<void*>(m_FrameBuffer->GetAttachment(0)), m_SceneViewPort, ImVec2{ 0, 1 }, ImVec2{ 1, 0 }, ImVec4{1, 1, 1, 1}, focusColor);
 
-		
-		ImGui::SetNextWindowSize(ImVec2{ ImGui::GetWindowSize().x - 20.0f,0 }, ImGuiCond_Always);
-		ShowWindowBarOverlay("Overlay", ImGui::GetWindowViewport(), [&]()
-			{
-				ScenePlayStop(scene);
-			});
+	if (m_SceneViewPort.ViewPort.z != ImGui::GetContentRegionAvail().x || m_SceneViewPort.ViewPort.w != ImGui::GetContentRegionAvail().y)
+	{
+		m_SceneViewPort.ViewPort.z = ImGui::GetContentRegionAvail().x;
+		m_SceneViewPort.ViewPort.w = ImGui::GetContentRegionAvail().y;
 
-		if (m_SelectedEntity.IsValid())
+		m_FrameBuffer->Resize(m_SceneViewPort.ViewPort.z, m_SceneViewPort.ViewPort.w);
+		m_Camera->Resize(m_SceneViewPort.ViewPort.z / m_SceneViewPort.ViewPort.w);
+	}
+	
+	m_SceneViewPort.ViewPort.x = ImGui::GetWindowPos().x + ImGui::GetCursorPos().x; // With tab size
+	m_SceneViewPort.ViewPort.y = ImGui::GetWindowPos().y + ImGui::GetCursorPos().y; // With tab size
+
+	m_SceneViewPort.MousePosition.x = (unsigned int)(ImGui::GetMousePos().x - m_SceneViewPort.ViewPort.x);
+	/*Flip Y coord*/
+	m_SceneViewPort.MousePosition.y = (unsigned int)(m_SceneViewPort.ViewPort.w - (ImGui::GetMousePos().y - m_SceneViewPort.ViewPort.y));
+
+	ImGui::Image(reinterpret_cast<void*>(m_FrameBuffer->GetAttachment(0)), { m_SceneViewPort.ViewPort.z, m_SceneViewPort.ViewPort.w }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 }, ImVec4{ 1, 1, 1, 1 }, focusColor);
+
+	
+	//SHADE_CORE_TRACE("Selected x :{0}, y :{1}", m_SceneViewPort.MousePosition.x, m_SceneViewPort.MousePosition.y);
+
+	ImGui::SetNextWindowSize(ImVec2{ ImGui::GetWindowSize().x - 20.0f,0 }, ImGuiCond_Always);
+	ShowWindowBarOverlay("Overlay", ImGui::GetWindowViewport(), [&]()
 		{
-			if (m_SelectedEntity.HasComponent<shade::Transform3DComponent>())
-			{
-				m_AllowedGuizmoOperation = m_BasicGuizmoOperation;
-				auto& transform   = m_SelectedEntity.GetComponent<shade::Transform3DComponent>();
-				auto pcTransform  = scene->ComputePCTransform(m_SelectedEntity);
+			ScenePlayStop(scene);
+		});
+	
+	
 
-				if (DrawImGuizmo(pcTransform, m_Camera, m_GuizmoOperation, ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, ImGui::GetWindowSize().x, ImGui::GetWindowSize().y))
-				{
-					if (m_SelectedEntity.HasParent())
-					{
-						auto parentTransform = scene->ComputePCTransform(m_SelectedEntity.GetParent());
-						pcTransform = glm::inverse(parentTransform) * pcTransform;
-					}
+	if (m_SelectedEntity.IsValid())
+	{
+		if (m_SelectedEntity.HasComponent<shade::Transform3DComponent>())
+		{
+			m_AllowedGuizmoOperation = m_BasicGuizmoOperation;
+			auto& transform = m_SelectedEntity.GetComponent<shade::Transform3DComponent>();
+			auto pcTransform = scene->ComputePCTransform(m_SelectedEntity);
 
-					transform.SetTransform(pcTransform);
-				}
-			}
-			else if (m_SelectedEntity.HasComponent<shade::CameraComponent>())
+			if (DrawImGuizmo(pcTransform, m_Camera, m_GuizmoOperation, ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, ImGui::GetWindowSize().x, ImGui::GetWindowSize().y))
 			{
-				auto& camera = m_SelectedEntity.GetComponent<shade::CameraComponent>();
-				glm::mat4 transform = camera->GetView();
-				// TODO Camera parent trnasform, в сабмите и он рендер
-				/*if (m_SelectedEntity.HasParent())
+				if (m_SelectedEntity.HasParent())
 				{
 					auto parentTransform = scene->ComputePCTransform(m_SelectedEntity.GetParent());
-					transform = (parentTransform) * transform;
+					pcTransform = glm::inverse(parentTransform) * pcTransform;
 				}
-				else*/
-				{
-					transform = glm::inverse(transform);
-				}
-			
-				
-				if (DrawImGuizmo(transform, m_Camera, m_GuizmoOperation, ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, ImGui::GetWindowSize().x, ImGui::GetWindowSize().y))
-				{
-					camera->SetVeiw(transform);
-				}
+
+				transform.SetTransform(pcTransform);
 			}
 		}
+		else if (m_SelectedEntity.HasComponent<shade::CameraComponent>())
+		{
+			auto& camera = m_SelectedEntity.GetComponent<shade::CameraComponent>();
+			glm::mat4 transform = camera->GetView();
+			// TODO Camera parent trnasform, в сабмите и он рендер
+			/*if (m_SelectedEntity.HasParent())
+			{
+				auto parentTransform = scene->ComputePCTransform(m_SelectedEntity.GetParent());
+				transform = (parentTransform) * transform;
+			}
+			else*/
+			{
+				transform = glm::inverse(transform);
+			}
+
+
+			if (DrawImGuizmo(transform, m_Camera, m_GuizmoOperation, ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, ImGui::GetWindowSize().x, ImGui::GetWindowSize().y))
+			{
+				camera->SetVeiw(transform);
+			}
+		}
+	}
 }
 
 void EditorLayer::TagComponent(shade::Entity& entity)
@@ -731,7 +753,7 @@ void EditorLayer::PointLightComponent(shade::Entity& entity)
 void EditorLayer::SpotLightComponent(shade::Entity& entity)
 {
 	auto& light = entity.GetComponent<shade::SpotLightComponent>();
-	
+
 	DrawColor3("Ambient", glm::value_ptr(light->GetAmbientColor()));
 	DrawColor3("Diffuse", glm::value_ptr(light->GetDiffuseColor()));
 	DrawColor3("Specular", glm::value_ptr(light->GetSpecularColor()));
@@ -746,12 +768,24 @@ void EditorLayer::CameraComponent(shade::Entity& entity)
 {
 	auto& camera = entity.GetComponent<shade::CameraComponent>();
 
-	DrawVec3F("Position",   glm::value_ptr(camera->GetPosition()));
+	DrawVec3F("Position", glm::value_ptr(camera->GetPosition()));
 	DrawVec3F("Diretction", glm::value_ptr(camera->GetForwardDirrection()));
+
+	float aspect = camera->GetAspect();
+	float znear = camera->GetNear();
+	float zfar = camera->GetFar();
+
+	if (DrawFlaot("Aspect", &aspect))
+		camera->SetAspect(aspect);
+	if (DrawFlaot("Near", &znear))
+		camera->SetNear(znear);
+	if (DrawFlaot("Far", &zfar))
+		camera->SetFar(zfar);
+
 	bool isPrimary = camera->IsPrimary();
 	if (ImGui::Checkbox("Primary", &isPrimary))
 		camera->SetAsPrimary(isPrimary);
-	
+
 }
 
 void EditorLayer::AssetDataExpader(shade::AssetData& data)

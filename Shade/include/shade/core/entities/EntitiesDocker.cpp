@@ -47,3 +47,7 @@ entt::registry& shade::EntitiesDocker::GetEntities()
 {
     return m_Registry;
 }
+shade::Entity shade::EntitiesDocker::GetEntity(const std::uint32_t& id)
+{
+    return Entity{ m_Registry.entity(entt::entity(id)),this };
+}

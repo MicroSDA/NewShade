@@ -23,5 +23,5 @@ layout (location = 0)  out vec4 FrameBuffer;
 
 void main()
 {
-	FrameBuffer = vec4(0, 1, 0, 1);
+	FrameBuffer = vec4(0.3, 0.8, 0.3, 1);
 }

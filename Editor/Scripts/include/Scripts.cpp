@@ -39,9 +39,9 @@ void EditorCameraScript::OnUpdate(const shade::Timer& deltaTime)
 				camera->MoveRight(m_MovementSpeed * deltaTime);
 
 			if (shade::Input::IsKeyPressed(shade::Key::Q))
-				camera->RotateZ(m_RotationSpeed * deltaTime);
+				camera->RotateZ(m_RotationSpeed / 100.f * deltaTime);
 			if (shade::Input::IsKeyPressed(shade::Key::E))
-				camera->RotateZ(-m_RotationSpeed * deltaTime);
+				camera->RotateZ(-m_RotationSpeed / 100.f * deltaTime);
 
 		}
 		{

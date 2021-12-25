@@ -74,7 +74,7 @@ void shade::OpenGLVertexArray::AddVertexBuffer(const Shared<VertexBuffer>& verte
 			m_VertexBufferIndex++;
 			break;
 		}
-		case VertexBuffer::ElementType::Int:
+		//case VertexBuffer::ElementType::Int:
 		case VertexBuffer::ElementType::Int2:
 		case VertexBuffer::ElementType::Int3:
 		case VertexBuffer::ElementType::Int4:
@@ -102,6 +102,22 @@ void shade::OpenGLVertexArray::AddVertexBuffer(const Shared<VertexBuffer>& verte
 					element.Normalized ? GL_TRUE : GL_FALSE,
 					layout.GetStride(),
 					(const void*)(element.Offset + sizeof(float) * count * i));
+				glVertexAttribDivisor(m_VertexBufferIndex, 1);
+				m_VertexBufferIndex++;
+			}
+			break;
+		}
+		case VertexBuffer::ElementType::Int: // TEMPORARY here
+		{
+			uint8_t count = element.GetTypeCount();
+			for (uint8_t i = 0; i < count; i++)
+			{
+				glEnableVertexAttribArray(m_VertexBufferIndex);
+				glVertexAttribIPointer(m_VertexBufferIndex,
+					count,
+					GL_INT,
+					layout.GetStride(),
+					(const void*)(element.Offset + sizeof(int) * count * i));
 				glVertexAttribDivisor(m_VertexBufferIndex, 1);
 				m_VertexBufferIndex++;
 			}

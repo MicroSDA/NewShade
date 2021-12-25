@@ -76,14 +76,14 @@ namespace shade
 
 		static Shared<FrameBuffer> Create(const Layout& layout);
 	protected:
-		virtual void _ClearAttachmentInt(const std::uint32_t& attachment,   const std::int32_t& clearValue = 0) = 0;
+		virtual void _ClearAttachmentInt(const std::uint32_t& attachment,	const int& clearValue = 0) = 0;
 		virtual void _ClearAttachmentFloat(const std::uint32_t& attachment, const float& clearValue = 0) = 0;
 	};
 
 	template<typename T>
 	inline void FrameBuffer::ClearAttachment(const std::uint32_t& index, const T& clearValue)
 	{
-		if (std::is_same<T, std::int32_t>::value)
+		if (std::is_same<T, int>::value)
 			_ClearAttachmentInt(index, clearValue);
 		else if (std::is_same<T, float>::value)
 			_ClearAttachmentFloat(index, clearValue);

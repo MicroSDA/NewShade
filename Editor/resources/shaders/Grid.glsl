@@ -75,6 +75,7 @@ float ComputeLinearDepth(vec3 pos)
 }
 
 layout (location = 0)   out vec4 FrameBuffer;
+layout (location = 1)   out int  Selected;
 
 void main()
 {
@@ -91,4 +92,6 @@ void main()
 
 	if(FrameBuffer.a <= 0.2)
 		discard;
+		
+	Selected= -1;
 }

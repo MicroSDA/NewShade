@@ -3,7 +3,6 @@
 #include "resources/shaders/General/Structures.glsl"
 // Input attributes
 layout (location = 0) in  vec3  a_Position;
-layout (location = 1) in  vec2  a_UV_Coordinates;
 layout (location = 4) in  mat4  a_Transform;
 // Camera uniform buffer
 layout(std140, binding = 0) uniform UniformCamera
@@ -11,26 +10,18 @@ layout(std140, binding = 0) uniform UniformCamera
 	Camera u_Camera;
 };
 
-layout (location = 0) out vec2 out_UV_Coordinates;
-
 void main()
 {
     vec4 Position 	= a_Transform * vec4(a_Position.xyz, 1.0);
 	gl_Position 	= u_Camera.ViewProjection * vec4(Position.xyz / Position.w, 1.0);
-	out_UV_Coordinates = a_UV_Coordinates;
 }
 
 #type fragment
 #version 460 core
 
-layout (location = 0)  in  vec2 a_UV_Coordinates;
 layout (location = 0)  out vec4 FrameBuffer;
-
-uniform sampler2D texture1;
 
 void main()
 {
-	//texture(texture1, a_UV_Coordinates)
-	FrameBuffer = texture(texture1, a_UV_Coordinates).rgba;
-	FrameBuffer = vec4(0,1,0,1);
+	FrameBuffer = vec4(0, 1, 0, 1);
 }

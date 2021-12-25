@@ -24,9 +24,12 @@ private:
 	ImGuizmo::OPERATION m_PointLightGuizmoOperation  = ImGuizmo::OPERATION::TRANSLATE;
 	ImGuizmo::OPERATION m_SpotLightGuizmoOperation   = ImGuizmo::OPERATION::TRANSLATE;
 
-
-	ImVec2 m_SceneViewPort = {0, 0};
-
+	struct SceneVeiwPort
+	{
+		ImVec4		ViewPort = { 0, 0, 0, 0 };
+		glm::vec2	MousePosition = { 0,0 };
+	} m_SceneViewPort;
+	
 	shade::Shared<shade::FrameBuffer>	m_FrameBuffer;
 
 	shade::Shared<shade::Camera> m_EditorCamera;
@@ -51,8 +54,10 @@ private:
 
 	/* Debug */
 	bool m_IsShowGrid		= true;
-	bool m_IsShowFrustum	= true;
+	bool m_IsShowFrustum	= false;
+	/* Relocate to renderer */
 	unsigned int m_SubmitedMeshCount = 0;
+
 	shade::Shared<shade::Grid>   m_Grid;
 	shade::Shared<shade::Box>    m_Box;
 	shade::Entity				 m_SelectedEntity;

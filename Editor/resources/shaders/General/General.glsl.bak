@@ -8,6 +8,7 @@ layout (location = 1) in vec2  a_UV_Coordinates;
 layout (location = 2) in vec3  a_Normal;
 layout (location = 3) in vec3  a_Tangent;
 layout (location = 4) in mat4  a_Transform;
+layout (location = 7) in int   a_Id;
 //uniform mat4 a_Transform; // For non istance render
 
 // Output attributes
@@ -16,6 +17,7 @@ layout (location = 0) out vec2 out_UV_Coordinates;
 layout (location = 1) out vec3 out_Normal;
 layout (location = 2) out vec3 out_Vertex;
 layout (location = 3) out mat3 out_TBN_Matrix;
+layout (location = 10) out int out_Id;
 // Camera uniform buffer
 layout(std140, binding = 0) uniform UCamera
 {
@@ -38,6 +40,7 @@ void main()
 	out_Normal  		= normalize((a_Transform 	* vec4(a_Normal, 	0.0)).xyz);
 	out_Vertex 			= (a_Transform 	* vec4(a_Position, 	1.0)).xyz;
 	out_TBN_Matrix		= GetTBN_Matrix(a_Transform, a_Normal, a_Tangent);	
+	out_Id 				= a_Id;
 }
 // !End of vertex shader
 #type fragment
@@ -46,10 +49,11 @@ void main()
 #include "resources/shaders/General/Structures.glsl"
 #include "resources/shaders/General/FragmentMath.glsl"
 // Input
-layout (location = 0) in vec2 a_UV_Coordinates;
-layout (location = 1) in vec3 a_Normal;
-layout (location = 2) in vec3 a_Vertex;
-layout (location = 3) in mat3 a_TBN_Matrix;
+layout (location = 0)  in vec2 a_UV_Coordinates;
+layout (location = 1)  in vec3 a_Normal;
+layout (location = 2)  in vec3 a_Vertex;
+layout (location = 3)  in mat3 a_TBN_Matrix;
+layout (location = 10) flat in int a_Id; // dont know why should be flat
 // Textures
 layout (binding = 0) uniform sampler2D u_TDiffuse;
 layout (binding = 1) uniform sampler2D u_TSpecular;
@@ -81,7 +85,7 @@ subroutine vec4 LightingCalculation(vec3 toCameraDirection);
 subroutine (LightingCalculation) 
 vec4 FlatColor(vec3 toCameraDirection)
 {
-	// Without noremal map and textures
+	// Without normal map and textures
 	vec4 Color = vec4(0.0, 0.0, 0.0, 0.0);
 
 	for(int i = 0;i < u_DirectLight.length(); i++)
@@ -110,14 +114,16 @@ vec4 BillinPhong(vec3 toCameraDirection)
 }; 
 subroutine uniform LightingCalculation u_sLighting;
 // Output buffer
-layout (location = 0) out vec4 FrameBuffer;
-//layout (location = 1) out vec4 BrighthessBuffer;
+layout (location = 0) out vec4 FrameBufferAttachment;
+layout (location = 1) out int  Selected;
+
 // Main entry point
 void main()
 {
-	vec3 ToCameraDirection 	= normalize(u_Camera.Position - a_Vertex);
+	vec3 ToCameraDirection 		= normalize(u_Camera.Position - a_Vertex);
 	// Do lighting calculation;
-	vec4 Color 			= u_sLighting(ToCameraDirection);
-	FrameBuffer 		= vec4(Color.rgb + (u_Material.DiffuseColor * u_Material.Emissive), 1.0);
+	vec4 Color 					= u_sLighting(ToCameraDirection);
+	FrameBufferAttachment 		= vec4(Color.rgb + (u_Material.DiffuseColor * u_Material.Emissive), 1.0);
+	Selected 					= a_Id;
 }
 // !End of fragment shader

@@ -167,13 +167,13 @@ void shade::Render::EndScene()
 	m_sRenderAPI->EndScene();
 }
 
-void shade::Render::SubmitInstance(const Shared<Shader>& shader, const Shared<Drawable>& drawable, const Shared<Material3D>& material, const glm::mat4& transform)
+void shade::Render::SubmitInstance(const Shared<Shader>& shader, const Shared<Drawable>& drawable, const Shared<Material3D>& material, const glm::mat4& transform, const int& id)
 {
 	auto& _shaderPool = m_sInstancePool.find(shader.get());
 	// If new shader encounter
 	if(_shaderPool == m_sInstancePool.end())
 	{	// If new drawable encounter
-		_CreateInstances(shader, drawable, material, transform);
+		_CreateInstances(shader, drawable, material, transform, id);
 	}
 	else
 	{
@@ -181,7 +181,7 @@ void shade::Render::SubmitInstance(const Shared<Shader>& shader, const Shared<Dr
 		if (_drawablePool == _shaderPool->second.end())
 		{
 			// Create new
-			_CreateInstances(shader, drawable, material, transform);
+			_CreateInstances(shader, drawable, material, transform, id);
 		}
 		else
 		{
@@ -189,7 +189,7 @@ void shade::Render::SubmitInstance(const Shared<Shader>& shader, const Shared<Dr
 			m_sInstancePool[shader.get()][drawable].Expired = false; 
 			m_sInstancePool[shader.get()][drawable].Count++;
 			m_sInstancePool[shader.get()][drawable].Material = material;
-			m_sInstancePool[shader.get()][drawable].Transforms.push_back(transform);
+			m_sInstancePool[shader.get()][drawable].Transforms.push_back({ transform, id });
 		}
 	}
 }
@@ -254,10 +254,10 @@ void shade::Render::DrawInstances(const Shared<Shader>& shader)
 		for (auto& instance : _shader->second)
 		{
 			// If size has been changed then need to resize
-			if (instance.second.EBO->GetSize() != sizeof(glm::mat4) * instance.second.Transforms.size())
-				instance.second.EBO->Resize(sizeof(glm::mat4) * instance.second.Count);
+			if (instance.second.EBO->GetSize() != sizeof(std::pair<glm::mat4, int>) * instance.second.Transforms.size())
+				instance.second.EBO->Resize(sizeof(std::pair<glm::mat4, int>) * instance.second.Count);
 
-			instance.second.EBO->SetData(instance.second.Transforms.data(), sizeof(glm::mat4) * instance.second.Count, 0);
+			instance.second.EBO->SetData(instance.second.Transforms.data(), sizeof(std::pair<glm::mat4, int>) * instance.second.Count, 0);
 
 			/* If material exist */
 			if (instance.second.Material)
@@ -400,7 +400,7 @@ void shade::Render::_CreateInstance(const Shared<Shader>& shader, const Shared<D
 	m_sSubmitedPool[shader.get()][drawable] = std::move(instance);
 }
 
-void shade::Render::_CreateInstances(const Shared<Shader>& shader, const Shared<Drawable>& drawable, const Shared<Material3D>& material, const glm::mat4& transform)
+void shade::Render::_CreateInstances(const Shared<Shader>& shader, const Shared<Drawable>& drawable, const Shared<Material3D>& material, const glm::mat4& transform, const int& id)
 {
 	/* In future - check if it has an animation, and add aditional elemnts in EBO for current drawable*/
 	Render::Instances instance;
@@ -415,13 +415,14 @@ void shade::Render::_CreateInstances(const Shared<Shader>& shader, const Shared<
 								{shade::VertexBuffer::ElementType::Float2, "UV_Coords"	},
 								{shade::VertexBuffer::ElementType::Float3, "Normal"		},
 								{shade::VertexBuffer::ElementType::Float3, "Tangent"	} });
-	instance.EBO->SetLayout({   {shade::VertexBuffer::ElementType::Mat4,   "Transform"	} });
+	instance.EBO->SetLayout({	{shade::VertexBuffer::ElementType::Mat4,   "Transform"	},
+								{shade::VertexBuffer::ElementType::Int,	   "Id"			} });
 	/* Add all buffers to VAO */
 	instance.VAO->AddVertexBuffer(instance.VBO);
 	instance.VAO->AddVertexBuffer(instance.EBO);
 	instance.VAO->SetIndexBuffer(instance.IBO);
 	instance.Expired = false;
-	instance.Transforms.push_back(transform);
+	instance.Transforms.push_back( {transform, id } );
 	/* Add new instance */
 	m_sInstancePool[shader.get()][drawable] = std::move(instance);
 }

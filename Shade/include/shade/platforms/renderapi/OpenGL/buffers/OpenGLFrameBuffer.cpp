@@ -152,10 +152,10 @@ shade::FrameBuffer::Texture::Data shade::OpenGLFrameBuffer::GetData(const std::u
 	if (attachment < m_TextureAttacments.size())
 	{
 		std::int32_t pixelData;
-		Bind();
+		glBindFramebuffer(GL_FRAMEBUFFER, m_RenderId);
 		glReadBuffer(GL_COLOR_ATTACHMENT0 + attachment);
 		glReadPixels(x, y, 1, 1, GL_RED_INTEGER, GL_INT, &pixelData);
-		UnBind();
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		return FrameBuffer::Texture::Data(pixelData, -1, -1);
 	}
 	return FrameBuffer::Texture::Data(-1, -1, -1);
@@ -174,14 +174,17 @@ std::uint32_t shade::OpenGLFrameBuffer::GetAttachment(const std::uint32_t& index
 	}
 }
 
-void shade::OpenGLFrameBuffer::_ClearAttachmentInt(const std::uint32_t& attachment, const std::int32_t& clearValue)
+void shade::OpenGLFrameBuffer::_ClearAttachmentInt(const std::uint32_t& attachment, const int& clearValue)
 {
 	if (attachment < 0 || attachment >= m_TextureAttacments.size())
 		SHADE_CORE_WARNING("Wrong frame buffer attacment id.");
 
+	glBindFramebuffer(GL_FRAMEBUFFER, m_RenderId);
+	glViewport(0, 0, m_Layout.Width, m_Layout.Height); // ?? 
 	auto& spec = m_AttachmentSpec[attachment];
 	glClearTexImage(m_TextureAttacments[attachment], 0,
 		util::ToOpenGLTextureFormat(spec.TextureFormat), GL_INT, &clearValue);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 void shade::OpenGLFrameBuffer::_ClearAttachmentFloat(const std::uint32_t& attachment, const float& clearValue)
@@ -191,9 +194,11 @@ void shade::OpenGLFrameBuffer::_ClearAttachmentFloat(const std::uint32_t& attach
 
 	GLuint clearColor[4] = { clearValue, clearValue, clearValue, clearValue }; // Wery big question
 
+	glBindFramebuffer(GL_FRAMEBUFFER, m_RenderId);
 	auto& spec = m_AttachmentSpec[attachment];
 	glClearTexImage(m_TextureAttacments[attachment], 0,
 		GL_BGRA, GL_UNSIGNED_BYTE, &clearColor);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 
@@ -237,7 +242,7 @@ void shade::OpenGLFrameBuffer::Invalidate()
 				util::AttachTexture(m_RenderId, m_TextureAttacments[i], m_Layout.Samples, m_Layout.MipsCount, GL_RGBA16F, GL_RGBA, m_Layout.Width, m_Layout.Height, i);
 				break;
 			case Texture::Format::RED_INT:
-				util::AttachTexture(m_RenderId,m_TextureAttacments[i], m_Layout.Samples,  m_Layout.MipsCount, GL_R32I, GL_RED_INTEGER, m_Layout.Width, m_Layout.Height, i);
+				util::AttachTexture(m_RenderId, m_TextureAttacments[i], m_Layout.Samples,  m_Layout.MipsCount, GL_R32I, GL_RED_INTEGER, m_Layout.Width, m_Layout.Height, i);
 				break;
 			}
 		}
