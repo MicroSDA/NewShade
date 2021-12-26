@@ -83,9 +83,10 @@ namespace shade
 		static void DepthTest(const bool& enable);
 		static void SetViewPort(std::uint32_t x, std::uint32_t y, std::uint32_t width, std::uint32_t height);
 
-		static void Begin(Shared<FrameBuffer> framebuffer = nullptr);
-		static void End(Shared<FrameBuffer> framebuffer = nullptr);
+		static void Begin();
+		static void End();
 		static void BeginScene(const Camera::RenderData& renderData, const glm::vec4& clipping = glm::vec4(0));
+		static void BeginScene(const Camera::RenderData& renderData, const Shared<FrameBuffer>& framebuffer, const glm::vec4& clipping = glm::vec4(0));
 		static void EndScene();
 
 		static void SubmitInstance(const Shared<Shader>& shader, const Shared<Drawable>& drawable, const Shared<Material3D>& material, const glm::mat4& transform, const int& id = -1);

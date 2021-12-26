@@ -30,8 +30,8 @@ namespace shade
 		virtual void Clear() = 0;
 		virtual void DepthTest(const bool& enable) = 0;
 		virtual void SetViewPort(std::uint32_t x, std::uint32_t y, std::uint32_t width, std::uint32_t height) = 0;
-		virtual void Begin(Shared<FrameBuffer> framebuffer = nullptr) = 0;
-		virtual void End(Shared<FrameBuffer> framebuffer = nullptr) = 0;
+		virtual void Begin() = 0;
+		virtual void End() = 0;
 		virtual void BeginScene(const Shared<Camera>& camera, const Shared<Environment>* env = nullptr, const std::size_t& envCount = 0) = 0;
 		virtual void EndScene() = 0;
 		virtual void DrawIndexed(const Drawable::DrawMode& mode, const Shared<VertexArray>& VAO, const Shared<IndexBuffer>& IBO)   const = 0;

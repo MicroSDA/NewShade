@@ -28,6 +28,10 @@ void EditorLayer::OnCreate()
 		shade::FrameBuffer::Texture::Format::RED_INT,
 		shade::FrameBuffer::Texture::Format::DEPTH24STENCIL8 }));
 
+	m_ShadowFrameBuffer = shade::FrameBuffer::Create(shade::FrameBuffer::Layout(1024, 1024, {
+		shade::FrameBuffer::Texture::Format::RGBA16F,
+		shade::FrameBuffer::Texture::Format::DEPTH24STENCIL8 }));
+
 	m_IconsTexture = shade::Texture::Create<shade::Texture>();
 	m_IconsTexture->GetAssetData().Attribute("Path").set_value("resources/assets/textures/icons.dds");
 	m_IconsTexture->Deserialize();
@@ -38,16 +42,17 @@ void EditorLayer::OnCreate()
 	m_LogoTexture->Deserialize();
 	m_LogoTexture->AssetInit();
 
-	m_InstancedShader = shade::ShadersLibrary::Get("General");
-	m_GridShader = shade::ShadersLibrary::Get("Grid");
-	m_FrustumShader = shade::ShadersLibrary::Get("Frustum");
-	m_BloomShader = shade::ShadersLibrary::Get("Bloom");
+	m_InstancedShader		= shade::ShadersLibrary::Get("General");
+	m_ShadowShader			= shade::ShadersLibrary::Get("Shadow");
+	m_GridShader			= shade::ShadersLibrary::Get("Grid");
+	m_FrustumShader			= shade::ShadersLibrary::Get("Frustum");
+	m_BloomShader			= shade::ShadersLibrary::Get("Bloom");
 	m_ColorCorrectionShader = shade::ShadersLibrary::Get("ColorCorrection");
-	m_BoxShader = shade::ShadersLibrary::Get("Box");
-	m_SpriteShader = shade::ShadersLibrary::Get("Sprite");
+	m_BoxShader				= shade::ShadersLibrary::Get("Box");
+	m_SpriteShader			= shade::ShadersLibrary::Get("Sprite");
 
-	m_Grid = shade::Grid::Create(0, 0, 0);
-	m_Box = shade::Box::Create(glm::vec3(-1.f), glm::vec3(1.f));
+	m_Grid	= shade::Grid::Create(0, 0, 0);
+	m_Box	= shade::Box::Create(glm::vec3(-1.f), glm::vec3(1.f));
 
 	m_PPBloom = shade::PPBloom::Create();
 	m_PPBloom->SetInOutTargets(m_FrameBuffer, m_FrameBuffer, m_BloomShader);
@@ -92,6 +97,8 @@ void EditorLayer::OnUpdate(const shade::Shared<shade::Scene>& scene, const shade
 				if (frustum.IsInFrustum(cpcTransform, mesh->GetMinHalfExt(), mesh->GetMaxHalfExt()))
 				{
 					shade::Render::SubmitInstance(m_InstancedShader, mesh, mesh->GetMaterial(), cpcTransform, (int)entity);
+					/* Shadow pas */
+					shade::Render::SubmitInstance(m_ShadowShader, mesh, nullptr, cpcTransform);
 
 					if (m_IsShowFrustum)
 						shade::Render::Submit(m_BoxShader, shade::Box::Create(mesh->GetMinHalfExt(), mesh->GetMaxHalfExt()), nullptr, cpcTransform);
@@ -144,6 +151,10 @@ void EditorLayer::OnRender(const shade::Shared<shade::Scene>& scene, const shade
 			ShowWindowBar("Mesh", &EditorLayer::Mesh, this, m_SelectedMesh);
 			ShowWindowBar("Material", &EditorLayer::Material, this, m_SelectedMaterial3D);
 			ShowWindowBar("Shaders library", &EditorLayer::ShadersLibrary, this);
+			ShowWindowBar("Depth", [&]() 
+				{
+					DrawImage(m_ShadowFrameBuffer->GetAttachment(0), 500, 500);
+				});
 		}
 
 		ShowWindowBar("Scene", &EditorLayer::Scene, this, scene);
@@ -153,20 +164,54 @@ void EditorLayer::OnRender(const shade::Shared<shade::Scene>& scene, const shade
 		/* Clear select atthacment */
 		
 	
-		shade::Render::Begin(m_FrameBuffer);
-		m_FrameBuffer->ClearAttachment(1, -1);
-		m_FrameBuffer->Bind();
+		//shade::Render::Begin();
+		//m_FrameBuffer->ClearAttachment(1, -1);
+		//m_FrameBuffer->ClearAttachment(0, 0.0f);
+		//m_FrameBuffer->Bind();
 
-		shade::Render::BeginScene(m_Camera->GetRenderData());
+		/* Shadow pas */
+		//shade::Render::DepthTest(true);
+
+		glm::mat4 lightProjection, lightView;
+		glm::mat4 lightSpaceMatrix;
+
+		glm::vec3 lightPos(-10.0f, 150.0f, -10.f);
+
+		float near_plane = 1.0f, far_plane = 250.f;
+		//lightProjection = glm::perspective(glm::radians(45.0f), (GLfloat)SHADOW_WIDTH / (GLfloat)SHADOW_HEIGHT, near_plane, far_plane); // note that if you use a perspective projection matrix you'll have to change the light position as the current light position isn't enough to reflect the whole scene
+		lightProjection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, near_plane, far_plane);
+		
+		lightView		= glm::lookAt(lightPos, glm::vec3(0.0f), glm::vec3(0.0, 1.0, 0.0));
+		lightSpaceMatrix = lightProjection * lightView;
+
+		shade::Render::BeginScene(m_Camera->GetRenderData(), m_ShadowFrameBuffer);
+		shade::Render::Begin(); // Clearing frambuffer
+		/*-------------------*/
+		m_ShadowShader->Bind();
+		m_ShadowShader->SendMat4("u_LightMatrix", false, glm::value_ptr(lightSpaceMatrix));
+		shade::Render::DrawInstances(m_ShadowShader);
+		shade::Render::EndScene();
+
+		
+		/* Normal pass */
+		/* Has to be cleared frame buffer if needed*/
+		m_InstancedShader->Bind();
+		m_ShadowFrameBuffer->BindDepthAsTexture(3);
+		m_InstancedShader->SendMat4("u_LightMatrix", false, glm::value_ptr(lightSpaceMatrix));
+		shade::Render::BeginScene(m_Camera->GetRenderData(), m_FrameBuffer);
+		shade::Render::Begin(); // Clearing frambuffer
+		/*-------------------*/
 		shade::Render::DrawInstances(m_InstancedShader);
 		shade::Render::EndScene();
+
+		
 
 		if (m_isBloomEnabled)
 			shade::Render::PProcess::Process(m_PPBloom);
 		if (m_isColorCorrectionEnabled)
 			shade::Render::PProcess::Process(m_PPColorCorrection);
 
-		shade::Render::BeginScene(m_Camera->GetRenderData());
+		/*shade::Render::BeginScene(m_Camera->GetRenderData());
 		shade::Render::DrawSubmited(m_GridShader);
 		shade::Render::DrawInstances(m_FrustumShader);
 		shade::Render::DrawSubmited(m_BoxShader);
@@ -180,8 +225,8 @@ void EditorLayer::OnRender(const shade::Shared<shade::Scene>& scene, const shade
 
 		shade::Render::DrawSprite(m_SpriteShader, m_LogoTexture, transform.GetModelMatrix(), glm::vec4{ 120, 199.0f, 574, 167 });
 		
-		shade::Render::EndScene();
-		shade::Render::End(m_FrameBuffer);
+		shade::Render::EndScene();*/
+		shade::Render::End();
 	}
 }
 
@@ -233,10 +278,8 @@ void EditorLayer::OnEvent(const shade::Shared<shade::Scene>& scene, shade::Event
 		if (shade::Input::IsMouseButtonPressed(shade::Mouse::ButtonLeft))
 		{
 			auto id = m_FrameBuffer->GetData(1, m_SceneViewPort.MousePosition.x, m_SceneViewPort.MousePosition.y).R;
-			if(scene->GetEntity(id).IsValid())
-				m_SelectedEntity =  scene->GetEntity(id);
-			SHADE_CORE_TRACE("Selected x :{0}, y :{1} entity ::::::::::Id : {2}", m_SceneViewPort.MousePosition.x, m_SceneViewPort.MousePosition.y, m_FrameBuffer->GetData(1, m_SceneViewPort.MousePosition.x, m_SceneViewPort.MousePosition.y).R);
-
+			/*if (scene->GetEntity(id).IsValid())
+				m_SelectedEntity =  scene->GetEntity(id);*/
 		}
 	}
 	if (event.GetEventType() == shade::EventType::WindowResize)

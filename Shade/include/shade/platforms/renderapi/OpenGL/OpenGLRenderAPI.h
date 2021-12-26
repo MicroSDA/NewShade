@@ -17,9 +17,10 @@ namespace shade
 		virtual void DrawIndexed(const Drawable::DrawMode& mode, const Shared<VertexArray>& VAO, const Shared<IndexBuffer>& IBO) const override;
 		virtual void DrawInstanced(const Drawable::DrawMode& mode, const Shared<VertexArray>& VAO, const Shared<IndexBuffer>& IBO, const std::uint32_t& instanceCount) override;
 		virtual void DrawNotIndexed(const Drawable::DrawMode& mode, const Shared<VertexArray>& VAO, const std::uint32_t& count)  override;
-		virtual void Begin(Shared<FrameBuffer> framebuffer = nullptr) override;
-		virtual void End(Shared<FrameBuffer> framebuffer = nullptr) override;
+		virtual void Begin() override;
+		virtual void End() override;
 		virtual void DepthTest(const bool& enable) override;
+		//TODO Has to be check if this is needed !!!!!!!!!!!!
 		// Post Process
 		virtual void Bloom(const Shared<FrameBuffer>& inputFrameBuffer, const Shared<FrameBuffer>& outFrameBuffer, const Shared<Shader>& bloomShader) override;
 	private:

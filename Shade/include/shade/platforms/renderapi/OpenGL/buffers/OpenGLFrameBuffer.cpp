@@ -174,6 +174,15 @@ std::uint32_t shade::OpenGLFrameBuffer::GetAttachment(const std::uint32_t& index
 	}
 }
 
+std::uint32_t shade::OpenGLFrameBuffer::GetDepthAttachment() const
+{
+	if (m_DepthAttachment != 0)
+		return m_DepthAttachment;
+
+	SHADE_CORE_WARNING("Framebuffer doesnt have depth attachment");
+	return 0;
+}
+
 void shade::OpenGLFrameBuffer::_ClearAttachmentInt(const std::uint32_t& attachment, const int& clearValue)
 {
 	if (attachment < 0 || attachment >= m_TextureAttacments.size())
@@ -293,10 +302,16 @@ const shade::FrameBuffer::Layout& shade::OpenGLFrameBuffer::GetLayout() const
 	return m_Layout;
 }
 
-void shade::OpenGLFrameBuffer::BindAsTexture(const std::uint32_t& attachment, const std::uint32_t& unit) const
+void shade::OpenGLFrameBuffer::BindAttachmentAsTexture(const std::uint32_t& attachment, const std::uint32_t& unit) const
 {
 	glActiveTexture(GL_TEXTURE0 + unit);
 	glBindTexture(GL_TEXTURE_2D, GetAttachment(attachment));
+}
+
+void shade::OpenGLFrameBuffer::BindDepthAsTexture(const std::uint32_t& unit) const
+{
+	glActiveTexture(GL_TEXTURE0 + unit);
+	glBindTexture(GL_TEXTURE_2D, GetDepthAttachment());
 }
 
 void shade::OpenGLFrameBuffer::BindAsImage(const std::uint32_t& attachment, const std::uint32_t& binding, const std::uint32_t& mip, const Texture::Format& format, const Texture::Access& access)

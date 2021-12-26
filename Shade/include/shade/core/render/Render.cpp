@@ -93,7 +93,7 @@ void shade::Render::SetViewPort(std::uint32_t x, std::uint32_t y, std::uint32_t 
 	m_sRenderAPI->SetViewPort(x, y, width, height);
 }
 
-void shade::Render::Begin(Shared<FrameBuffer> framebuffer)
+void shade::Render::Begin()
 {
 	/* Instances */
 	for (auto shader = m_sInstancePool.begin(); shader != m_sInstancePool.end();)
@@ -129,18 +129,17 @@ void shade::Render::Begin(Shared<FrameBuffer> framebuffer)
 			++shader;
 	}
 
-	m_sRenderAPI->Begin(framebuffer);
+	m_sRenderAPI->Begin();
 }
 
-void shade::Render::End(Shared<FrameBuffer> framebuffer)
+void shade::Render::End()
 {
-	m_sRenderAPI->End(framebuffer);
+	m_sRenderAPI->End();
 	m_sLightEnviroment.Clear();
 }
 
 void shade::Render::BeginScene(const Camera::RenderData& renderData, const glm::vec4& clipping)
 {
-	//m_sRenderAPI->BeginScene(camera, env, envCount);
 	/* Set data to uniforsm buffetrs */
 	m_sCameraUniformBuffer->SetData(&renderData, sizeof(Camera::RenderData), 0);
 	m_sClippingUniformBuffer->SetData(glm::value_ptr(clipping), sizeof(glm::vec4), 0);
@@ -160,6 +159,29 @@ void shade::Render::BeginScene(const Camera::RenderData& renderData, const glm::
 		m_sSpotLightsBuffer->Resize(sizeof(SpotLight::RenderData) * sLightCount);
 	m_sSpotLightsBuffer->SetData(m_sLightEnviroment.SpotLightSources.data(), sizeof(SpotLight::RenderData) * sLightCount);
 	/*!Process SSBO buffers*/
+}
+
+void shade::Render::BeginScene(const Camera::RenderData& renderData, const Shared<FrameBuffer>& framebuffer, const glm::vec4& clipping)
+{
+	framebuffer->Bind();
+	/* Set data to uniforsm buffetrs */
+	m_sCameraUniformBuffer->SetData(&renderData, sizeof(Camera::RenderData), 0);
+	m_sClippingUniformBuffer->SetData(glm::value_ptr(clipping), sizeof(glm::vec4), 0);
+
+	/* Process SSBO buffers */
+	std::uint32_t dLightCount = m_sLightEnviroment.DirectLightSources.size(), pLighCount = m_sLightEnviroment.PointLightSources.size(), sLightCount = m_sLightEnviroment.SpotLightSources.size();
+	/* Direct light */
+	if (m_sDirectLightsBuffer->GetSize() != sizeof(DirectLight::RenderData) * dLightCount)
+		m_sDirectLightsBuffer->Resize(sizeof(DirectLight::RenderData) * dLightCount);
+	m_sDirectLightsBuffer->SetData(m_sLightEnviroment.DirectLightSources.data(), sizeof(DirectLight::RenderData) * dLightCount);
+	/* Point light */
+	if (m_sPointLightsBuffer->GetSize() != sizeof(PointLight::RenderData) * pLighCount)
+		m_sPointLightsBuffer->Resize(sizeof(PointLight::RenderData) * pLighCount);
+	m_sPointLightsBuffer->SetData(m_sLightEnviroment.PointLightSources.data(), sizeof(PointLight::RenderData) * pLighCount);
+	/* Spot light */
+	if (m_sSpotLightsBuffer->GetSize() != sizeof(SpotLight::RenderData) * sLightCount)
+		m_sSpotLightsBuffer->Resize(sizeof(SpotLight::RenderData) * sLightCount);
+	m_sSpotLightsBuffer->SetData(m_sLightEnviroment.SpotLightSources.data(), sizeof(SpotLight::RenderData) * sLightCount);
 }
 
 void shade::Render::EndScene()

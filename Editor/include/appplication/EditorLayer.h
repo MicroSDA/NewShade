@@ -31,11 +31,13 @@ private:
 	} m_SceneViewPort;
 	
 	shade::Shared<shade::FrameBuffer>	m_FrameBuffer;
+	shade::Shared<shade::FrameBuffer>	m_ShadowFrameBuffer;
 
 	shade::Shared<shade::Camera> m_EditorCamera;
 	shade::Shared<shade::Camera> m_Camera;
 
 	shade::Shared<shade::Shader> m_InstancedShader;
+	shade::Shared<shade::Shader> m_ShadowShader;
 	shade::Shared<shade::Shader> m_GridShader;
 	shade::Shared<shade::Shader> m_FrustumShader;
 	shade::Shared<shade::Shader> m_BoxShader;

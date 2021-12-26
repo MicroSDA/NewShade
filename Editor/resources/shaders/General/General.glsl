@@ -13,11 +13,13 @@ layout (location = 8) in int   a_Id;
 
 // Output attributes
 // 17 components total(64 min, 128 max on GTX950). One component is one value. vec3 = 3, vec4 = 4, mat4 = 4*4 = 16 components
-layout (location = 0) out vec2 out_UV_Coordinates;
-layout (location = 1) out vec3 out_Normal;
-layout (location = 2) out vec3 out_Vertex;
-layout (location = 3) out mat3 out_TBN_Matrix;
-layout (location = 10) out int out_Id;
+layout (location = 0)  out vec2 out_UV_Coordinates;
+layout (location = 1)  out vec3 out_Normal;
+layout (location = 2)  out vec3 out_Vertex;
+layout (location = 3)  out mat3 out_TBN_Matrix;
+layout (location = 10) out int  out_Id;
+layout (location = 11) out vec4 out_FragPosLightSpace;
+
 // Camera uniform buffer
 layout(std140, binding = 0) uniform UCamera
 {
@@ -28,6 +30,8 @@ layout(std140, binding = 1) uniform UClipDistance
 {
 	vec4 u_ClipDistance;
 };
+
+uniform mat4 u_LightMatrix;
 // Main entry point
 void main()
 {
@@ -36,11 +40,12 @@ void main()
 	// Clip
 	gl_ClipDistance[0] 	= dot(u_Camera.View * vec4(a_Position, 1.0), u_ClipDistance);
 	// Pass other data to fragment shader
-	out_UV_Coordinates 	= a_UV_Coordinates;
-	out_Normal  		= normalize((a_Transform 	* vec4(a_Normal, 	0.0)).xyz);
-	out_Vertex 			= (a_Transform 	* vec4(a_Position, 	1.0)).xyz;
-	out_TBN_Matrix		= GetTBN_Matrix(a_Transform, a_Normal, a_Tangent);	
-	out_Id 				= a_Id;
+	out_UV_Coordinates 	  = a_UV_Coordinates;
+	out_Normal  		  = normalize((a_Transform 	* vec4(a_Normal, 	0.0)).xyz);
+	out_Vertex 			  = (a_Transform 	* vec4(a_Position, 	1.0)).xyz;
+	out_TBN_Matrix		  = GetTBN_Matrix(a_Transform, a_Normal, a_Tangent);	
+	out_Id 				  = a_Id;
+	out_FragPosLightSpace = u_LightMatrix * a_Transform * vec4(a_Position, 1.0);
 }
 // !End of vertex shader
 #type fragment
@@ -54,10 +59,12 @@ layout (location = 1)  in vec3 a_Normal;
 layout (location = 2)  in vec3 a_Vertex;
 layout (location = 3)  in mat3 a_TBN_Matrix;
 layout (location = 10) flat in int a_Id; // dont know why should be flat
+layout (location = 11) in vec4    a_FragPosLightSpace; // dont know why should be flat
 // Textures
 layout (binding = 0) uniform sampler2D u_TDiffuse;
 layout (binding = 1) uniform sampler2D u_TSpecular;
 layout (binding = 2) uniform sampler2D u_TNormal;
+layout (binding = 3) uniform sampler2D u_ShadowMap;
 // Camera uniform buffer
 layout (std140, binding = 0) uniform UCamera
 {
@@ -123,7 +130,8 @@ void main()
 	vec3 ToCameraDirection 		= normalize(u_Camera.Position - a_Vertex);
 	// Do lighting calculation;
 	vec4 Color 					= u_sLighting(ToCameraDirection);
-	FrameBufferAttachment 		= vec4(Color.rgb + (u_Material.DiffuseColor * u_Material.Emissive), 1.0);
+	float shadow = ShadowCalculation(u_ShadowMap, vec3(-10.0f, 150.0f, -10.f), a_Normal, a_Vertex, a_FragPosLightSpace);                      
+	FrameBufferAttachment 		= vec4(Color.rgb * (1.0 - shadow) + (u_Material.DiffuseColor * u_Material.Emissive), 1.0);
 	Selected 					= a_Id;
 }
 // !End of fragment shader

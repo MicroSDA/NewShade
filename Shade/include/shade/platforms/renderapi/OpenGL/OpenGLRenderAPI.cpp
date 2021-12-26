@@ -36,7 +36,11 @@ void shade::OpenGLRenderAPI::Init()
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glEnable(GL_CULL_FACE);
+
 	glEnable(GL_DEPTH_TEST);
+	//glDepthMask(GL_FALSE);
+	glDepthFunc(GL_LESS);
+
 	glEnable(GL_CLIP_DISTANCE0);
 	glEnable(GL_CLIP_DISTANCE1);
 	glLineWidth(5.f);
@@ -105,16 +109,12 @@ void shade::OpenGLRenderAPI::DrawNotIndexed(const Drawable::DrawMode& mode, cons
 	VAO->Bind();  glDrawArrays(static_cast<GLenum>(mode), 0, count);
 }
 
-void shade::OpenGLRenderAPI::Begin(Shared<FrameBuffer> framebuffer)
+void shade::OpenGLRenderAPI::Begin()
 {
-	if (framebuffer != nullptr)
-	{
-		framebuffer->Bind();
-		Clear();
-	}
+	Clear();
 }
 
-void shade::OpenGLRenderAPI::End(Shared<FrameBuffer> framebuffer)
+void shade::OpenGLRenderAPI::End()
 {
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }

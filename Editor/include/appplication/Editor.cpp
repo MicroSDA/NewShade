@@ -11,7 +11,7 @@ void Editor::OnCreate()
 	auto& widnow = CreateWindow({"Shade editor", 1600, 800, false });
 	// Create shaders 
 	shade::ShadersLibrary::Create("General", "resources/shaders/General/General.glsl");
-
+	shade::ShadersLibrary::Create("Shadow",  "resources/shaders/General/Shadow.glsl");
 	shade::ShadersLibrary::Create("Grid",				"resources/shaders/Grid.glsl");
 	shade::ShadersLibrary::Create("Box",				"resources/shaders/Primitives/Box.glsl");
 	shade::ShadersLibrary::Create("Frustum",			"resources/shaders/Frustum.glsl");

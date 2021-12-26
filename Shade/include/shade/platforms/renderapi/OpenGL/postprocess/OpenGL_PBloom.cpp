@@ -44,7 +44,7 @@ void shade::OpenGL_PBloom::Process()
 	{
 		/* Downsample */
 		m_BloomShader->SendInt("u_Lod", i);
-		m_BloomFrameBuffer->BindAsTexture(0, 0);
+		m_BloomFrameBuffer->BindAttachmentAsTexture(0, 0);
 		m_BloomFrameBuffer->BindAsImage(0,   2, i + 1, FrameBuffer::Texture::Format::RGBA16F, FrameBuffer::Texture::Access::Write);
 		m_BloomShader->SelectSubrutine("s_Stage", "Downsample", Shader::Type::Compute);
 		m_BloomShader->ExecuteSubrutines();
@@ -55,7 +55,7 @@ void shade::OpenGL_PBloom::Process()
 	for (auto i = m_Samples; i > 0; i--)
 	{
 		m_BloomShader->SendInt("u_Lod", i);
-		m_BloomFrameBuffer->BindAsTexture(0, 0);
+		m_BloomFrameBuffer->BindAttachmentAsTexture(0, 0);
 		m_BloomFrameBuffer->BindAsImage(0,   2, i - 1, FrameBuffer::Texture::Format::RGBA16F, FrameBuffer::Texture::Access::ReadWrite);
 		m_BloomShader->SelectSubrutine("s_Stage", "Upsample", Shader::Type::Compute);
 		m_BloomShader->ExecuteSubrutines();
