@@ -37,7 +37,7 @@ namespace shade
 		virtual void DrawIndexed(const Drawable::DrawMode& mode, const Shared<VertexArray>& VAO, const Shared<IndexBuffer>& IBO)   const = 0;
 		virtual void DrawInstanced(const Drawable::DrawMode& mode, const Shared<VertexArray>& VAO, const Shared<IndexBuffer>& IBO, const std::uint32_t& instanceCount) = 0;
 		virtual void DrawNotIndexed(const Drawable::DrawMode& mode, const Shared<VertexArray>& VAO, const std::uint32_t& count) = 0;
-
+		virtual void CullFace(const int& mode) = 0;
 		// Post process implemintation
 		virtual void Bloom(const Shared<FrameBuffer>& inputFrameBuffer, const Shared<FrameBuffer>& outFrameBuffer, const Shared<Shader>& bloomShader) = 0;
 

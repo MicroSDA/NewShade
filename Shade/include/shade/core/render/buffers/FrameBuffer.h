@@ -17,26 +17,30 @@ namespace shade
 				RGBA10,
 				RGBA16F,
 				RED_INT,
-				DEPTH24STENCIL8
+				DEPTH24STENCIL8,
+				// For cascade shadows 
+				DEPTH24STENCIL8_ARRAY_2,
+				DEPTH24STENCIL8_ARRAY_3,
+				DEPTH24STENCIL8_ARRAY_4,
 			};
 			enum class Access : std::uint32_t
 			{
-				Read		= 0x88B8,
-				Write		= 0x88B9,
-				ReadWrite   = 0x88BA
+				Read = 0x88B8,
+				Write = 0x88B9,
+				ReadWrite = 0x88BA
 			};
 			struct Data
 			{
-				Data():
+				Data() :
 					R(-1), G(-1), B(-1)
 				{}
-				Data(const std::int32_t& r, const std::int32_t& g, const std::int32_t& b):
-					R(r), G(g), B(b) 
+				Data(const std::int32_t& r, const std::int32_t& g, const std::int32_t& b) :
+					R(r), G(g), B(b)
 				{}
 				std::int32_t R, G, B;
 			};
 			Texture() = default;
-			Texture(Format format):
+			Texture(Format format) :
 				TextureFormat(format)
 			{}
 			Texture::Format TextureFormat;
@@ -44,7 +48,7 @@ namespace shade
 		struct Attachment
 		{
 			Attachment() = default;
-			Attachment(std::initializer_list<Texture> attachments):
+			Attachment(std::initializer_list<Texture> attachments) :
 				Attachments(attachments)
 			{}
 
@@ -52,14 +56,15 @@ namespace shade
 		};
 		struct Layout
 		{
-			Layout(const std::uint32_t& width, const std::uint32_t& height, const Attachment& attachments, const std::uint32_t& mipsCount = 0, const bool& swapChainTarget = false):
-				Width(width), Height(height),Attachments(attachments), MipsCount(mipsCount), IsSwapChainTarget(swapChainTarget)
+			Layout(const std::uint32_t& width, const std::uint32_t& height, const Attachment& attachments, const std::uint32_t& mipsCount = 0, const std::uint32_t& layers = 1, const bool& swapChainTarget = false) :
+				Width(width), Height(height), Attachments(attachments), MipsCount(mipsCount), Layers(layers), IsSwapChainTarget(swapChainTarget)
 			{}
 			std::uint32_t Width = 0, Height = 0;
 			Attachment Attachments;
-			std::uint32_t Samples		= 1;
-			bool IsSwapChainTarget		= false;
-			std::uint32_t				MipsCount = 0;
+			std::uint32_t Samples = 1;
+			std::uint32_t Layers  = 1;
+			bool IsSwapChainTarget = false;
+			std::uint32_t	MipsCount = 0;
 		};
 	public:
 		virtual ~FrameBuffer() = default;
@@ -78,7 +83,7 @@ namespace shade
 
 		static Shared<FrameBuffer> Create(const Layout& layout);
 	protected:
-		virtual void _ClearAttachmentInt(const std::uint32_t& attachment,	const int& clearValue = 0) = 0;
+		virtual void _ClearAttachmentInt(const std::uint32_t& attachment, const int& clearValue = 0) = 0;
 		virtual void _ClearAttachmentFloat(const std::uint32_t& attachment, const float& clearValue = 0) = 0;
 	};
 

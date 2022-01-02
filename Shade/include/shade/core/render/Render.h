@@ -19,6 +19,7 @@
 #include "shade/core/render/postprocess/PPColorCorrection.h"
 #include "shade/core/render/drawable/primitives/Plane.h"
 #include "shade/core/vertex/Vertex2D.h"
+#include "shade/core/render/effects/Shadows.h"
 
 namespace shade
 {
@@ -81,12 +82,13 @@ namespace shade
 		static void SetClearColor(const float& r, const float& g, const float& b,const float& a);
 		static void Clear();
 		static void DepthTest(const bool& enable);
+		static void CullFace(const int& mode);// Test
 		static void SetViewPort(std::uint32_t x, std::uint32_t y, std::uint32_t width, std::uint32_t height);
 
 		static void Begin();
 		static void End();
 		static void BeginScene(const Camera::RenderData& renderData, const glm::vec4& clipping = glm::vec4(0));
-		static void BeginScene(const Camera::RenderData& renderData, const Shared<FrameBuffer>& framebuffer, const glm::vec4& clipping = glm::vec4(0));
+		static void BeginScene(const Shared<Camera>& camera, const Shared<FrameBuffer>& framebuffer, const glm::vec4& clipping = glm::vec4(0));
 		static void EndScene();
 
 		static void SubmitInstance(const Shared<Shader>& shader, const Shared<Drawable>& drawable, const Shared<Material3D>& material, const glm::mat4& transform, const int& id = -1);
@@ -123,6 +125,10 @@ namespace shade
 		static Shared<ShaderStorageBuffer>	m_sDirectLightsBuffer;
 		static Shared<ShaderStorageBuffer>	m_sPointLightsBuffer;
 		static Shared<ShaderStorageBuffer>	m_sSpotLightsBuffer;
+		static Shared<ShaderStorageBuffer>	m_sShadowCascadesBuffer;
+
+		static Shared<FrameBuffer>			m_sFrameBuffer;
+		static Shared<FrameBuffer>			m_sShadowFrameBuffer;
 		//Util
 		static void _CreateInstance(const Shared<Shader>& shader, const Shared<Drawable>& drawable, const Shared<Material3D>& material, const glm::mat4& transform);
 		static void _CreateInstances(const Shared<Shader>& shader, const Shared<Drawable>& drawable, const Shared<Material3D>& material, const glm::mat4& transform, const int& id);

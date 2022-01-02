@@ -21,7 +21,7 @@ namespace shade
 		virtual void BindDepthAsTexture(const std::uint32_t& unit) const override;
 		virtual void BindAsImage(const std::uint32_t& attachment, const std::uint32_t& binding, const std::uint32_t& mip, const Texture::Format& format, const Texture::Access& access) override;
 	private:
-		virtual void _ClearAttachmentInt(const std::uint32_t& attachment,   const std::int32_t& clearValue = 0) override;
+		virtual void _ClearAttachmentInt(const std::uint32_t& attachment, const std::int32_t& clearValue = 0) override;
 		virtual void _ClearAttachmentFloat(const std::uint32_t& attachment, const float& clearValue = 0.0f) override;
 		void Invalidate();
 		GLuint m_RenderId = 0;

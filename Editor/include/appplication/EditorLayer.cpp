@@ -98,7 +98,9 @@ void EditorLayer::OnUpdate(const shade::Shared<shade::Scene>& scene, const shade
 				{
 					shade::Render::SubmitInstance(m_InstancedShader, mesh, mesh->GetMaterial(), cpcTransform, (int)entity);
 					/* Shadow pas */
-					shade::Render::SubmitInstance(m_ShadowShader, mesh, nullptr, cpcTransform);
+					//shade::Render::SubmitInstance(m_ShadowShader, mesh, nullptr, cpcTransform);
+
+
 
 					if (m_IsShowFrustum)
 						shade::Render::Submit(m_BoxShader, shade::Box::Create(mesh->GetMinHalfExt(), mesh->GetMaxHalfExt()), nullptr, cpcTransform);
@@ -151,12 +153,9 @@ void EditorLayer::OnRender(const shade::Shared<shade::Scene>& scene, const shade
 			ShowWindowBar("Mesh", &EditorLayer::Mesh, this, m_SelectedMesh);
 			ShowWindowBar("Material", &EditorLayer::Material, this, m_SelectedMaterial3D);
 			ShowWindowBar("Shaders library", &EditorLayer::ShadersLibrary, this);
-			ShowWindowBar("Depth", [&]() 
-				{
-					DrawImage(m_ShadowFrameBuffer->GetAttachment(0), 500, 500);
-				});
+			
+			
 		}
-
 		ShowWindowBar("Scene", &EditorLayer::Scene, this, scene);
 
 	} ImGui::End(); // Begin("DockSpace")
@@ -172,7 +171,7 @@ void EditorLayer::OnRender(const shade::Shared<shade::Scene>& scene, const shade
 		/* Shadow pas */
 		//shade::Render::DepthTest(true);
 
-		glm::mat4 lightProjection, lightView;
+		/*glm::mat4 lightProjection, lightView;
 		glm::mat4 lightSpaceMatrix;
 
 		glm::vec3 lightPos(-10.0f, 150.0f, -10.f);
@@ -186,7 +185,7 @@ void EditorLayer::OnRender(const shade::Shared<shade::Scene>& scene, const shade
 
 		shade::Render::BeginScene(m_Camera->GetRenderData(), m_ShadowFrameBuffer);
 		shade::Render::Begin(); // Clearing frambuffer
-		/*-------------------*/
+	
 		m_ShadowShader->Bind();
 		m_ShadowShader->SendMat4("u_LightMatrix", false, glm::value_ptr(lightSpaceMatrix));
 		shade::Render::DrawInstances(m_ShadowShader);
@@ -195,11 +194,14 @@ void EditorLayer::OnRender(const shade::Shared<shade::Scene>& scene, const shade
 		
 		/* Normal pass */
 		/* Has to be cleared frame buffer if needed*/
-		m_InstancedShader->Bind();
-		m_ShadowFrameBuffer->BindDepthAsTexture(3);
-		m_InstancedShader->SendMat4("u_LightMatrix", false, glm::value_ptr(lightSpaceMatrix));
-		shade::Render::BeginScene(m_Camera->GetRenderData(), m_FrameBuffer);
+	
+		m_FrameBuffer->Bind();
+		shade::Render::Clear();
+
 		shade::Render::Begin(); // Clearing frambuffer
+		shade::Render::BeginScene(m_Camera, m_FrameBuffer);
+		
+		//shade::Render::Clear();
 		/*-------------------*/
 		shade::Render::DrawInstances(m_InstancedShader);
 		shade::Render::EndScene();
@@ -211,7 +213,7 @@ void EditorLayer::OnRender(const shade::Shared<shade::Scene>& scene, const shade
 		if (m_isColorCorrectionEnabled)
 			shade::Render::PProcess::Process(m_PPColorCorrection);
 
-		/*shade::Render::BeginScene(m_Camera->GetRenderData());
+		shade::Render::BeginScene(m_Camera->GetRenderData());
 		shade::Render::DrawSubmited(m_GridShader);
 		shade::Render::DrawInstances(m_FrustumShader);
 		shade::Render::DrawSubmited(m_BoxShader);
@@ -225,7 +227,7 @@ void EditorLayer::OnRender(const shade::Shared<shade::Scene>& scene, const shade
 
 		shade::Render::DrawSprite(m_SpriteShader, m_LogoTexture, transform.GetModelMatrix(), glm::vec4{ 120, 199.0f, 574, 167 });
 		
-		shade::Render::EndScene();*/
+		shade::Render::EndScene();
 		shade::Render::End();
 	}
 }
@@ -264,9 +266,9 @@ void EditorLayer::OnEvent(const shade::Shared<shade::Scene>& scene, shade::Event
 		}
 		if (keyCode == shade::Key::F1)
 		{
-			shade::AssetManager::HoldPrefab<shade::Model3D>("Nanosuit", [&](auto& asset) mutable
+			shade::AssetManager::HoldPrefab<shade::Model3D>("Cube", [&](auto& asset) mutable
 				{
-					auto entity = scene->CreateEntity("Nanosuit");
+					auto entity = scene->CreateEntity("Cube");
 					entity.AddComponent<shade::Model3DComponent>(shade::AssetManager::Receive<shade::Model3D>(asset));
 					entity.AddComponent<shade::Transform3DComponent>();
 				}, shade::Asset::Lifetime::Destroy);

@@ -36,7 +36,7 @@ void shade::OpenGLRenderAPI::Init()
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glEnable(GL_CULL_FACE);
-
+	//glCullFace(GL_FRONT);
 	glEnable(GL_DEPTH_TEST);
 	//glDepthMask(GL_FALSE);
 	glDepthFunc(GL_LESS);
@@ -122,6 +122,11 @@ void shade::OpenGLRenderAPI::End()
 void shade::OpenGLRenderAPI::DepthTest(const bool& enable)
 {
 	(enable) ? glEnable(GL_DEPTH_TEST): glDisable(GL_DEPTH_TEST);
+}
+
+void shade::OpenGLRenderAPI::CullFace(const int& mode)
+{
+	glCullFace(mode);
 }
 
 void shade::OpenGLRenderAPI::Bloom(const Shared<FrameBuffer>& inputFrameBuffer, const Shared<FrameBuffer>& outFrameBuffer, const Shared<Shader>& bloomShader)

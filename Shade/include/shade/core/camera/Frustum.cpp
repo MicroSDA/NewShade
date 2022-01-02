@@ -9,14 +9,15 @@ shade::Frustum::Frustum(const glm::mat4& viewProjectionMatrix)
 {
 	_CalculateFrustum(viewProjectionMatrix);
 }
-const glm::vec4* shade::Frustum::GetFrustum() const
+
+const std::vector<glm::vec4>& shade::Frustum::GetFrustum() const
 {
 	return m_Frustum;
 }
 
-const glm::vec4& shade::Frustum::GetSide(const Frustum::Side& size) const
+const glm::vec4& shade::Frustum::GetSide(const Frustum::Side& side) const
 {
-	return m_Frustum[(std::uint32_t)size];
+	return m_Frustum[(std::uint32_t)side];
 }
 
 bool shade::Frustum::IsInFrustum(const glm::mat4& transform, const glm::vec3& minHalfExt, const glm::vec3& maxHalfExt)
@@ -32,20 +33,19 @@ bool shade::Frustum::IsInFrustum(const glm::mat4& transform, const glm::vec3& mi
 void shade::Frustum::_CalculateFrustum(const glm::mat4& viewProjectionMatrix)
 {
 	m_VP_Matrix = viewProjectionMatrix;
-	glm::mat4 matrix = glm::transpose(m_VP_Matrix);
+	//glm::mat4 matrix = glm::transpose(m_VP_Matrix);
+	glm::mat4 matrix = glm::inverse(m_VP_Matrix);
 
-	m_Frustum[(std::uint32_t)Side::Left]   = matrix[3] + matrix[0];
-	m_Frustum[(std::uint32_t)Side::Right]  = matrix[3] - matrix[0];
-	m_Frustum[(std::uint32_t)Side::Bottom] = matrix[3] + matrix[1];
-	m_Frustum[(std::uint32_t)Side::Top]    = matrix[3] - matrix[1];
-	m_Frustum[(std::uint32_t)Side::Near]   = matrix[3] + matrix[2];
-	m_Frustum[(std::uint32_t)Side::Far]    = matrix[3] - matrix[2];
+	m_Frustum.push_back(matrix[3] + matrix[0]); // Left
+	m_Frustum.push_back(matrix[3] - matrix[0]); // Right
+	m_Frustum.push_back(matrix[3] - matrix[1]); // Top
+	m_Frustum.push_back(matrix[3] + matrix[1]); // Bottom
+	m_Frustum.push_back(matrix[3] + matrix[2]); // Near
+	m_Frustum.push_back(matrix[3] - matrix[2]); // Far
 
-	// Normalizing x,y,z
+	// Normalizing x, y, z
 	for (auto i = 0; i < 6; i++)
-	{
 		_Normalize(m_Frustum[i]);
-	}
 }
 
 void shade::Frustum::_Normalize(glm::vec4& side)

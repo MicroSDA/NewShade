@@ -20,6 +20,7 @@ namespace shade
 		virtual void Begin() override;
 		virtual void End() override;
 		virtual void DepthTest(const bool& enable) override;
+		virtual void CullFace(const int& mode) override;
 		//TODO Has to be check if this is needed !!!!!!!!!!!!
 		// Post Process
 		virtual void Bloom(const Shared<FrameBuffer>& inputFrameBuffer, const Shared<FrameBuffer>& outFrameBuffer, const Shared<Shader>& bloomShader) override;

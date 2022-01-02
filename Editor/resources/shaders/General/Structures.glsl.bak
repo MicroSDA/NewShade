@@ -14,7 +14,7 @@ struct DirectLight
 	vec3 AmbientColor;
 	vec3 DiffuseColor;
 	vec3 SpecularColor;
-	vec3 Position;
+	vec3 Position
 	mat4 ViewMatrix;
 };
 
@@ -54,10 +54,4 @@ struct Material
 	float ShininesStrength;
 	float Opacity;
 	float Refracti;
-};
-
-struct DirectLightCascade
-{
-	mat4 ViewMatrix;
-	float ClipDistance;
 };

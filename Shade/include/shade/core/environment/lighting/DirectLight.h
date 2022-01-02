@@ -12,6 +12,8 @@ namespace shade
 			alignas(16) glm::vec3 AmbientColor;
 			alignas(16) glm::vec3 DiffuseColor;
 			alignas(16) glm::vec3 SpecularColor;
+			alignas(16) glm::vec3 Position;
+			alignas(16)	glm::mat4 ViewMatrix;
 		};
 	public:
 		DirectLight();
