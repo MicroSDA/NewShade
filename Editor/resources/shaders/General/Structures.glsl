@@ -58,6 +58,6 @@ struct Material
 
 struct DirectLightCascade
 {
-	mat4 ViewMatrix;
-	float ClipDistance;
+	mat4  ViewMatrix;
+	float SplitDistance;
 };

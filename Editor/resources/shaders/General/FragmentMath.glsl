@@ -8,7 +8,7 @@ vec3 Get_TBNNormal(vec3 Normal, mat3 TBN_Matrix)
    return TBN_Normal;
 }
 // Need to refactor this
-struct Cascade
+/*struct Cascade
 {
     mat4  ViewMatrix;
     float Distance;
@@ -82,7 +82,8 @@ float ComputeShadowCascade(Cascade cascade[4], sampler2DArray shadowMap, mat4 Ca
     }
         
     return shadow;
-}
+}*/
+
 float ShadowCalculationTest(sampler2DArray shadowMap, mat4 CameraView, vec3 fragPosWorldSpace, vec3 Normal, vec3 lightDirection, mat4 lightViewMatrix)
 {
     // select cascade layer

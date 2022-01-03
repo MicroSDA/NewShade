@@ -59,7 +59,7 @@ void shade::Render::Init()
 		m_sSprites.VAO->AddVertexBuffer(m_sSprites.EBO);
 		/*------------------------------------------------------*/
 
-		m_sShadowFrameBuffer = shade::FrameBuffer::Create(shade::FrameBuffer::Layout(2048, 2048,
+		m_sShadowFrameBuffer = shade::FrameBuffer::Create(shade::FrameBuffer::Layout(4096, 4096,
 			{
 				FrameBuffer::Texture::Format::DEPTH24STENCIL8_ARRAY_4,
 			}));
@@ -175,87 +175,6 @@ void shade::Render::BeginScene(const Camera::RenderData& renderData, const glm::
 	/*!Process SSBO buffers*/
 }
 
-static std::vector<glm::vec4> GetFrustumCornersWorldSpace(const shade::Shared<shade::Camera>& camera, const glm::mat4& proj, const glm::mat4& view)
-{
-	auto c = *camera.get();
-	c.SetFar(c.GetFar() / 1.0f);
-
-	const auto p = c.GetProjection();
-
-	const auto inv = glm::inverse(p * view);
-
-	std::vector<glm::vec4> frustumCorners;
-	for (unsigned int x = 0; x < 2; ++x)
-	{
-		for (unsigned int y = 0; y < 2; ++y)
-		{
-			for (unsigned int z = 0; z < 2; ++z)
-			{
-				const glm::vec4 pt = inv * glm::vec4(2.0f * x - 1.0f, 2.0f * y - 1.0f, 2.0f * z - 1.0f, 1.0f);
-				frustumCorners.push_back(pt / pt.w);
-			}
-		}
-	}
-
-	return frustumCorners;
-}
-
-static glm::mat4 ComputeDirectLightViewMatrix(const shade::Shared<shade::Camera>& camera, shade::DirectLight::RenderData& light)
-{
-	auto frustum = camera->GetFrustum();
-	glm::vec3 center = glm::vec3(0, 0, 0);
-	auto corners = GetFrustumCornersWorldSpace(camera, camera->GetProjection(), camera->GetView());
-
-	for (const auto& v : corners)
-	{
-		center += glm::vec3(v);
-	}
-	center /= corners.size(); // 8
-
-	const auto lightView = glm::lookAt(center - light.Direction, center, glm::vec3(0.0f, 1.0f, 0.0f));
-
-	float minX = std::numeric_limits<float>::max();
-	float maxX = std::numeric_limits<float>::min();
-	float minY = std::numeric_limits<float>::max();
-	float maxY = std::numeric_limits<float>::min();
-	float minZ = std::numeric_limits<float>::max();
-	float maxZ = std::numeric_limits<float>::min();
-
-	for (const auto& v : corners)
-	{
-		const auto trf = lightView * v;
-		minX = std::min(minX, trf.x);
-		maxX = std::max(maxX, trf.x);
-		minY = std::min(minY, trf.y);
-		maxY = std::max(maxY, trf.y);
-		minZ = std::min(minZ, trf.z);
-		maxZ = std::max(maxZ, trf.z);
-	}
-
-	// Tune this parameter according to the scene
-	constexpr float zMult = 10.0f;
-	if (minZ < 0)
-	{
-		minZ *= zMult;
-	}
-	else
-	{
-		minZ /= zMult;
-	}
-	if (maxZ < 0)
-	{
-		maxZ /= zMult;
-	}
-	else
-	{
-		maxZ *= zMult;
-	}
-
-	//const glm::mat4 lightProjection = glm::ortho(-100.f, 100.f, -100.f, 100.f, 0.01f, 100.f);
-	const glm::mat4 lightProjection = glm::ortho(minX, maxX, minY, maxY, minZ, maxZ);
-
-	return lightProjection * lightView;
-}
 void shade::Render::BeginScene(const Shared<Camera>& camera, const Shared<FrameBuffer>& framebuffer, const glm::vec4& clipping)
 {
 	m_sFrameBuffer = framebuffer;
@@ -265,14 +184,13 @@ void shade::Render::BeginScene(const Shared<Camera>& camera, const Shared<FrameB
 
 	/* Process SSBO buffers */
 	std::uint32_t dLightCount = m_sLightEnviroment.DirectLightSources.size(), pLighCount = m_sLightEnviroment.PointLightSources.size(), sLightCount = m_sLightEnviroment.SpotLightSources.size();
-
 	/* Shadow */
 	if (m_sLightEnviroment.DirectLightSources.size())
 	{
 		/* Only for one direct light for now !*/
 		/* Hardcoded for now*/
 		const int cascadesCount = 4;
-		const float levels[4] = { camera->GetFar() / 25.0f, camera->GetFar() / 15.0f, camera->GetFar() / 5.0f, camera->GetFar() / 2.0f };
+		const float levels[4] = { camera->GetFar() / 50.0f, camera->GetFar() / 25.0f, camera->GetFar() / 10.0f, camera->GetFar() / 2.0f };
 
 		m_sShadowCascadesBuffer->Resize(sizeof(Shadows::Cascade) * cascadesCount);
 
@@ -293,36 +211,13 @@ void shade::Render::BeginScene(const Shared<Camera>& camera, const Shared<FrameB
 			}
 		}
 	
+
+		/*cascades.emplace_back(Shadows::ComputeDirectLightCascade(camera, m_sLightEnviroment.DirectLightSources[0].Direction, camera->GetNear(), levels[0], levels[0]));
+		cascades.emplace_back(Shadows::ComputeDirectLightCascade(camera, m_sLightEnviroment.DirectLightSources[0].Direction, levels[0], levels[1], levels[1]));
+		cascades.emplace_back(Shadows::ComputeDirectLightCascade(camera, m_sLightEnviroment.DirectLightSources[0].Direction, levels[1], levels[2], levels[2]));
+		cascades.emplace_back(Shadows::ComputeDirectLightCascade(camera, m_sLightEnviroment.DirectLightSources[0].Direction, levels[2], camera->GetFar(), levels[3]));*/
+
 		m_sShadowCascadesBuffer->SetData(cascades.data(), sizeof(Shadows::Cascade) * cascadesCount);
-
-
-		/*auto& light = m_sLightEnviroment.DirectLightSources[0];
-		light.ViewMatrix = ComputeDirectLightViewMatrix(camera, light);*/
-		//light.Position   = glm::vec3(0,0,0);
-		///*for (auto& light : m_sLightEnviroment.DirectLightSources)
-		//{*/
-		//const float distance = camera->GetFar() / 50; // Temporary;
-		//glm::vec3	position = -light.Direction * distance;
-
-		////glm::vec3	position = glm::vec3(-2.0f, 4.0f, -1.0f);
-		///* need get this from camera*/
-		//float near_plane = -10.0f, far_plane = distance * 10;
-		///* Projection * View */
-
-
-
-		//glm::mat4 lightProjection = glm::ortho(
-		//	-camera->GetAspect() * camera->GetFar(),
-		//	camera->GetAspect() * camera->GetFar(),
-		//	-camera->GetFar(),
-		//	camera->GetFar(),
-		//	-1000.f, 1000.f);
-
-		////glm::mat4 lightProjection	= glm::ortho(-distance, distance, -distance, distance, near_plane, far_plane);
-		//glm::mat4 lightView = glm::lookAt(position, camera->GetPosition(), glm::vec3(0.0, 1.0, 0.0));
-		//light.ViewMatrix = lightProjection * lightView;
-		//light.Position = position;
-		///** }*/
 	}
 
 	/* Direct light */

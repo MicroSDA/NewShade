@@ -12,14 +12,14 @@ shade::Shadows::Cascade shade::Shadows::ComputeDirectLightCascade(const shade::S
 	{
 		frustumCenter += glm::vec3(c);
 	}
-	frustumCenter /= frustumCorners.size(); // 8
-
-	/* Create veiw matrix based on camera frustum and light direction */			            /* Up vector */
-	const glm::mat4 lightView = glm::lookAt(frustumCenter - direction, frustumCenter, glm::vec3(0.0f, 1.0f, 0.0f));
+	frustumCenter /= 8.0f; // 8
 
 	float minX = std::numeric_limits<float>::max(), maxX = std::numeric_limits<float>::min(),
 		  minY = std::numeric_limits<float>::max(), maxY = std::numeric_limits<float>::min(),
 		  minZ = std::numeric_limits<float>::max(), maxZ = std::numeric_limits<float>::min();
+
+	/* Create veiw matrix based on camera frustum and light direction */			            /* Up vector */
+	const glm::mat4 lightView = glm::lookAt(frustumCenter - direction, frustumCenter, glm::vec3(0.0f, 1.0f, 0.0f));
 
 	for (const auto& c : frustumCorners)
 	{
@@ -29,7 +29,7 @@ shade::Shadows::Cascade shade::Shadows::ComputeDirectLightCascade(const shade::S
 		minZ = std::min(minZ, trf.z); maxZ = std::max(maxZ, trf.z);
 	}
 
-	constexpr float zMult = 2.0f;
+	constexpr float zMult = 1.0f;
 	if (minZ < 0)
 	{
 		minZ *= zMult;
@@ -38,6 +38,7 @@ shade::Shadows::Cascade shade::Shadows::ComputeDirectLightCascade(const shade::S
 	{
 		minZ /= zMult;
 	}
+
 	if (maxZ < 0)
 	{
 		maxZ /= zMult;

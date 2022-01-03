@@ -17,7 +17,6 @@ layout (location = 1)  out vec3 out_Normal;
 layout (location = 2)  out vec3 out_Vertex;
 layout (location = 3)  out mat3 out_TBN_Matrix;
 layout (location = 7)  out int  out_Id;
-layout (location = 8)  out vec4 out_FragPosLightSpace;
 // Camera uniform buffer
 layout(std140, binding = 0) uniform UCamera
 {
@@ -43,30 +42,30 @@ void main()
 	out_UV_Coordinates 	  = a_UV_Coordinates;
 	out_Normal  		  = normalize((a_Transform 	* vec4(a_Normal, 	0.0)).xyz);
 	//out_Normal            = transpose(inverse(mat3(a_Transform))) * a_Normal;
-	out_Vertex 			  = (a_Transform 	* vec4(a_Position, 	1.0)).xyz;
+	out_Vertex 			  = vec3(a_Transform * vec4(a_Position, 	1.0));
 	out_TBN_Matrix		  = GetTBN_Matrix(a_Transform, a_Normal, a_Tangent);	
 	out_Id 				  = a_Id;
-	out_FragPosLightSpace = u_DirectLight[0].ViewMatrix * a_Transform * vec4(a_Position, 1.0);
 }
 // !End of vertex shader
 #type fragment
 #version 460 core
+/* Include in reverse order*/
 #include "resources/shaders/General/BillinPhong.glsl"
+#include "resources/shaders/General/Effects/CSM.glsl"
 #include "resources/shaders/General/Structures.glsl"
 #include "resources/shaders/General/FragmentMath.glsl"
+
 // Input
 layout (location = 0)  in vec2 a_UV_Coordinates;
 layout (location = 1)  in vec3 a_Normal;
 layout (location = 2)  in vec3 a_Vertex;
 layout (location = 3)  in mat3 a_TBN_Matrix;
 layout (location = 7)  flat in int a_Id; // dont know why should be flat
-layout (location = 8)  in vec4 a_FragPosLightSpace; // dont know why should be flat
 // Textures
-layout (binding = 0) uniform sampler2D u_TDiffuse;
-layout (binding = 1) uniform sampler2D u_TSpecular;
-layout (binding = 2) uniform sampler2D u_TNormal;
-layout (binding = 3) uniform sampler2DArray u_ShadowMap;
-
+layout (binding = 0) uniform sampler2D 		u_TDiffuse;
+layout (binding = 1) uniform sampler2D 		u_TSpecular;
+layout (binding = 2) uniform sampler2D 		u_TNormal;
+layout (binding = 3) uniform sampler2DArray u_TShadowMap;
 // Camera uniform buffer
 layout (std140, binding = 0) uniform UCamera
 {
@@ -118,23 +117,28 @@ vec4 BillinPhong(vec3 toCameraDirection)
 	vec3 TBN_Normal = Get_TBNNormal(texture(u_TNormal, a_UV_Coordinates).rgb, a_TBN_Matrix);
 	for(int i = 0;i < u_DirectLight.length(); i++)
 		{
-			//float Shadow    = 1.0 - ShadowCalculationTest(u_ShadowMap, u_Camera.View, a_Vertex, a_Normal, -u_DirectLight[i].Direction, u_DirectLight[i].ViewMatrix); 
-			Cascade cascades[4]; 
-			cascades[0].ViewMatrix = u_DirectLightCascade[0].ViewMatrix;
-			cascades[0].Distance   = u_DirectLightCascade[0].ClipDistance;
+			vec4    FragPosVeiwSpace    = u_Camera.View * vec4(a_Vertex, 1.0);
+    		float   Depth               = abs(FragPosVeiwSpace.z);
+    		int     CascadeLayer        = 0;
+			for(int i = 0; i < u_DirectLightCascade.length(); i++)
+			{
+				if(Depth < u_DirectLightCascade[i].SplitDistance)
+				{
+					CascadeLayer = i;	break;
+				}
+				else if(CascadeLayer == 0)
+						CascadeLayer = u_DirectLightCascade.length() - 1; 
+			}
+			float Shadow  = 1.0 - CSM_DirectLight(u_TShadowMap,
+												  u_DirectLightCascade[CascadeLayer].ViewMatrix,
+												  CascadeLayer,
+												  u_DirectLightCascade[i].SplitDistance,
+												  u_Camera.View,
+												  a_Vertex,
+												  a_Normal,
+												  u_DirectLight[i].Direction);	
 
-			cascades[1].ViewMatrix = u_DirectLightCascade[1].ViewMatrix;
-			cascades[1].Distance   = u_DirectLightCascade[1].ClipDistance;
-
-			cascades[2].ViewMatrix = u_DirectLightCascade[2].ViewMatrix;
-			cascades[2].Distance   = u_DirectLightCascade[2].ClipDistance;
-
-			cascades[3].ViewMatrix = u_DirectLightCascade[3].ViewMatrix;
-			cascades[3].Distance   = u_DirectLightCascade[3].ClipDistance;
-
-			float Shadow           = 1.0 - ComputeShadowCascade(cascades, u_ShadowMap, u_Camera.View, a_Vertex, a_Normal, u_DirectLight[i].Direction);
-
-			Color += BilinPhongDirectLight(TBN_Normal, u_DirectLight[i], u_Material,           toCameraDirection, texture(u_TDiffuse, a_UV_Coordinates).rgba, texture(u_TSpecular, a_UV_Coordinates).rgba, Shadow); 
+			Color += BilinPhongDirectLight(TBN_Normal, u_DirectLight[i], u_Material, toCameraDirection, texture(u_TDiffuse, a_UV_Coordinates).rgba, texture(u_TSpecular, a_UV_Coordinates).rgba, Shadow); 
 		}
 	for(int i = 0;i < u_PointLight.length();  i++)
 		Color += BilinPhongPointLight(TBN_Normal, u_PointLight[i],   u_Material, a_Vertex, toCameraDirection, texture(u_TDiffuse, a_UV_Coordinates).rgba, texture(u_TSpecular, a_UV_Coordinates).rgba);
@@ -153,12 +157,9 @@ void main()
 {
 	vec3 ToCameraDirection 		= normalize(u_Camera.Position - a_Vertex);
 	// Do lighting calculation;
-	vec4 Color 					= u_sLighting(ToCameraDirection);
-   
-	//float shadow                = ShadowCalculationTest(u_ShadowMap, u_Camera.View, a_Vertex, 1.0, a_Normal, -u_DirectLight[0].Direction, u_DirectLight[0].ViewMatrix);      
-	//float shadow                = 0.0;          
+	vec4 Color 					= u_sLighting(ToCameraDirection);      
 	FrameBufferAttachment 		= vec4(Color.rgb  + (u_Material.DiffuseColor * u_Material.Emissive), 1.0);
-	//FrameBufferAttachment 		= vec4(1, 1, 1, 1);
+	//FrameBufferAttachment 		= texture(u_TShadowMap, vec3(a_UV_Coordinates, 0));
 	Selected 					= a_Id;
 }
 // !End of fragment shader
