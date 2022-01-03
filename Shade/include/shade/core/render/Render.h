@@ -126,9 +126,11 @@ namespace shade
 		static Shared<ShaderStorageBuffer>	m_sPointLightsBuffer;
 		static Shared<ShaderStorageBuffer>	m_sSpotLightsBuffer;
 		static Shared<ShaderStorageBuffer>	m_sShadowCascadesBuffer;
+		static Shared<ShaderStorageBuffer>	m_sShadowSpotLightBuffer;
 
 		static Shared<FrameBuffer>			m_sFrameBuffer;
 		static Shared<FrameBuffer>			m_sShadowFrameBuffer;
+		static Shared<FrameBuffer>			m_sShadowSpotLightFrameBuffer;
 		//Util
 		static void _CreateInstance(const Shared<Shader>& shader, const Shared<Drawable>& drawable, const Shared<Material3D>& material, const glm::mat4& transform);
 		static void _CreateInstances(const Shared<Shader>& shader, const Shared<Drawable>& drawable, const Shared<Material3D>& material, const glm::mat4& transform, const int& id);

@@ -19,7 +19,9 @@ namespace shade
 	Shared<ShaderStorageBuffer> Render::m_sPointLightsBuffer;
 	Shared<ShaderStorageBuffer> Render::m_sSpotLightsBuffer;
 	Shared<ShaderStorageBuffer> Render::m_sShadowCascadesBuffer;
+	Shared<ShaderStorageBuffer> Render::m_sShadowSpotLightBuffer;
 	Shared<FrameBuffer>			Render::m_sShadowFrameBuffer;
+	Shared<FrameBuffer>			Render::m_sShadowSpotLightFrameBuffer;;
 	Shared<FrameBuffer>			Render::m_sFrameBuffer;
 
 }
@@ -43,7 +45,7 @@ void shade::Render::Init()
 		m_sPointLightsBuffer = ShaderStorageBuffer::Create(0, 3);
 		m_sSpotLightsBuffer = ShaderStorageBuffer::Create(0, 4);
 		m_sShadowCascadesBuffer = ShaderStorageBuffer::Create(0, 5);
-
+		m_sShadowSpotLightBuffer = ShaderStorageBuffer::Create(0, 6);
 
 		glm::fvec2 plane[4] = { glm::fvec2(-1.0,  1.0), glm::fvec2(-1.0, -1.0) ,glm::fvec2(1.0,   1.0), glm::fvec2(1.0,  -1.0) };
 
@@ -62,6 +64,11 @@ void shade::Render::Init()
 		m_sShadowFrameBuffer = shade::FrameBuffer::Create(shade::FrameBuffer::Layout(4096, 4096,
 			{
 				FrameBuffer::Texture::Format::DEPTH24STENCIL8_ARRAY_4,
+			}));
+		m_sShadowSpotLightFrameBuffer = shade::FrameBuffer::Create(shade::FrameBuffer::Layout(4096, 4096,
+			{
+				FrameBuffer::Texture::Format::RGBA16F,
+				FrameBuffer::Texture::Format::DEPTH24STENCIL8,
 			}));
 	}
 	else
@@ -184,42 +191,27 @@ void shade::Render::BeginScene(const Shared<Camera>& camera, const Shared<FrameB
 
 	/* Process SSBO buffers */
 	std::uint32_t dLightCount = m_sLightEnviroment.DirectLightSources.size(), pLighCount = m_sLightEnviroment.PointLightSources.size(), sLightCount = m_sLightEnviroment.SpotLightSources.size();
-	/* Shadow */
+
+	/* Shadows */
+	/* Only one direct light can cast cascaded shadows */
 	if (m_sLightEnviroment.DirectLightSources.size())
 	{
-		/* Only for one direct light for now !*/
-		/* Hardcoded for now*/
-		const int cascadesCount = 4;
-		const float levels[4] = { camera->GetFar() / 50.0f, camera->GetFar() / 25.0f, camera->GetFar() / 10.0f, camera->GetFar() / 2.0f };
-
-		m_sShadowCascadesBuffer->Resize(sizeof(Shadows::Cascade) * cascadesCount);
-
+		/* TODO : need to redisign */
+		const int cascadeCount = 4;
+		const float spilt[cascadeCount] = { camera->GetFar() / 50.0f, camera->GetFar() / 25.0f, camera->GetFar() / 10.0f, camera->GetFar() / 2.0f };
 		std::vector<Shadows::Cascade> cascades;
-		for (size_t i = 0; i < 4 + 1; ++i)
+		m_sShadowCascadesBuffer->Resize(sizeof(Shadows::Cascade) * 4);
+		for (size_t i = 0; i < cascadeCount + 1; ++i)
 		{
 			if (i == 0)
-			{
-				cascades.push_back(Shadows::ComputeDirectLightCascade(camera, m_sLightEnviroment.DirectLightSources[0].Direction, camera->GetNear(), levels[i], levels[i]));
-			}
-			else if (i < 4)
-			{
-				cascades.push_back(Shadows::ComputeDirectLightCascade(camera, m_sLightEnviroment.DirectLightSources[0].Direction, levels[i - 1], levels[i],      levels[i]));
-			}
+				cascades.push_back(Shadows::ComputeDirectLightCascade(camera, m_sLightEnviroment.DirectLightSources[0].Direction, camera->GetNear(), spilt[i], spilt[i]));
+			else if (i < cascadeCount)
+				cascades.push_back(Shadows::ComputeDirectLightCascade(camera, m_sLightEnviroment.DirectLightSources[0].Direction, spilt[i - 1], spilt[i], spilt[i]));
 			else
-			{
-				cascades.push_back(Shadows::ComputeDirectLightCascade(camera, m_sLightEnviroment.DirectLightSources[0].Direction, levels[i - 1], camera->GetFar(), levels[i]));
-			}
+				cascades.push_back(Shadows::ComputeDirectLightCascade(camera, m_sLightEnviroment.DirectLightSources[0].Direction, spilt[i - 1], camera->GetFar(), spilt[i]));
 		}
-	
-
-		/*cascades.emplace_back(Shadows::ComputeDirectLightCascade(camera, m_sLightEnviroment.DirectLightSources[0].Direction, camera->GetNear(), levels[0], levels[0]));
-		cascades.emplace_back(Shadows::ComputeDirectLightCascade(camera, m_sLightEnviroment.DirectLightSources[0].Direction, levels[0], levels[1], levels[1]));
-		cascades.emplace_back(Shadows::ComputeDirectLightCascade(camera, m_sLightEnviroment.DirectLightSources[0].Direction, levels[1], levels[2], levels[2]));
-		cascades.emplace_back(Shadows::ComputeDirectLightCascade(camera, m_sLightEnviroment.DirectLightSources[0].Direction, levels[2], camera->GetFar(), levels[3]));*/
-
-		m_sShadowCascadesBuffer->SetData(cascades.data(), sizeof(Shadows::Cascade) * cascadesCount);
+		m_sShadowCascadesBuffer->SetData(cascades.data(), sizeof(Shadows::Cascade) * 4);
 	}
-
 	/* Direct light */
 	if (m_sDirectLightsBuffer->GetSize() != sizeof(DirectLight::RenderData) * dLightCount)
 		m_sDirectLightsBuffer->Resize(sizeof(DirectLight::RenderData) * dLightCount);
@@ -317,6 +309,7 @@ void shade::Render::Submit(const Shared<Shader>& shader, const Shared<Texture>& 
 void shade::Render::DrawInstances(const Shared<Shader>& shader)
 {
 	m_sShadowFrameBuffer->Bind();
+	//m_sShadowSpotLightFrameBuffer->Bind();
 	Render::Clear();
 
 	auto& _shader = m_sInstancePool.find(shader.get());
@@ -324,6 +317,7 @@ void shade::Render::DrawInstances(const Shared<Shader>& shader)
 	{
 		/* Shadows */
 	   // Render::CullFace(0x0404);
+		//ShadersLibrary::Get("Shadow")->Bind();
 		ShadersLibrary::Get("Shadow")->Bind();
 		for (auto& instance : _shader->second)
 		{
@@ -334,7 +328,12 @@ void shade::Render::DrawInstances(const Shared<Shader>& shader)
 
 			if (m_sLightEnviroment.DirectLightSources.size())
 			{
+				//ShadersLibrary::Get("Shadow")->SendMat4("u_LightView", false, glm::value_ptr(m_sLightEnviroment.DirectLightSources[0].ViewMatrix));
+				m_sRenderAPI->DrawInstanced(instance.second.DrawMode, instance.second.VAO, instance.second.VAO->GetIndexBuffer(), instance.second.Count);
+			}
 
+			if (m_sLightEnviroment.SpotLightSources.size())
+			{
 				//ShadersLibrary::Get("Shadow")->SendMat4("u_LightView", false, glm::value_ptr(m_sLightEnviroment.DirectLightSources[0].ViewMatrix));
 				m_sRenderAPI->DrawInstanced(instance.second.DrawMode, instance.second.VAO, instance.second.VAO->GetIndexBuffer(), instance.second.Count);
 			}
@@ -375,6 +374,11 @@ void shade::Render::DrawInstances(const Shared<Shader>& shader)
 				{
 					//shader->SendMat4("u_LightView", false, glm::value_ptr(m_sLightEnviroment.DirectLightSources[0].ViewMatrix));
 					m_sShadowFrameBuffer->BindDepthAsTexture(3); // First cascade
+				}
+				if (m_sLightEnviroment.SpotLightSources.size())
+				{
+					//shader->SendMat4("u_LightView", false, glm::value_ptr(m_sLightEnviroment.DirectLightSources[0].ViewMatrix));
+					m_sShadowSpotLightFrameBuffer->BindDepthAsTexture(4); // First cascade
 				}
 			}
 			/*GL_FRONT_LEFT 0x0400

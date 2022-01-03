@@ -24,7 +24,7 @@ vec4 BilinPhongDirectLight(vec3 normal, DirectLight light, Material material, ve
 	//return vec4(ambientColor + ((diffuseColor + specularColor) * shadow));
 }
 
-vec4 BilinPhongPointLight(vec3 normal, PointLight light, Material material, vec3 vertex, vec3 toCameraDirection, vec4 diffuseTexture, vec4 specularTexture)
+vec4 BilinPhongPointLight(vec3 normal, PointLight light, Material material, vec3 vertex, vec3 toCameraDirection, vec4 diffuseTexture, vec4 specularTexture, float Shadow)
 {
 	vec3 lightDirection			= vertex - light.Position;
 	float distanceBetween		= length(lightDirection);
@@ -36,13 +36,13 @@ vec4 BilinPhongPointLight(vec3 normal, PointLight light, Material material, vec3
 	directLight.DiffuseColor  	= light.DiffuseColor;
 	directLight.SpecularColor 	= light.SpecularColor;
   	//----------------------------------------------
-	vec4 totalColor				= BilinPhongDirectLight(normal, directLight, material, toCameraDirection, diffuseTexture, specularTexture, 1.0);
+	vec4 totalColor				= BilinPhongDirectLight(normal, directLight, material, toCameraDirection, diffuseTexture, specularTexture, Shadow);
 	float attenuation       	= light.Constant + light.Linear * distanceBetween + light.Qaudratic * (distanceBetween * distanceBetween);
 
 	return totalColor / attenuation;
 }
 
-vec4 BilinPhongSpotLight(vec3 normal, SpotLight light, Material material, vec3 vertex, vec3 toCameraDirection, vec4 diffuseTexture, vec4 specularTexture)
+vec4 BilinPhongSpotLight(vec3 normal, SpotLight light, Material material, vec3 vertex, vec3 toCameraDirection, vec4 diffuseTexture, vec4 specularTexture, float Shadow)
 {
 	const float Smooth				= 2.0; // Harcoded 
     vec3  lightDirection			= normalize(vertex - light.Position);
@@ -62,7 +62,7 @@ vec4 BilinPhongSpotLight(vec3 normal, SpotLight light, Material material, vec3 v
         pointLight.Linear 			= light.Linear;
         pointLight.Qaudratic 		= light.Qaudratic;
         //--------------------------------------------
-        vec4 totalColor				= BilinPhongPointLight(normal, pointLight, material, vertex, toCameraDirection, diffuseTexture, specularTexture);
+        vec4 totalColor				= BilinPhongPointLight(normal, pointLight, material, vertex, toCameraDirection, diffuseTexture, specularTexture, Shadow);
 
         return totalColor * spotFactor;
     }

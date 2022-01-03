@@ -25,7 +25,6 @@ layout (std430, binding = 5) restrict readonly buffer UDirectlightCascade
 {
 	DirectLightCascade u_DirectLightCascade[];
 };
-
 void main()
 {   
     for (int i = 0; i < 3; ++i)
@@ -46,12 +45,13 @@ float LinearizeDepth(float depth, float far_plane, float near_plane)
     return (2.0 * near_plane * far_plane) / (far_plane + near_plane - z * (far_plane - near_plane));	
 }
 
-layout (binding = 3) uniform sampler2DArray u_TShadowMap;
+layout (binding = 4) uniform sampler2D u_TShadowMap;
+
+out vec4 FragColor;
 
 void main()
 {
-     float depthValue = texture(u_TShadowMap, vec3(0, 0, 0)).r;
-    // FragColor = vec4(vec3(LinearizeDepth(depthValue) / far_plane), 1.0); // perspective
-     //gl_FragColor = vec4(vec3(depthValue), 1.0); // orthographic
+    float depthValue = texture(u_TShadowMap, vec2(0.0,0.0)).r;
+    //FragColor = vec4(vec3(LinearizeDepth(depthValue) / 1000), 1.0); // perspective
     // TODO: check alpha for shadow !
 }

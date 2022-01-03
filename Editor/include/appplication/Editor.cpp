@@ -12,6 +12,7 @@ void Editor::OnCreate()
 	// Create shaders 
 	shade::ShadersLibrary::Create("General",			"resources/shaders/General/General.glsl");
 	shade::ShadersLibrary::Create("Shadow",				"resources/shaders/General/Effects/ShadowMapping.glsl");
+	shade::ShadersLibrary::Create("ShadowSpot",			"resources/shaders/General/Effects/ShadowMappingSpotLIght.glsl");
 	shade::ShadersLibrary::Create("Grid",				"resources/shaders/Grid.glsl");
 	shade::ShadersLibrary::Create("Box",				"resources/shaders/Primitives/Box.glsl");
 	shade::ShadersLibrary::Create("Frustum",			"resources/shaders/Frustum.glsl");

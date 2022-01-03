@@ -156,6 +156,12 @@ void EditorLayer::OnRender(const shade::Shared<shade::Scene>& scene, const shade
 			
 			
 		}
+		ShowWindowBar("Shadows", [&]()
+			{
+				static int id = 11;
+				DrawImage(id, ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y);
+				DrawInt("Render id", &id);
+			});
 		ShowWindowBar("Scene", &EditorLayer::Scene, this, scene);
 
 	} ImGui::End(); // Begin("DockSpace")
@@ -208,7 +214,7 @@ void EditorLayer::OnRender(const shade::Shared<shade::Scene>& scene, const shade
 
 		
 
-		if (m_isBloomEnabled)
+		/*if (m_isBloomEnabled)
 			shade::Render::PProcess::Process(m_PPBloom);
 		if (m_isColorCorrectionEnabled)
 			shade::Render::PProcess::Process(m_PPColorCorrection);
@@ -227,7 +233,7 @@ void EditorLayer::OnRender(const shade::Shared<shade::Scene>& scene, const shade
 
 		shade::Render::DrawSprite(m_SpriteShader, m_LogoTexture, transform.GetModelMatrix(), glm::vec4{ 120, 199.0f, 574, 167 });
 		
-		shade::Render::EndScene();
+		shade::Render::EndScene();*/
 		shade::Render::End();
 	}
 }

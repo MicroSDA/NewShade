@@ -52,6 +52,15 @@ shade::Shadows::Cascade shade::Shadows::ComputeDirectLightCascade(const shade::S
 	return  Cascade{ lightProjection * lightView, split };
 }
 
+glm::mat4 shade::Shadows::ComputeSpotLightViewMatrix(const shade::Shared<Camera>& camera, const glm::vec3& position, const glm::vec3& direction)
+{
+	glm::mat4 projection = camera->GetProjection();
+
+	const glm::mat4 lightView = glm::lookAt(position - direction, position, glm::vec3(0.0f, 1.0f, 0.0f));
+
+	return projection * lightView;
+}
+
 std::vector<glm::vec4> shade::Shadows::GetCameraFrustumCorners(const glm::mat4& projection, const glm::mat4& veiw)
 {
 	/* Create new view projection based on the split distance*/
