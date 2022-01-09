@@ -113,41 +113,34 @@ vec4 BillinPhong(vec3 toCameraDirection)
 	vec3 TBN_Normal = Get_TBNNormal(texture(u_TNormal, a_UV_Coordinates).rgb, a_TBN_Matrix);
 	for(int i = 0;i < u_DirectLight.length(); i++)
 		{
+			/* Direct light cascade shadow */
 			vec4    FragPosVeiwSpace    = u_Camera.View * vec4(a_Vertex, 1.0);
     		float   Depth               = abs(FragPosVeiwSpace.z);
     		int     CascadeLayer        = 0;
+
 			for(int i = 0; i < u_DirectLightCascade.length(); i++)
 			{
 				if(Depth <= u_DirectLightCascade[i].SplitDistance)
 				{
 					CascadeLayer = i;	break;
 				}
-				else if(CascadeLayer == 0)
-						CascadeLayer = u_DirectLightCascade.length() - 1; 
+			 
 			}
-			float Shadow  = 1.0 - CSM_DirectLight(u_TDirectLightShadowMap,
-												  u_DirectLightCascade[CascadeLayer].ViewMatrix,
-												  CascadeLayer,
-												  u_DirectLightCascade.length(),
-												  u_DirectLightCascade[i].SplitDistance,
-												  u_Camera.View,
-												  a_Vertex,
-												  a_Normal,
-												  u_DirectLight[i].Direction);	
-
-			if(CascadeLayer == 0)		
+			float Shadow  = 1.0 - CSM_DirectLight(u_TDirectLightShadowMap, u_DirectLightCascade[CascadeLayer].ViewMatrix, CascadeLayer, u_DirectLightCascade.length(), u_DirectLightCascade[i].SplitDistance, u_Camera.View, a_Vertex, a_Normal, u_DirectLight[i].Direction);	
+			/* Calc direct light*/
+			Color += BilinPhongDirectLight(TBN_Normal, u_DirectLight[i], u_Material, toCameraDirection, texture(u_TDiffuse, a_UV_Coordinates).rgba, texture(u_TSpecular, a_UV_Coordinates).rgba, Shadow); 
+			/* Cascades visualizing */
+			/*if(CascadeLayer == 0)		
 				Color += vec4(0.2, 0.2, 0, 0);
 			if(CascadeLayer == 1)
 				Color += vec4(0.0, 0.2, 0, 0);
 			if(CascadeLayer == 2)
 				Color += vec4(0.0, 0.0, 0.2, 0);
 			if(CascadeLayer == 3)
-				Color += vec4(0.2, 0.0, 0.0, 0);
-
-			Color += BilinPhongDirectLight(TBN_Normal, u_DirectLight[i], u_Material, toCameraDirection, texture(u_TDiffuse, a_UV_Coordinates).rgba, texture(u_TSpecular, a_UV_Coordinates).rgba, Shadow); 
+				Color += vec4(0.2, 0.0, 0.0, 0);*/
 		}
 	for(int i = 0;i < u_PointLight.length();  i++)
-		Color += BilinPhongPointLight(TBN_Normal, u_PointLight[i],   u_Material, a_Vertex, toCameraDirection, texture(u_TDiffuse, a_UV_Coordinates).rgba, texture(u_TSpecular, a_UV_Coordinates).rgba, 1.0);
+		Color += BilinPhongPointLight(TBN_Normal, u_PointLight[i],   u_Material, a_Vertex, toCameraDirection, texture(u_TDiffuse, a_UV_Coordinates).rgba, texture(u_TSpecular, a_UV_Coordinates).rgba, 0.0);
 	for(int i = 0;i < u_SpotLight.length();  i++)
 	{
 		/*float Shadow  = 1.0 - SM_SpotLight(u_TSpotLightShadowMap,
@@ -157,7 +150,7 @@ vec4 BillinPhong(vec3 toCameraDirection)
 												  a_Normal,
 												  u_SpotLight[i].Position);*/
 
-		Color += BilinPhongSpotLight(TBN_Normal, u_SpotLight[i],  u_Material, a_Vertex, toCameraDirection, texture(u_TDiffuse, a_UV_Coordinates).rgba, texture(u_TSpecular, a_UV_Coordinates).rgba, 1.0);
+		Color += BilinPhongSpotLight(TBN_Normal, u_SpotLight[i],  u_Material, a_Vertex, toCameraDirection, texture(u_TDiffuse, a_UV_Coordinates).rgba, texture(u_TSpecular, a_UV_Coordinates).rgba, 0.0);
 	}
 	return Color;	
 }; 

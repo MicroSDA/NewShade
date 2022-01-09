@@ -21,7 +21,7 @@ vec4 BilinPhongDirectLight(vec3 normal, DirectLight light, Material material, ve
 	}
 
 	return vec4(ambientColor + max(((diffuseColor + specularColor) * shadow), 0.0));
-	//return vec4(ambientColor + ((diffuseColor + specularColor) * shadow));
+	//return vec4(ambientColor + ((diffuseColor + specularColor) - shadow));
     //return vec4(ambientColor + vec4(1, 0, 0, 1.0));
 
 	//return vec4(ambientColor + ((diffuseColor + specularColor) * shadow));
