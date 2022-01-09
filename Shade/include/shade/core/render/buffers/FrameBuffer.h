@@ -2,9 +2,19 @@
 #include "shade/config/API.h"
 #include "shade/core/Types.h"
 #include "shade/core/utils/Log.h"
+#include <type_traits>
 
 namespace shade
 {
+	typedef int AttachmentClear;
+
+	enum AttacmentClearFlag : int
+	{
+		Color   = 0x00004000,
+		Depth   = 0x00000100,
+		Stensil = 0x00000400
+	};
+
 	class SHADE_API FrameBuffer
 	{
 	public:
@@ -80,7 +90,7 @@ namespace shade
 		template<typename T>
 		void ClearAttachment(const std::uint32_t& index, const T& clearValue);
 		virtual const Layout& GetLayout() const = 0;
-
+		virtual void Clear(shade::AttachmentClear clear) = 0;
 		static Shared<FrameBuffer> Create(const Layout& layout);
 	protected:
 		virtual void _ClearAttachmentInt(const std::uint32_t& attachment, const int& clearValue = 0) = 0;

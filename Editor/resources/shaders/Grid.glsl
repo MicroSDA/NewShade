@@ -22,7 +22,7 @@ void main()
 {
 	out_Near 		= UnprojectPoint(Position.x, Position.y, 0.0, u_Camera.ViewProjection).xyz; // unprojecting on the near plane
 	out_Far  		= UnprojectPoint(Position.x, Position.y, 1.0, u_Camera.ViewProjection).xyz; // unprojecting on the far plane
-	gl_Position 	= vec4(Position, 1.0f);
+	gl_Position 	= vec4(Position, 1.0);
 }
 
 #type fragment
@@ -74,8 +74,7 @@ float ComputeLinearDepth(vec3 pos)
     return linearDepth / 100; // normalize
 }
 
-layout (location = 0)   out vec4 FrameBuffer;
-layout (location = 1)   out int  Selected;
+layout (location = 0) out vec4 FrameBuffer;
 
 void main()
 {
@@ -84,14 +83,11 @@ void main()
     float linearDepth   = ComputeLinearDepth(fragPos3D);
     float fading        = max(0, (0.4 - linearDepth));
 
-
     gl_FragDepth        = ComputeDepth(fragPos3D);
     vec3 gridColor      =  vec3(0.2, 0.2, 0.2);
-    FrameBuffer         = (Grid(gridColor, fragPos3D, 0.1, true) + Grid(gridColor, fragPos3D, 1.0, true))* float(t > 0); 
-	FrameBuffer.a      *= fading;
-
-	if(FrameBuffer.a <= 0.2)
+    vec4 Color          = (Grid(gridColor, fragPos3D, 0.1, true) + Grid(gridColor, fragPos3D, 1.0, true))* float(t > 0);
+	Color.a      *= fading;
+	if(Color.a <= 0.2)
 		discard;
-		
-	Selected= -1;
+    FrameBuffer = Color;
 }

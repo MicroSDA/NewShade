@@ -95,6 +95,57 @@ static bool SerrTransform3DComponent(shade::Entity& entity, YAML::Emitter& emitt
 	return true;
 }
 
+static bool SerrDirectLightComponent(shade::Entity& entity, YAML::Emitter& emitter)
+{
+	if (entity.HasComponent<shade::DirectLightComponent>())
+	{
+		auto& comp = entity.GetComponent<shade::DirectLightComponent>();
+		emitter << YAML::Key << "DirectLight" << YAML::BeginMap;
+		emitter << YAML::Key << "Ambient" << YAML::Value << comp->GetAmbientColor();
+		emitter << YAML::Key << "Diffuse" << YAML::Value << comp->GetDiffuseColor();
+		emitter << YAML::Key << "Specular" << YAML::Value << comp->GetSpecularColor();
+		emitter << YAML::EndMap;
+	}
+
+	return true;
+}
+
+static bool SerrSpotLightComponent(shade::Entity& entity, YAML::Emitter& emitter)
+{
+	if (entity.HasComponent<shade::SpotLightComponent>())
+	{
+		auto& comp = entity.GetComponent<shade::SpotLightComponent>();
+		emitter << YAML::Key << "SpotLight" << YAML::BeginMap;
+		emitter << YAML::Key << "Ambient" << YAML::Value << comp->GetAmbientColor();
+		emitter << YAML::Key << "Diffuse" << YAML::Value << comp->GetDiffuseColor();
+		emitter << YAML::Key << "Specular" << YAML::Value << comp->GetSpecularColor();
+		emitter << YAML::Key << "Constant" << YAML::Value << comp->GetConstant();
+		emitter << YAML::Key << "Linear" << YAML::Value << comp->GetLinear();
+		emitter << YAML::Key << "Qaudratic" << YAML::Value << comp->GetQaudratic();
+		emitter << YAML::Key << "Min angle" << YAML::Value << comp->GetMinAngle();
+		emitter << YAML::Key << "Max angle" << YAML::Value << comp->GetMaxAngle();
+		emitter << YAML::EndMap;
+	}
+	return true;
+}
+
+static bool SerrPointLightComponent(shade::Entity& entity, YAML::Emitter& emitter)
+{
+	if (entity.HasComponent<shade::PointLightComponent>())
+	{
+		auto& comp = entity.GetComponent<shade::PointLightComponent>();
+		emitter << YAML::Key << "PointLight" << YAML::BeginMap;
+		emitter << YAML::Key << "Ambient" << YAML::Value << comp->GetAmbientColor();
+		emitter << YAML::Key << "Diffuse" << YAML::Value << comp->GetDiffuseColor();
+		emitter << YAML::Key << "Specular" << YAML::Value << comp->GetSpecularColor();
+		emitter << YAML::Key << "Constant" << YAML::Value << comp->GetConstant();
+		emitter << YAML::Key << "Linear" << YAML::Value << comp->GetLinear();
+		emitter << YAML::Key << "Qaudratic" << YAML::Value << comp->GetQaudratic();
+		emitter << YAML::EndMap;
+	}
+	return true;
+}
+
 static bool SerrModel3DComponent(shade::Entity& entity, YAML::Emitter& emitter)
 {
 	if (entity.HasComponent<shade::Model3DComponent>())
@@ -116,6 +167,12 @@ static bool SerrEntity(shade::Entity& entity, YAML::Emitter& emitter)
 	if (!SerrTransform3DComponent(entity, emitter))
 		return false;
 	if (!SerrModel3DComponent(entity, emitter))
+		return false;
+	if (!SerrDirectLightComponent(entity, emitter))
+		return false;
+	if (!SerrSpotLightComponent(entity, emitter))
+		return false;
+	if (!SerrPointLightComponent(entity, emitter))
 		return false;
 
 
@@ -146,6 +203,7 @@ static bool DeserrTransform3DComponent(shade::Entity& entity, YAML::detail::iter
 
 	return true;
 }
+
 static bool DesserModel3DComponent(shade::Entity& entity, YAML::detail::iterator_value& value)
 {
 	if (value["Model3D"])
@@ -159,9 +217,64 @@ static bool DesserModel3DComponent(shade::Entity& entity, YAML::detail::iterator
 
 	return true;
 }
+
+static bool DesserDirectLightComponent(shade::Entity& entity, YAML::detail::iterator_value& value)
+{
+	if (value["DirectLight"])
+	{
+		auto light = value["DirectLight"];
+		auto& directLight = entity.AddComponent<shade::DirectLightComponent>(shade::CreateShared<shade::DirectLight>());
+
+		directLight->SetAmbientColor(light["Ambient"].as<glm::vec3>());
+		directLight->SetDiffuseColor(light["Diffuse"].as<glm::vec3>());
+		directLight->SetSpecularColor(light["Specular"].as<glm::vec3>());
+	}
+
+	return true;
+}
+
+static bool DesserPointLightComponent(shade::Entity& entity, YAML::detail::iterator_value& value)
+{
+	if (value["PointLight"])
+	{
+		auto light = value["PointLight"];
+		auto& pointLight = entity.AddComponent<shade::PointLightComponent>(shade::CreateShared<shade::PointLight>());
+
+		pointLight->SetAmbientColor(light["Ambient"].as<glm::vec3>());
+		pointLight->SetDiffuseColor(light["Diffuse"].as<glm::vec3>());
+		pointLight->SetSpecularColor(light["Specular"].as<glm::vec3>());
+		pointLight->SetConstant(light["Constant"].as<float>());
+		pointLight->SetLinear(light["Linear"].as<float>());
+		pointLight->SetQaudratic(light["Qaudratic"].as<float>());
+	}
+
+	return true;
+}
+static bool DesserSpotLightComponent(shade::Entity& entity, YAML::detail::iterator_value& value)
+{
+	if (value["SpotLight"])
+	{
+		auto light = value["SpotLight"];
+		auto& spotLight = entity.AddComponent<shade::SpotLightComponent>(shade::CreateShared<shade::SpotLight>());
+
+		spotLight->SetAmbientColor(light["Ambient"].as<glm::vec3>());
+		spotLight->SetDiffuseColor(light["Diffuse"].as<glm::vec3>());
+		spotLight->SetSpecularColor(light["Specular"].as<glm::vec3>());
+		spotLight->SetConstant(light["Constant"].as<float>());
+		spotLight->SetLinear(light["Linear"].as<float>());
+		spotLight->SetQaudratic(light["Qaudratic"].as<float>());
+		spotLight->SetMinAngle(light["Min angle"].as<float>());
+		spotLight->SetMaxAngle(light["Max angle"].as<float>());
+	}
+
+	return true;
+}
 static bool DeserrEntity(shade::Entity& entity, YAML::detail::iterator_value& value)
 {
 	DeserrTransform3DComponent(entity, value);
 	DesserModel3DComponent(entity, value);
+	DesserDirectLightComponent(entity, value);
+	DesserPointLightComponent(entity, value);
+	DesserSpotLightComponent(entity, value);
 	return true;
 }

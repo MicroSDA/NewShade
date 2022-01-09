@@ -58,3 +58,9 @@ std::uint32_t shade::OpenGLIndexBuffer::GetSize() const
 		glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
 	return size;
 }
+
+void shade::OpenGLIndexBuffer::Resize(const uint32_t& count)
+{
+	glBindBuffer(GL_ARRAY_BUFFER, m_RenderID);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(Index) * count, nullptr, GL_STATIC_DRAW); // Always static, keep in mind
+}

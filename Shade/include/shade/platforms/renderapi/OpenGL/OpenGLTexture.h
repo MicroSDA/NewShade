@@ -14,6 +14,7 @@ namespace shade
 		virtual void Bind(std::uint32_t binding = 0) const override;
 		virtual std::uint32_t GetRenderID() override;
 		virtual void AssetInit() override;
+		static void BindTest(std::uint32_t renderId, std::uint32_t binding);
 	private:
 		GLuint  m_RenderID;
 		bool    m_IsInit;

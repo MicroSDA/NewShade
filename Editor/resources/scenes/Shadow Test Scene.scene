@@ -1,0 +1,41 @@
+Scene: Shadow Test Scene
+Entities:
+  - Entity: 4
+    Tag: Cube
+    Transform3D:
+      Position: [0, 0, 0]
+      Rotation: [0, -0, 0]
+      Scale: [10.4563313, 1, 7.38313866]
+    Model3D:
+      Asset: Cube
+  - Entity: 3
+    Tag: Cube
+    Transform3D:
+      Position: [0, 1.88903904, 0]
+      Rotation: [0, -0, 0]
+      Scale: [1, 1, 1]
+    Model3D:
+      Asset: Cube
+  - Entity: 2
+    Tag: Direct light
+    Transform3D:
+      Position: [0, 0, 0]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    DirectLight:
+      Ambient: [0.100000001, 0.100000001, 0.100000001]
+      Diffuse: [1, 1, 1]
+      Specular: [1, 1, 1]
+  - Entity: 1
+    Tag: Point light
+    Transform3D:
+      Position: [-0.482584953, 4.66078997, -0.131603003]
+      Rotation: [0, -0, 0]
+      Scale: [1, 1, 1]
+    PointLight:
+      Ambient: [0.100000001, 0.100000001, 0.100000001]
+      Diffuse: [1, 0, 0]
+      Specular: [1, 0, 0]
+      Constant: 1
+      Linear: 0.00100000005
+      Qaudratic: 0.00100000005

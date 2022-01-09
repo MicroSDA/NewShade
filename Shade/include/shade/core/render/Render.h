@@ -20,9 +20,13 @@
 #include "shade/core/render/drawable/primitives/Plane.h"
 #include "shade/core/vertex/Vertex2D.h"
 #include "shade/core/render/effects/Shadows.h"
+#include "shade/core/render/DrawablePass.h"
+#include "shade/core/render/RenderPipeline.h"
 
 namespace shade
 {
+	
+
 	class SHADE_API Render
 	{
 	public:
@@ -38,6 +42,7 @@ namespace shade
 				SpotLightSources.clear();
 			}
 		};
+
 		struct Sprites
 		{
 			Shared<VertexArray>				VAO;
@@ -46,29 +51,12 @@ namespace shade
 			Shared<IndexBuffer>				IBO;
 			std::vector<std::tuple<glm::mat4, Shared<Texture>>>	TexturesTransforms;
 		};
-		struct Instance
+
+		struct RenderPipelines
 		{
-			Drawable::DrawMode				DrawMode;
-			Shared<VertexArray>				VAO;
-			Shared<VertexBuffer>			VBO;
-			Shared<IndexBuffer>				IBO;
-			std::vector<std::tuple<glm::mat4, Shared<Material3D>>> MaterialTransforms;
-			bool							Expired = true;
+			std::unordered_map<std::shared_ptr<RenderPipeline>, DrawablePools> Pipelines;
 		};
-		struct Instances
-		{
-			Drawable::DrawMode						DrawMode;
-			std::uint32_t							Count = 0;
-			std::vector<std::pair<glm::mat4, int>>	Transforms;
-			Shared<Material3D>						Material;
-			Shared<VertexArray>						VAO;
-			Shared<VertexBuffer>					VBO;
-			Shared<VertexBuffer>					EBO;
-			Shared<IndexBuffer>						IBO;
-			bool									Expired = true;
-		};
-		using InstancePool = std::unordered_map<Shader* ,std::unordered_map<shade::Shared<Drawable>, Instances>>;
-		using SubmitedPool = std::unordered_map<Shader* ,std::unordered_map<shade::Shared<Drawable>, Instance>>;
+
 	public:
 		class SHADE_API PProcess
 		{
@@ -76,6 +64,7 @@ namespace shade
 			static void Process(const Shared<PostProcess>& pp);
 		};
 	public:
+		static Unique<RenderAPI>& GetRenderApi();
 		static void Init();
 		static void ShutDown();
 		static unsigned int GetVideoMemoryUsage();
@@ -90,37 +79,39 @@ namespace shade
 		static void BeginScene(const Camera::RenderData& renderData, const glm::vec4& clipping = glm::vec4(0));
 		static void BeginScene(const Shared<Camera>& camera, const Shared<FrameBuffer>& framebuffer, const glm::vec4& clipping = glm::vec4(0));
 		static void EndScene();
-
-		static void SubmitInstance(const Shared<Shader>& shader, const Shared<Drawable>& drawable, const Shared<Material3D>& material, const glm::mat4& transform, const int& id = -1);
-		static void Submit(const Shared<Shader>& shader, const Shared<Drawable>& drawable, const Shared<Material3D>& material, const glm::mat4& transform);
 		/* Light */
-		static void Submit(const Shared<DirectLight>& light,  const glm::mat4& transform);
-		static void Submit(const Shared<PointLight>&  light,  const glm::mat4& transform);
-		static void Submit(const Shared<SpotLight>&   light,  const glm::mat4& transform);
+		static void SubmitLight(const Shared<DirectLight>& light,  const glm::mat4& transform);
+		static void SubmitLight(const Shared<PointLight>&  light,  const glm::mat4& transform);
+		static void SubmitLight(const Shared<SpotLight>&   light,  const glm::mat4& transform);
 
-		/* Has to be reworked */
-		static void Submit(const Shared<Shader>& shader, const Shared<Texture>&  texture,  const glm::mat4& transform);
-
-		static void DrawInstances(const Shared<Shader>& shader);
-		static void DrawSubmited(const Shared<Shader>& shader);
-
-
-		static void DrawNotIndexed(const Drawable::DrawMode& mode, const Shared<VertexArray>& VAO, const std::uint32_t& count);
-		static void DrawIndexed(const Drawable::DrawMode& mode, const Shared<VertexArray>& VAO, const Shared<IndexBuffer>& IBO);
 		static void DrawSprite(const Shared<Shader>& shader, const Shared<Texture>& texture, const glm::mat4& transform, const glm::vec4& rectangle = glm::vec4(0, 0, 1, 1));
+		static void DrawSprite(const Shared<Shader>& shader, const std::uint32_t&   texture, const glm::mat4& transform, const glm::vec4& rectangle = glm::vec4(0, 0, 1, 1));
+
+		static void SubmitWithPipelineInstanced(const Shared<RenderPipeline>& pipeline, const Shared<Drawable>& drawable, const Shared<Material3D>& material, const glm::mat4& transform);
+
+
+		static void ExecuteSubmitedPipeline(const Shared<RenderPipeline>& pipeline);
+
+		static void ExecuteSubmitedPipelines();
+
+		static void Enable(const int& value);
+		static void Disable(const int& value);
 
 	private:
 		
 		static Unique<RenderAPI> m_sRenderAPI;
 		static bool				m_sIsInit;
 
-		static Render::InstancePool			m_sInstancePool;
-		static Render::SubmitedPool			m_sSubmitedPool;
 		static Render::Sprites				m_sSprites;
 		static Render::LightEnviroment		m_sLightEnviroment;
 
 		static Shared<UniformBuffer>		m_sCameraUniformBuffer;
 		static Shared<UniformBuffer>		m_sClippingUniformBuffer;
+
+		/* At scene begin framebuffer */
+		static Shared<FrameBuffer>			m_sTargetFrameBuffer;
+		/* Ping pong frame buffer */
+		static Shared<FrameBuffer>			m_sPreviousPassBuffer;
 
 		static Shared<ShaderStorageBuffer>	m_sDirectLightsBuffer;
 		static Shared<ShaderStorageBuffer>	m_sPointLightsBuffer;
@@ -128,12 +119,8 @@ namespace shade
 		static Shared<ShaderStorageBuffer>	m_sShadowCascadesBuffer;
 		static Shared<ShaderStorageBuffer>	m_sShadowSpotLightBuffer;
 
-		static Shared<FrameBuffer>			m_sFrameBuffer;
-		static Shared<FrameBuffer>			m_sShadowFrameBuffer;
-		static Shared<FrameBuffer>			m_sShadowSpotLightFrameBuffer;
-		//Util
-		static void _CreateInstance(const Shared<Shader>& shader, const Shared<Drawable>& drawable, const Shared<Material3D>& material, const glm::mat4& transform);
-		static void _CreateInstances(const Shared<Shader>& shader, const Shared<Drawable>& drawable, const Shared<Material3D>& material, const glm::mat4& transform, const int& id);
-
+		static std::unordered_map<Shared<Drawable>, BufferDrawData> m_sInstancedGeometryBuffers;
+		static RenderPipelines m_sPipelines;
+		static void _CreateInstancedGeometryBuffer(const Shared<Drawable>& drawable);
 	};
 }

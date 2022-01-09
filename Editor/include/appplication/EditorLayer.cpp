@@ -28,10 +28,6 @@ void EditorLayer::OnCreate()
 		shade::FrameBuffer::Texture::Format::RED_INT,
 		shade::FrameBuffer::Texture::Format::DEPTH24STENCIL8 }));
 
-	m_ShadowFrameBuffer = shade::FrameBuffer::Create(shade::FrameBuffer::Layout(1024, 1024, {
-		shade::FrameBuffer::Texture::Format::RGBA16F,
-		shade::FrameBuffer::Texture::Format::DEPTH24STENCIL8 }));
-
 	m_IconsTexture = shade::Texture::Create<shade::Texture>();
 	m_IconsTexture->GetAssetData().Attribute("Path").set_value("resources/assets/textures/icons.dds");
 	m_IconsTexture->Deserialize();
@@ -42,14 +38,14 @@ void EditorLayer::OnCreate()
 	m_LogoTexture->Deserialize();
 	m_LogoTexture->AssetInit();
 
-	m_InstancedShader		= shade::ShadersLibrary::Get("General");
-	m_ShadowShader			= shade::ShadersLibrary::Get("Shadow");
-	m_GridShader			= shade::ShadersLibrary::Get("Grid");
-	m_FrustumShader			= shade::ShadersLibrary::Get("Frustum");
-	m_BloomShader			= shade::ShadersLibrary::Get("Bloom");
-	m_ColorCorrectionShader = shade::ShadersLibrary::Get("ColorCorrection");
-	m_BoxShader				= shade::ShadersLibrary::Get("Box");
-	m_SpriteShader			= shade::ShadersLibrary::Get("Sprite");
+	m_InstancedShader			= shade::ShadersLibrary::Get("General");
+	m_DirectLightShadowShader	= shade::ShadersLibrary::Get("DirectLightShadow");
+	m_GridShader				= shade::ShadersLibrary::Get("Grid");
+	m_FrustumShader				= shade::ShadersLibrary::Get("Frustum");
+	m_BloomShader				= shade::ShadersLibrary::Get("Bloom");
+	m_ColorCorrectionShader		= shade::ShadersLibrary::Get("ColorCorrection");
+	//m_BoxShader					= shade::ShadersLibrary::Get("Box");
+	m_SpriteShader				= shade::ShadersLibrary::Get("Sprite");
 
 	m_Grid	= shade::Grid::Create(0, 0, 0);
 	m_Box	= shade::Box::Create(glm::vec3(-1.f), glm::vec3(1.f));
@@ -58,6 +54,10 @@ void EditorLayer::OnCreate()
 	m_PPBloom->SetInOutTargets(m_FrameBuffer, m_FrameBuffer, m_BloomShader);
 	m_PPColorCorrection = shade::PPColorCorrection::Create();
 	m_PPColorCorrection->SetInOutTargets(m_FrameBuffer, m_FrameBuffer, m_ColorCorrectionShader);
+
+	m_InstancedPipeline = shade::InstancedPipeline::Create<shade::InstancedPipeline>({ m_InstancedShader		 });
+	m_ShadowMapPipeline = shade::InstancedPipeline::Create<shade::ShadowMapPipeline>({ m_DirectLightShadowShader });
+	m_GridPipeline      = shade::InstancedPipeline::Create<shade::GridPipeline>({ m_GridShader });
 }
 
 void EditorLayer::OnUpdate(const shade::Shared<shade::Scene>& scene, const shade::Timer& deltaTime)
@@ -79,11 +79,11 @@ void EditorLayer::OnUpdate(const shade::Shared<shade::Scene>& scene, const shade
 
 	/* Materials always nullptr for this*/
 	if (m_IsShowGrid)
-		shade::Render::Submit(m_GridShader, m_Grid, m_Grid->GetMaterial(), glm::mat4(1));
+		shade::Render::SubmitWithPipelineInstanced(m_GridPipeline, m_Grid, m_Grid->GetMaterial(), glm::mat4(1));
 
 	scene->GetEntities().view<shade::CameraComponent>().each([&](auto& entity, shade::CameraComponent& camera)
 		{
-			shade::Render::SubmitInstance(m_FrustumShader, m_Box, nullptr, glm::inverse(camera->GetViewProjection()));
+			//shade::Render::SubmitInstance(m_FrustumShader, m_Box, nullptr, glm::inverse(camera->GetViewProjection()));
 		});
 
 	m_SubmitedMeshCount = 0;
@@ -94,17 +94,15 @@ void EditorLayer::OnUpdate(const shade::Shared<shade::Scene>& scene, const shade
 			{
 				auto cpcTransform = scene->ComputePCTransform(entity);
 
+				/* Shadow pass outside of frustum*/
+				shade::Render::SubmitWithPipelineInstanced(m_ShadowMapPipeline, mesh, mesh->GetMaterial(), cpcTransform);
+
 				if (frustum.IsInFrustum(cpcTransform, mesh->GetMinHalfExt(), mesh->GetMaxHalfExt()))
 				{
-					shade::Render::SubmitInstance(m_InstancedShader, mesh, mesh->GetMaterial(), cpcTransform, (int)entity);
-					/* Shadow pas */
-					//shade::Render::SubmitInstance(m_ShadowShader, mesh, nullptr, cpcTransform);
-
-
-
-					if (m_IsShowFrustum)
-						shade::Render::Submit(m_BoxShader, shade::Box::Create(mesh->GetMinHalfExt(), mesh->GetMaxHalfExt()), nullptr, cpcTransform);
-
+					shade::Render::SubmitWithPipelineInstanced(m_InstancedPipeline, mesh, mesh->GetMaterial(), cpcTransform);
+				
+					//if (m_IsShowFrustum)
+					//	shade::Render::Submit(m_BoxShader, shade::Box::Create(mesh->GetMinHalfExt(), mesh->GetMaxHalfExt()), nullptr, cpcTransform);
 					m_SubmitedMeshCount++;
 				}
 
@@ -114,15 +112,16 @@ void EditorLayer::OnUpdate(const shade::Shared<shade::Scene>& scene, const shade
 	/* Light */
 	scene->GetEntities().view<shade::DirectLightComponent, shade::Transform3DComponent>().each([&](auto& entity, shade::DirectLightComponent& enviroment, shade::Transform3DComponent& transform)
 		{
-			shade::Render::Submit(enviroment, scene->ComputePCTransform(entity));
+			//shade::Render::SubmitLight(enviroment, scene->ComputePCTransform(entity));
+			shade::Render::SubmitLight(enviroment, transform.GetModelMatrix());
 		});
 	scene->GetEntities().view<shade::PointLightComponent, shade::Transform3DComponent>().each([&](auto& entity, shade::PointLightComponent& enviroment, shade::Transform3DComponent& transform)
 		{
-			shade::Render::Submit(enviroment, scene->ComputePCTransform(entity));
+			shade::Render::SubmitLight(enviroment, scene->ComputePCTransform(entity));
 		});
 	scene->GetEntities().view<shade::SpotLightComponent, shade::Transform3DComponent>().each([&](auto& entity, shade::SpotLightComponent& enviroment, shade::Transform3DComponent& transform)
 		{
-			shade::Render::Submit(enviroment, scene->ComputePCTransform(entity));
+			shade::Render::SubmitLight(enviroment, scene->ComputePCTransform(entity));
 		});
 }
 
@@ -156,63 +155,35 @@ void EditorLayer::OnRender(const shade::Shared<shade::Scene>& scene, const shade
 			
 			
 		}
-		ShowWindowBar("Shadows", [&]()
-			{
-				static int id = 11;
-				DrawImage(id, ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y);
-				DrawInt("Render id", &id);
-			});
 		ShowWindowBar("Scene", &EditorLayer::Scene, this, scene);
 
 	} ImGui::End(); // Begin("DockSpace")
 	{
-		/* Clear select atthacment */
-		
-	
-		//shade::Render::Begin();
-		//m_FrameBuffer->ClearAttachment(1, -1);
-		//m_FrameBuffer->ClearAttachment(0, 0.0f);
-		//m_FrameBuffer->Bind();
+		static glm::vec4 clip = glm::vec4(0.9f);
 
-		/* Shadow pas */
-		//shade::Render::DepthTest(true);
+		ShowWindowBar("Shadows", [&]()
+			{
+				DrawFlaot("Near", &clip.x);
+				DrawFlaot("Far", &clip.y);
+				DrawFlaot("Lambda", &clip.z);
+			});
 
-		/*glm::mat4 lightProjection, lightView;
-		glm::mat4 lightSpaceMatrix;
+		m_FrameBuffer->Clear(shade::AttacmentClearFlag::Color | shade::AttacmentClearFlag::Depth | shade::AttacmentClearFlag::Stensil);
+		shade::Render::Begin();
+			shade::Render::BeginScene(m_Camera, m_FrameBuffer, clip);
+				shade::Render::ExecuteSubmitedPipeline(m_ShadowMapPipeline);
+				shade::Render::ExecuteSubmitedPipeline(m_InstancedPipeline);
+				if (m_isBloomEnabled)
+					shade::Render::PProcess::Process(m_PPBloom);
+				if (m_isColorCorrectionEnabled)
+					shade::Render::PProcess::Process(m_PPColorCorrection);
+				shade::Render::ExecuteSubmitedPipeline(m_GridPipeline);
 
-		glm::vec3 lightPos(-10.0f, 150.0f, -10.f);
+				//shade::Render::DrawSprite(m_SpriteShader, m_ShadowMapPipeline->GetResult()->GetDepthAttachment(), glm::mat4(1));
+			shade::Render::EndScene();
+		shade::Render::End();
 
-		float near_plane = 1.0f, far_plane = 250.f;
-		//lightProjection = glm::perspective(glm::radians(45.0f), (GLfloat)SHADOW_WIDTH / (GLfloat)SHADOW_HEIGHT, near_plane, far_plane); // note that if you use a perspective projection matrix you'll have to change the light position as the current light position isn't enough to reflect the whole scene
-		lightProjection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, near_plane, far_plane);
-		
-		lightView		= glm::lookAt(lightPos, glm::vec3(0.0f), glm::vec3(0.0, 1.0, 0.0));
-		lightSpaceMatrix = lightProjection * lightView;
 
-		shade::Render::BeginScene(m_Camera->GetRenderData(), m_ShadowFrameBuffer);
-		shade::Render::Begin(); // Clearing frambuffer
-	
-		m_ShadowShader->Bind();
-		m_ShadowShader->SendMat4("u_LightMatrix", false, glm::value_ptr(lightSpaceMatrix));
-		shade::Render::DrawInstances(m_ShadowShader);
-		shade::Render::EndScene();
-
-		
-		/* Normal pass */
-		/* Has to be cleared frame buffer if needed*/
-	
-		m_FrameBuffer->Bind();
-		shade::Render::Clear();
-
-		shade::Render::Begin(); // Clearing frambuffer
-		shade::Render::BeginScene(m_Camera, m_FrameBuffer);
-		
-		//shade::Render::Clear();
-		/*-------------------*/
-		shade::Render::DrawInstances(m_InstancedShader);
-		shade::Render::EndScene();
-
-		
 
 		/*if (m_isBloomEnabled)
 			shade::Render::PProcess::Process(m_PPBloom);
@@ -595,7 +566,7 @@ void EditorLayer::Scene(const shade::Shared<shade::Scene>& scene)
 		m_SceneViewPort.ViewPort.w = ImGui::GetContentRegionAvail().y;
 
 		m_FrameBuffer->Resize(m_SceneViewPort.ViewPort.z, m_SceneViewPort.ViewPort.w);
-		m_Camera->Resize(m_SceneViewPort.ViewPort.z / m_SceneViewPort.ViewPort.w);
+		m_Camera->Resize((float)m_SceneViewPort.ViewPort.z / (float)m_SceneViewPort.ViewPort.w);
 	}
 	
 	m_SceneViewPort.ViewPort.x = ImGui::GetWindowPos().x + ImGui::GetCursorPos().x; // With tab size

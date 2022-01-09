@@ -315,6 +315,7 @@ void shade::OpenGLFrameBuffer::Invalidate()
 	{
 		// Only depth-pass
 		glDrawBuffer(GL_NONE);
+		//glReadBuffer(GL_NONE);
 	}
 
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
@@ -357,4 +358,10 @@ void shade::OpenGLFrameBuffer::BindDepthAsTexture(const std::uint32_t& unit) con
 void shade::OpenGLFrameBuffer::BindAsImage(const std::uint32_t& attachment, const std::uint32_t& binding, const std::uint32_t& mip, const Texture::Format& format, const Texture::Access& access)
 {
 	glBindImageTexture(binding, GetAttachment(attachment), mip, GL_FALSE, 0, static_cast<GLenum>(access), util::ToOpenGLTextureFormat(format));
+}
+
+void shade::OpenGLFrameBuffer::Clear(shade::AttachmentClear clear)
+{
+	Bind();
+	glClear(static_cast<GLbitfield>(clear));
 }

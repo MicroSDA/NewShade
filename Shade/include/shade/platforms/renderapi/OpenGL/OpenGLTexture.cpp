@@ -27,6 +27,12 @@ void shade::OpenGLTexture::AssetInit()
 	_Init();
 }
 
+void shade::OpenGLTexture::BindTest(std::uint32_t renderId, std::uint32_t binding)
+{
+	glActiveTexture(GL_TEXTURE0 + binding);
+	glBindTexture(GL_TEXTURE_2D_ARRAY, renderId);
+}
+
 void shade::OpenGLTexture::_Init()
 {
 	if (m_ImageData.Data != nullptr)

@@ -5,7 +5,7 @@ shade::Shadows::Cascade shade::Shadows::ComputeDirectLightCascade(const shade::S
 {
 	glm::mat4 projection = glm::perspective(camera->GetFov(), camera->GetAspect(), nearPlane, farplane);
 
-	auto frustumCorners = GetCameraFrustumCorners(projection, camera->GetView());
+	auto frustumCorners  = GetCameraFrustumCorners(projection, camera->GetView());
 	glm::vec3 frustumCenter(0.0f);
 	/* Get frustum center */
 	for (const auto& c : frustumCorners)
@@ -29,8 +29,19 @@ shade::Shadows::Cascade shade::Shadows::ComputeDirectLightCascade(const shade::S
 		minZ = std::min(minZ, trf.z); maxZ = std::max(maxZ, trf.z);
 	}
 
+	float radius = 0.0f;
+	for (uint32_t i = 0; i < 8; i++)
+	{
+		float distance = glm::length(frustumCorners[i] - glm::vec4(frustumCenter, 1.0));
+		radius = glm::max(radius, distance);
+	}
+	radius = std::ceil(radius * 16.0f) / 16.0f;
+
+	glm::vec3 maxExtents = glm::vec3(radius);
+	glm::vec3 minExtents = -maxExtents;
+
 	constexpr float zMult = 1.0f;
-	if (minZ < 0)
+	/*if (minZ < 0)
 	{
 		minZ *= zMult;
 	}
@@ -46,10 +57,11 @@ shade::Shadows::Cascade shade::Shadows::ComputeDirectLightCascade(const shade::S
 	else
 	{
 		maxZ *= zMult;
-	}
+	}*/
 	/* Create ortho projection based on camera frustum corners */
-	const glm::mat4 lightProjection = glm::ortho(minX, maxX, minY, maxY, minZ, maxZ);
-	return  Cascade{ lightProjection * lightView, split };
+	//const glm::mat4 lightProjection = glm::ortho(minX, maxX, minY, maxY, minZ, maxZ);
+	const glm::mat4 lightProjection = glm::ortho(minExtents.x, maxExtents.x, minExtents.y, maxExtents.y, minExtents.z, maxExtents.z - minExtents.z);
+	return  Cascade{ lightProjection * lightView, radius };
 }
 
 glm::mat4 shade::Shadows::ComputeSpotLightViewMatrix(const shade::Shared<Camera>& camera, const glm::vec3& position, const glm::vec3& direction)

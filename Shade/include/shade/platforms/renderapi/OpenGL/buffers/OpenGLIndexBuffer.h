@@ -15,6 +15,7 @@ namespace shade
 		virtual void SetData(const Index* data, const uint32_t& count, const uint32_t& offset) override;
 		virtual std::uint32_t GetCount() const override;
 		virtual std::uint32_t GetSize() const override;
+		virtual void Resize(const uint32_t& count) override;
 	private:
 		uint32_t m_RenderID;
 

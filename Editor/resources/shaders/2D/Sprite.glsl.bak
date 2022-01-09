@@ -48,6 +48,6 @@ void main()
 	//color += vec3(texture(u_Texture, vec3(a_UV_Coordinates, 2)).r)/ 0.75;
 	//color += vec3(texture(u_Texture, vec3(a_UV_Coordinates, 3)).r)/ 0.75;
 	
-	FrameBuffer = vec4(color, 0.0); // orthographic;
+	FrameBuffer = vec4(color, 0.3); // orthographic;
 	//FrameBuffer = texture(u_Texture, vec3(a_UV_Coordinates, 0)).rgba;
 }
