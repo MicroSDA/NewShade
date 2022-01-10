@@ -79,7 +79,7 @@ void EditorLayer::OnUpdate(const shade::Shared<shade::Scene>& scene, const shade
 
 	/* Materials always nullptr for this*/
 	if (m_IsShowGrid)
-		shade::Render::SubmitWithPipelineInstanced(m_GridPipeline, m_Grid, m_Grid->GetMaterial(), glm::mat4(1));
+		shade::Render::SubmitPipelineInstanced(m_GridPipeline, m_Grid, m_Grid->GetMaterial(), glm::mat4(1));
 
 	scene->GetEntities().view<shade::CameraComponent>().each([&](auto& entity, shade::CameraComponent& camera)
 		{
@@ -95,11 +95,11 @@ void EditorLayer::OnUpdate(const shade::Shared<shade::Scene>& scene, const shade
 				auto cpcTransform = scene->ComputePCTransform(entity);
 
 				/* Shadow pass outside of frustum*/
-				shade::Render::SubmitWithPipelineInstanced(m_ShadowMapPipeline, mesh, mesh->GetMaterial(), cpcTransform);
+				shade::Render::SubmitPipelineInstanced(m_ShadowMapPipeline, mesh, mesh->GetMaterial(), cpcTransform);
 
 				if (frustum.IsInFrustum(cpcTransform, mesh->GetMinHalfExt(), mesh->GetMaxHalfExt()))
 				{
-					shade::Render::SubmitWithPipelineInstanced(m_InstancedPipeline, mesh, mesh->GetMaterial(), cpcTransform);
+					shade::Render::SubmitPipelineInstanced(m_InstancedPipeline, mesh, mesh->GetMaterial(), cpcTransform);
 				
 					//if (m_IsShowFrustum)
 					//	shade::Render::Submit(m_BoxShader, shade::Box::Create(mesh->GetMinHalfExt(), mesh->GetMaxHalfExt()), nullptr, cpcTransform);
@@ -153,26 +153,29 @@ void EditorLayer::OnRender(const shade::Shared<shade::Scene>& scene, const shade
 			ShowWindowBar("Material", &EditorLayer::Material, this, m_SelectedMaterial3D);
 			ShowWindowBar("Shaders library", &EditorLayer::ShadersLibrary, this);
 			
+			ShowWindowBar("SpotLight Shadow", [&]() 
+				{
+					DrawFlaot("Aspect", &m_ShadowMapPipeline->_ASPECT);
+					DrawFlaot("Near", &m_ShadowMapPipeline->_NEAR);
+					DrawFlaot("Far", &m_ShadowMapPipeline->_FAR);
+					DrawFlaot("Fov", &m_ShadowMapPipeline->_FOV);
+					static int id = 0;
+					DrawInt("ID", &id);
+					DrawImage(id, 500, 500);
+				
+				});
 			
 		}
 		ShowWindowBar("Scene", &EditorLayer::Scene, this, scene);
 
 	} ImGui::End(); // Begin("DockSpace")
 	{
-		static glm::vec4 clip = glm::vec4(0.9f);
-
-		ShowWindowBar("Shadows", [&]()
-			{
-				DrawFlaot("Near", &clip.x);
-				DrawFlaot("Far", &clip.y);
-				DrawFlaot("Lambda", &clip.z);
-			});
-
 		m_FrameBuffer->Clear(shade::AttacmentClearFlag::Color | shade::AttacmentClearFlag::Depth | shade::AttacmentClearFlag::Stensil);
 		shade::Render::Begin();
-			shade::Render::BeginScene(m_Camera, m_FrameBuffer, clip);
+			shade::Render::BeginScene(m_Camera, m_FrameBuffer);
 				shade::Render::ExecuteSubmitedPipeline(m_ShadowMapPipeline);
 				shade::Render::ExecuteSubmitedPipeline(m_InstancedPipeline);
+
 				if (m_isBloomEnabled)
 					shade::Render::PProcess::Process(m_PPBloom);
 				if (m_isColorCorrectionEnabled)

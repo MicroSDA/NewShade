@@ -1,13 +1,14 @@
 #include "shade_pch.h"
 #include "InstancedPipeline.h"
 #include "shade/core/render/Render.h"
+#include "shade/core/render/pipelines/ShadowMapPipeline.h"
 
 shade::InstancedPipeline::InstancedPipeline(const RenderPipeline::Specification& spec)
 {
 	m_Specification = spec;
 }
 
-shade::Shared<shade::FrameBuffer > shade::InstancedPipeline::Process(const shade::Shared<FrameBuffer>& target, const shade::Shared<FrameBuffer>& previousPass, const DrawablePools& drawables, std::unordered_map<Shared<Drawable>, BufferDrawData>& drawData)
+shade::Shared<shade::FrameBuffer > shade::InstancedPipeline::Process(const shade::Shared<FrameBuffer>& target, const shade::Shared<FrameBuffer>& previousPass, const Shared<RenderPipeline>& previusPiepline, const DrawablePools& drawables, std::unordered_map<Shared<Drawable>, BufferDrawData>& drawData)
 {
 	auto& shader = m_Specification.Shader;
 	shader->Bind(); shader->ExecuteSubrutines();
@@ -38,9 +39,13 @@ shade::Shared<shade::FrameBuffer > shade::InstancedPipeline::Process(const shade
 				if (material->TextureNormals)
 					material->TextureNormals->Bind(2);
 
+				previusPiepline->As<ShadowMapPipeline>().GetDriectLightFrameBuffer()->BindDepthAsTexture(3);
+				previusPiepline->As<ShadowMapPipeline>().GetSpotLightFrameBuffer()->BindDepthAsTexture(4);
 				/* If shadows pas*/
-				if (previousPass)
-					previousPass->BindDepthAsTexture(3);
+				/*if (previousPass)
+					  previousPass->BindDepthAsTexture(3);*/
+
+			
 			}
 
 			drawData[instance].TBO->Resize(sizeof(glm::mat4) * transforms.size());

@@ -24,13 +24,37 @@ float Variance_DirectLight(sampler2DArray ShadowMap, vec3 ProjectionCoords, floa
             float P = step(Depth, Moments.x);
             float Variance = max(Moments.y - Moments.x * Moments.x, 0.00002);
             float D = Depth - Moments.x;
+            float Max = LineStep(0.99, 1.0, Variance / (Variance + D * D));
+            Value += max(P, Max);
+        }
+    }
+
+    Value /= float(SamplesCount * max(CascadeLayer, 1));
+    return 1.0 - min(Value, 1.0);
+}
+
+float Variance_SpotLight(sampler2D ShadowMap, vec3 ProjectionCoords, float Depth)
+{
+    const int   SamplesCount   = 1;
+    float       Value        = 0.0;
+    vec2        TexelSize    = 1.0 / vec2(textureSize(ShadowMap, 0));
+
+    for(int x = -SamplesCount; x < SamplesCount; x++)
+    {  
+        for(int y = -SamplesCount; y < SamplesCount; y++)
+        {
+            float _Depth = texture(ShadowMap, vec2(ProjectionCoords.xy + vec2(x, y) * TexelSize)).r; 
+            vec2  Moments = vec2(_Depth, _Depth * _Depth);
+            float P = step(Depth, Moments.x);
+            float Variance = max(Moments.y - Moments.x * Moments.x, 0.000000002);
+            float D = Depth - Moments.x;
             float Max = LineStep(0.9, 1.0, Variance / (Variance + D * D));
             Value += max(P, Max);
         }
     }
 
-    Value /= SamplesCount * max(CascadeLayer, 1);
-    return 1.0 - min(Value, 1.0);
+    Value /= SamplesCount * 2;
+    return min(Value, 1.0);
 }
 
 float PCF_DirectLight(sampler2DArray ShadowMap, vec3 ProjectionCoords, float Depth, float Bias, int CascadeLayer)
@@ -78,7 +102,7 @@ float CSM_DirectLight(sampler2DArray ShadowMap, mat4 LightViewMatrix, int Cascad
     ProjectionCoords  = ProjectionCoords * 0.5 + 0.5;
     float CurentDepth = ProjectionCoords.z;
     if (!ShadowInRange(ProjectionCoords.z) || !ShadowInRange(ProjectionCoords.x) || !ShadowInRange(ProjectionCoords.y)) // Tweek ?
-        return 1.0;
+        return 0.0;
 
     return Variance_DirectLight(ShadowMap, ProjectionCoords, CurentDepth, CascadeLayer);
 
@@ -100,9 +124,12 @@ float SM_SpotLight(sampler2D ShadowMap, mat4 LightViewMatrix, mat4 CameraView, v
     /* Set between 0 - 1 range */
     ProjectionCoords  = ProjectionCoords * 0.5 + 0.5;
     float CurentDepth = ProjectionCoords.z;
-    if (CurentDepth  > 1.0) // Tweek ?
-        return 0.0;
+   if (!ShadowInRange(ProjectionCoords.z) || !ShadowInRange(ProjectionCoords.x) || !ShadowInRange(ProjectionCoords.y))
+   {
+       return 1.0;
+   }
+        
     /* Calculate bias */
-    float Bias = max(0.025 * (1.0 - dot(Normal, LightDirection)), 0.0005);
-    return PCF_SpotLight(ShadowMap, ProjectionCoords, CurentDepth, Bias);
+    float Bias = max(0.25 * (1.0 - dot(Normal, LightDirection)), 0.0005);
+    return Variance_SpotLight(ShadowMap, ProjectionCoords, CurentDepth);
 }

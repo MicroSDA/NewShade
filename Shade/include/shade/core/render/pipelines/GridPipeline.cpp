@@ -7,10 +7,12 @@ shade::GridPipeline::GridPipeline(const RenderPipeline::Specification& spec)
     m_Specification = spec;
 }
 
-shade::Shared<shade::FrameBuffer> shade::GridPipeline::Process(const shade::Shared<FrameBuffer>& target, const shade::Shared<FrameBuffer>& previousPass, const DrawablePools& drawables, std::unordered_map<Shared<Drawable>, BufferDrawData>& drawData)
+shade::Shared<shade::FrameBuffer> shade::GridPipeline::Process(const shade::Shared<FrameBuffer>& target, const shade::Shared<FrameBuffer>& previousPass, const Shared<RenderPipeline>& previusPipline, const DrawablePools& drawables, std::unordered_map<Shared<Drawable>, BufferDrawData>& drawData)
 {
 	auto& shader = m_Specification.Shader;
 	shader->Bind(); //shader->ExecuteSubrutines();
+
+	target->Bind();
 
 	for (auto& [instance, materials] : drawables.Drawables)
 	{

@@ -9,5 +9,7 @@ mat3 GetTBN_Matrix(mat4 ModelMatrix, vec3 Normal, vec3 Tangent)
 	if (dot(cross(N, T), B) > 0.0)
              T = T * -1.0;
 
-	return mat3(T, B, N);
+	/* Flip B if normal map is in DirectX order */
+	return mat3(T, -B, N);
+	//return mat3(T, B, N);
 }

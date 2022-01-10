@@ -25,7 +25,7 @@ layout(std140, binding = 1) uniform UClipDistance
 {
 	vec4 u_ClipDistance;
 };
-layout (std430, binding = 2) restrict readonly buffer UDirectlight
+layout (std430, binding = 2) restrict readonly buffer UDirectLight
 {
 	DirectLight u_DirectLight[];
 };
@@ -61,31 +61,37 @@ layout (binding = 0) uniform sampler2D 		u_TDiffuse;
 layout (binding = 1) uniform sampler2D 		u_TSpecular;
 layout (binding = 2) uniform sampler2D 		u_TNormal;
 layout (binding = 3) uniform sampler2DArray u_TDirectLightShadowMap;
-//layout (binding = 4) uniform sampler2D      u_TSpotLightShadowMap;
+
+layout (binding = 4) uniform sampler2D      u_TSpotLightShadowMap;
 // Camera uniform buffer
 layout (std140, binding = 0) uniform UCamera
 {
 	Camera u_Camera;
 }; 
 // Direct lights SSBO buffer
-layout (std430, binding = 2) restrict readonly buffer UDirectlight
+layout (std430, binding = 2) restrict readonly buffer UDirectLight
 {
 	DirectLight u_DirectLight[];
 };
 // Point lights SSBO buffer
-layout (std430, binding = 3) restrict readonly buffer UPointlight
+layout (std430, binding = 3) restrict readonly buffer UPointLight
 {
 	PointLight u_PointLight[];
 };
 // Spot lights SSBO buffer
-layout (std430, binding = 4) restrict readonly buffer USpotlight
+layout (std430, binding = 4) restrict readonly buffer USpotLight
 {
 	SpotLight u_SpotLight[];
 };
 // Shadow map cascades
-layout (std430, binding = 5) restrict readonly buffer UDirectlightCascade
+layout (std430, binding = 5) restrict readonly buffer UDirectLightCascade
 {
 	DirectLightCascade u_DirectLightCascade[];
+};
+
+layout (std430, binding = 6) restrict readonly buffer USpotLightCascade
+{
+	mat4 u_SpotLightCascade[];
 };
 // Need to pack in SSBO material as well !!
 uniform Material          u_Material;
@@ -140,17 +146,17 @@ vec4 BillinPhong(vec3 toCameraDirection)
 				Color += vec4(0.2, 0.0, 0.0, 0);*/
 		}
 	for(int i = 0;i < u_PointLight.length();  i++)
-		Color += BilinPhongPointLight(TBN_Normal, u_PointLight[i],   u_Material, a_Vertex, toCameraDirection, texture(u_TDiffuse, a_UV_Coordinates).rgba, texture(u_TSpecular, a_UV_Coordinates).rgba, 0.0);
+		Color += BilinPhongPointLight(TBN_Normal, u_PointLight[i],   u_Material, a_Vertex, toCameraDirection, texture(u_TDiffuse, a_UV_Coordinates).rgba, texture(u_TSpecular, a_UV_Coordinates).rgba, 1.0);
 	for(int i = 0;i < u_SpotLight.length();  i++)
 	{
-		/*float Shadow  = 1.0 - SM_SpotLight(u_TSpotLightShadowMap,
-												  u_SpotLignViewMatrix[0],
+		float Shadow  = SM_SpotLight(u_TSpotLightShadowMap,
+												  u_SpotLightCascade[0],
 												  u_Camera.View,
 												  a_Vertex,
 												  a_Normal,
-												  u_SpotLight[i].Position);*/
+												  u_SpotLight[i].Direction);
 
-		Color += BilinPhongSpotLight(TBN_Normal, u_SpotLight[i],  u_Material, a_Vertex, toCameraDirection, texture(u_TDiffuse, a_UV_Coordinates).rgba, texture(u_TSpecular, a_UV_Coordinates).rgba, 0.0);
+		Color += BilinPhongSpotLight(TBN_Normal, u_SpotLight[i],  u_Material, a_Vertex, toCameraDirection, texture(u_TDiffuse, a_UV_Coordinates).rgba, texture(u_TSpecular, a_UV_Coordinates).rgba, Shadow);
 	}
 	return Color;	
 }; 

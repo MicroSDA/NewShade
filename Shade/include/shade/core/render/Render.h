@@ -19,7 +19,6 @@
 #include "shade/core/render/postprocess/PPColorCorrection.h"
 #include "shade/core/render/drawable/primitives/Plane.h"
 #include "shade/core/vertex/Vertex2D.h"
-#include "shade/core/render/effects/Shadows.h"
 #include "shade/core/render/DrawablePass.h"
 #include "shade/core/render/RenderPipeline.h"
 
@@ -76,7 +75,6 @@ namespace shade
 
 		static void Begin();
 		static void End();
-		static void BeginScene(const Camera::RenderData& renderData, const glm::vec4& clipping = glm::vec4(0));
 		static void BeginScene(const Shared<Camera>& camera, const Shared<FrameBuffer>& framebuffer, const glm::vec4& clipping = glm::vec4(0));
 		static void EndScene();
 		/* Light */
@@ -87,20 +85,20 @@ namespace shade
 		static void DrawSprite(const Shared<Shader>& shader, const Shared<Texture>& texture, const glm::mat4& transform, const glm::vec4& rectangle = glm::vec4(0, 0, 1, 1));
 		static void DrawSprite(const Shared<Shader>& shader, const std::uint32_t&   texture, const glm::mat4& transform, const glm::vec4& rectangle = glm::vec4(0, 0, 1, 1));
 
-		static void SubmitWithPipelineInstanced(const Shared<RenderPipeline>& pipeline, const Shared<Drawable>& drawable, const Shared<Material3D>& material, const glm::mat4& transform);
-
+		static void SubmitPipelineInstanced(const Shared<RenderPipeline>& pipeline, const Shared<Drawable>& drawable, const Shared<Material3D>& material, const glm::mat4& transform);
 
 		static void ExecuteSubmitedPipeline(const Shared<RenderPipeline>& pipeline);
-
 		static void ExecuteSubmitedPipelines();
 
 		static void Enable(const int& value);
 		static void Disable(const int& value);
 
+		static const LightEnviroment& GetSubmitedLight();
+		static const Shared<Camera>&  GetLastActiveCamera();
 	private:
 		
 		static Unique<RenderAPI> m_sRenderAPI;
-		static bool				m_sIsInit;
+		static bool				 m_sIsInit;
 
 		static Render::Sprites				m_sSprites;
 		static Render::LightEnviroment		m_sLightEnviroment;
@@ -112,12 +110,15 @@ namespace shade
 		static Shared<FrameBuffer>			m_sTargetFrameBuffer;
 		/* Ping pong frame buffer */
 		static Shared<FrameBuffer>			m_sPreviousPassBuffer;
+		static Shared<RenderPipeline>		m_sPreviousPipeline;
 
 		static Shared<ShaderStorageBuffer>	m_sDirectLightsBuffer;
 		static Shared<ShaderStorageBuffer>	m_sPointLightsBuffer;
 		static Shared<ShaderStorageBuffer>	m_sSpotLightsBuffer;
-		static Shared<ShaderStorageBuffer>	m_sShadowCascadesBuffer;
+		//static Shared<ShaderStorageBuffer>	m_sShadowCascadesBuffer;
 		static Shared<ShaderStorageBuffer>	m_sShadowSpotLightBuffer;
+
+		static Shared<Camera>				m_sCamera;
 
 		static std::unordered_map<Shared<Drawable>, BufferDrawData> m_sInstancedGeometryBuffers;
 		static RenderPipelines m_sPipelines;

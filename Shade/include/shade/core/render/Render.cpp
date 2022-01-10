@@ -5,7 +5,6 @@
 namespace shade
 {
 	Unique<RenderAPI> Render::m_sRenderAPI = RenderAPI::Create();
-
 	bool Render::m_sIsInit = false;
 	/* Pools */
 	Render::Sprites				Render::m_sSprites;
@@ -16,16 +15,15 @@ namespace shade
 	Shared<ShaderStorageBuffer> Render::m_sDirectLightsBuffer;
 	Shared<ShaderStorageBuffer> Render::m_sPointLightsBuffer;
 	Shared<ShaderStorageBuffer> Render::m_sSpotLightsBuffer;
-	Shared<ShaderStorageBuffer> Render::m_sShadowCascadesBuffer;
+	//Shared<ShaderStorageBuffer> Render::m_sShadowCascadesBuffer;
 	Shared<ShaderStorageBuffer> Render::m_sShadowSpotLightBuffer;
 	Shared<FrameBuffer>			Render::m_sTargetFrameBuffer;
 	Shared<FrameBuffer>			Render::m_sPreviousPassBuffer;
-
+	Shared<RenderPipeline>		Render::m_sPreviousPipeline;
+	Shared<Camera>	            Render::m_sCamera;
 
 	Render::RenderPipelines		Render::m_sPipelines;
-
 	std::unordered_map<Shared<Drawable>, BufferDrawData> Render::m_sInstancedGeometryBuffers;
-
 }
 
 void shade::Render::PProcess::Process(const Shared<PostProcess>& pp)
@@ -51,7 +49,7 @@ void shade::Render::Init()
 		m_sDirectLightsBuffer = ShaderStorageBuffer::Create(0, 2);
 		m_sPointLightsBuffer = ShaderStorageBuffer::Create(0, 3);
 		m_sSpotLightsBuffer = ShaderStorageBuffer::Create(0, 4);
-		m_sShadowCascadesBuffer = ShaderStorageBuffer::Create(0, 5);
+		//m_sShadowCascadesBuffer = ShaderStorageBuffer::Create(0, 5);
 		m_sShadowSpotLightBuffer = ShaderStorageBuffer::Create(0, 6);
 
 		glm::fvec2 plane[4] = { glm::fvec2(-1.0,  1.0), glm::fvec2(-1.0, -1.0) ,glm::fvec2(1.0,   1.0), glm::fvec2(1.0,  -1.0) };
@@ -171,84 +169,17 @@ void shade::Render::End()
 	}
 }
 
-void shade::Render::BeginScene(const Camera::RenderData& renderData, const glm::vec4& clipping)
+void shade::Render::BeginScene(const Shared<Camera>& camera, const Shared<FrameBuffer>& framebuffer, const glm::vec4& clipping)
 {
+	m_sCamera = camera;
+	m_sTargetFrameBuffer = framebuffer;
 	/* Set data to uniforsm buffetrs */
-	m_sCameraUniformBuffer->SetData(&renderData, sizeof(Camera::RenderData), 0);
+	m_sCameraUniformBuffer->SetData(&camera->GetRenderData(), sizeof(Camera::RenderData), 0);
 	m_sClippingUniformBuffer->SetData(glm::value_ptr(clipping), sizeof(glm::vec4), 0);
 
 	/* Process SSBO buffers */
 	std::uint32_t dLightCount = m_sLightEnviroment.DirectLightSources.size(), pLighCount = m_sLightEnviroment.PointLightSources.size(), sLightCount = m_sLightEnviroment.SpotLightSources.size();
-	/* Direct light */
-	if (m_sDirectLightsBuffer->GetSize() != sizeof(DirectLight::RenderData) * dLightCount)
-		m_sDirectLightsBuffer->Resize(sizeof(DirectLight::RenderData) * dLightCount);
-	m_sDirectLightsBuffer->SetData(m_sLightEnviroment.DirectLightSources.data(), sizeof(DirectLight::RenderData) * dLightCount);
-	/* Point light */
-	if (m_sPointLightsBuffer->GetSize() != sizeof(PointLight::RenderData) * pLighCount)
-		m_sPointLightsBuffer->Resize(sizeof(PointLight::RenderData) * pLighCount);
-	m_sPointLightsBuffer->SetData(m_sLightEnviroment.PointLightSources.data(), sizeof(PointLight::RenderData) * pLighCount);
-	/* Spot light */
-	if (m_sSpotLightsBuffer->GetSize() != sizeof(SpotLight::RenderData) * sLightCount)
-		m_sSpotLightsBuffer->Resize(sizeof(SpotLight::RenderData) * sLightCount);
-	m_sSpotLightsBuffer->SetData(m_sLightEnviroment.SpotLightSources.data(), sizeof(SpotLight::RenderData) * sLightCount);
-	/*!Process SSBO buffers*/
-}
-
-void shade::Render::BeginScene(const Shared<Camera>& camera, const Shared<FrameBuffer>& framebuffer, const glm::vec4& clipping)
-{
-	m_sTargetFrameBuffer = framebuffer;
-	/* Set data to uniforsm buffetrs */
-	m_sCameraUniformBuffer->SetData(&camera->GetRenderData(), sizeof(Camera::RenderData), 0);
-	glm::vec4 clip;
-	m_sClippingUniformBuffer->SetData(glm::value_ptr(clip), sizeof(glm::vec4), 0);
-
-	/* Process SSBO buffers */
-	std::uint32_t dLightCount = m_sLightEnviroment.DirectLightSources.size(), pLighCount = m_sLightEnviroment.PointLightSources.size(), sLightCount = m_sLightEnviroment.SpotLightSources.size();
-	/* Shadows */
-	/* Only one direct light can cast cascaded shadows */
-	if (dLightCount)
-	{
-		/* TODO : need to redisign */
-		const int cascadeCount = 4;
-		//float spilt[cascadeCount] = { camera->GetFar() / 50.0f, camera->GetFar() / 25.0f, camera->GetFar() / 10.0f, camera->GetFar() / 1.0f };
-		float spilt[cascadeCount];
-		std::vector<Shadows::Cascade> cascades;
-		m_sShadowCascadesBuffer->Resize(sizeof(Shadows::Cascade) * 4);
-
-		const int SHADOW_MAP_CASCADE_COUNT = 4;
-		float nearClip = camera->GetNear();
-		float farClip = camera->GetFar();
-		float clipRange = farClip - nearClip;
-
-		float minZ = nearClip;
-		float maxZ = nearClip + clipRange;
-
-		float range = maxZ - minZ;
-		float ratio = maxZ / minZ;
-
-		float CascadeSplitLambda = clipping.z;
-
-		for (uint32_t i = 0; i < SHADOW_MAP_CASCADE_COUNT; i++)
-		{
-			float p = (i + 1) / static_cast<float>(SHADOW_MAP_CASCADE_COUNT);
-			float log = minZ * std::pow(ratio, p);
-			float uniform = minZ + range * p;
-			float d = CascadeSplitLambda * (log - uniform) + uniform;
-			spilt[i] = farClip * (d - nearClip) / clipRange;
-		}
-
-		for (size_t i = 0; i < cascadeCount + 1; ++i)
-		{
-			if (i == 0)
-				cascades.push_back(Shadows::ComputeDirectLightCascade(camera, m_sLightEnviroment.DirectLightSources[0].Direction, camera->GetNear() + clipping.x, spilt[i] + clipping.y, spilt[i]));
-			else if (i < cascadeCount)
-				cascades.push_back(Shadows::ComputeDirectLightCascade(camera, m_sLightEnviroment.DirectLightSources[0].Direction, spilt[i - 1] + clipping.x, spilt[i] + clipping.y, spilt[i]));
-			else
-				cascades.push_back(Shadows::ComputeDirectLightCascade(camera, m_sLightEnviroment.DirectLightSources[0].Direction, spilt[i - 1] + clipping.x, camera->GetFar() + clipping.y, spilt[i]));
-		}
-
-		m_sShadowCascadesBuffer->SetData(cascades.data(), sizeof(Shadows::Cascade) * 4);
-	}
+	
 	/* Direct light */
 	if (m_sDirectLightsBuffer->GetSize() != sizeof(DirectLight::RenderData) * dLightCount)
 		m_sDirectLightsBuffer->Resize(sizeof(DirectLight::RenderData) * dLightCount);
@@ -321,7 +252,7 @@ void shade::Render::DrawSprite(const Shared<Shader>& shader, const std::uint32_t
 	m_sRenderAPI->DrawNotIndexed(Drawable::DrawMode::TriangleStrip, m_sSprites.VAO, 4);
 }
 
-void shade::Render::SubmitWithPipelineInstanced(const Shared<RenderPipeline>& pipeline, const Shared<Drawable>& drawable, const Shared<Material3D>& material, const glm::mat4& transform)
+void shade::Render::SubmitPipelineInstanced(const Shared<RenderPipeline>& pipeline, const Shared<Drawable>& drawable, const Shared<Material3D>& material, const glm::mat4& transform)
 {
 	m_sPipelines.Pipelines[pipeline].Drawables[drawable].Materials[material].push_back(transform);
 
@@ -336,9 +267,11 @@ void shade::Render::ExecuteSubmitedPipeline(const Shared<RenderPipeline>& pipeli
 	if (_pipeline != m_sPipelines.Pipelines.end())
 	{
 		if(m_sPreviousPassBuffer)
-			m_sPreviousPassBuffer = _pipeline->first->Process(m_sTargetFrameBuffer, m_sPreviousPassBuffer, _pipeline->second, m_sInstancedGeometryBuffers);
+			m_sPreviousPassBuffer = _pipeline->first->Process(m_sTargetFrameBuffer, m_sPreviousPassBuffer, m_sPreviousPipeline, _pipeline->second, m_sInstancedGeometryBuffers);
 		else
-			m_sPreviousPassBuffer = _pipeline->first->Process(m_sTargetFrameBuffer, m_sTargetFrameBuffer, _pipeline->second, m_sInstancedGeometryBuffers);
+			m_sPreviousPassBuffer = _pipeline->first->Process(m_sTargetFrameBuffer, m_sTargetFrameBuffer, m_sPreviousPipeline, _pipeline->second, m_sInstancedGeometryBuffers);
+
+		m_sPreviousPipeline = _pipeline->first;
 	}	
 }
 
@@ -347,9 +280,11 @@ void shade::Render::ExecuteSubmitedPipelines()
 	for (const auto& pipeline : m_sPipelines.Pipelines)
 	{
 		if(m_sPreviousPassBuffer)
-			m_sPreviousPassBuffer = pipeline.first->Process(m_sTargetFrameBuffer, m_sPreviousPassBuffer, pipeline.second,  m_sInstancedGeometryBuffers);
+			m_sPreviousPassBuffer = pipeline.first->Process(m_sTargetFrameBuffer, m_sPreviousPassBuffer, m_sPreviousPipeline, pipeline.second,  m_sInstancedGeometryBuffers);
 		else
-			m_sPreviousPassBuffer = pipeline.first->Process(m_sTargetFrameBuffer, m_sTargetFrameBuffer, pipeline.second, m_sInstancedGeometryBuffers);
+			m_sPreviousPassBuffer = pipeline.first->Process(m_sTargetFrameBuffer, m_sTargetFrameBuffer, m_sPreviousPipeline, pipeline.second, m_sInstancedGeometryBuffers);
+
+		m_sPreviousPipeline = pipeline.first;
 	}
 }
 
@@ -361,6 +296,16 @@ void shade::Render::Enable(const int& value)
 void shade::Render::Disable(const int& value)
 {
 	m_sRenderAPI->Disable(value);
+}
+
+const shade::Render::LightEnviroment& shade::Render::GetSubmitedLight()
+{
+	return m_sLightEnviroment;
+}
+
+const shade::Shared<shade::Camera>& shade::Render::GetLastActiveCamera()
+{
+	return m_sCamera;
 }
 
 void shade::Render::_CreateInstancedGeometryBuffer(const Shared<Drawable>& drawable)

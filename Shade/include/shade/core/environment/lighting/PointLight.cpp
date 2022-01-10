@@ -32,8 +32,8 @@ std::uint32_t  shade::PointLight::m_TotalCount = 0;
 
 shade::PointLight::PointLight() : shade::Light(shade::Environment::Type::PointLight),
 	m_Constant(1.0f),
-	m_Linear(0.7f),
-	m_Qaudratic(1.8f)
+	m_Linear(0.001f),
+	m_Qaudratic(0.001f)
 {
 	// Icnrease count
 	m_TotalCount++;
