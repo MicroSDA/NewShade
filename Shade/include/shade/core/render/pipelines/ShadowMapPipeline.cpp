@@ -73,8 +73,9 @@ shade::Shared<shade::FrameBuffer> shade::ShadowMapPipeline::Process(const shade:
 			alignas(16) glm::mat4 VeiwMatrix;
 		};
 		/* Probably need aligment for mat4 */
-		_FOV = glm::acos(lights.SpotLightSources[0].MaxAngle) * 2.0;
-		SpotLighCascade c { ComputeSpotLightCascade(camera, lights.SpotLightSources[0].Position, lights.SpotLightSources[0].Direction, camera->GetNear(), 1000)};
+		float fov = glm::acos(lights.SpotLightSources[0].MaxAngle) * 2.0;
+		float distance = 500.0f; // Nedd calc form linear and quadratic;
+		SpotLighCascade c { ComputeSpotLightCascade(fov, lights.SpotLightSources[0].Position, lights.SpotLightSources[0].Direction, 1.0f, distance)};
 		//glm::mat4 ViewMatrix = ComputeSpotLightCascade(camera, lights.SpotLightSources[0].Position, lights.SpotLightSources[0].Direction, 0, 500);
 		if (m_SpotLightCascadeBuffer->GetSize() != sizeof(SpotLighCascade))
 			m_SpotLightCascadeBuffer->Resize(sizeof(SpotLighCascade));
@@ -179,10 +180,10 @@ shade::ShadowMapPipeline::Cascade shade::ShadowMapPipeline::ComputeDirectLightCa
 	return  Cascade{ lightProjection * lightView, radius };
 }
 
-glm::mat4 shade::ShadowMapPipeline::ComputeSpotLightCascade(const shade::Shared<Camera>& camera, const glm::vec3& position, const glm::vec3& direction, const float& nearPlane, const float& farplane)
+glm::mat4 shade::ShadowMapPipeline::ComputeSpotLightCascade(const float& fov, const glm::vec3& position, const glm::vec3& direction, const float& nearPlane, const float& farplane)
 {
 	//glm::mat4 lightProjection = glm::perspective(camera->GetFov(), camera->GetAspect(), nearPlane, farplane);
-	glm::mat4 lightProjection = glm::perspective(_FOV, _ASPECT, _NEAR, _FAR);
+	glm::mat4 lightProjection = glm::perspective(fov, 1.0f, nearPlane, farplane);
 	glm::mat4 lightView       = glm::lookAt(position - direction, position, glm::vec3(0.0, 1.0, 0.0));
 
 	return lightProjection * lightView;

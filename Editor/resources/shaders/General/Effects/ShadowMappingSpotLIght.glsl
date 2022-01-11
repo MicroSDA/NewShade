@@ -30,8 +30,8 @@ layout (location = 0) in vec2  a_UV_Coordinates;
 
 float LinearizeDepth(in vec2 uv)
 {
-    float zNear = 0.5;    // TODO: Replace by the zNear of your perspective projection
-    float zFar  = 500.0; // TODO: Replace by the zFar  of your perspective projection
+    float zNear = 1.0;    // TODO: Replace by the zNear of your perspective projection
+    float zFar  = 100.0; // TODO: Replace by the zFar  of your perspective projection
     float depth = gl_FragCoord.z;
     return (2.0 * zNear) / (zFar + zNear - depth * (zFar - zNear));
 }

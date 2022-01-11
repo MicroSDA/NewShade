@@ -119,7 +119,7 @@ bool shade::Scene::Serialize() const
 
 			if (_entity.IsValid())
 			{
-				if (!SerrEntity(_entity, out))
+				if (!SerrEntity(_entity, out, false))
 				{
 					SHADE_CORE_WARNING("Entity id: '{0}' has not been serialized successful!", entity);
 				}
@@ -165,7 +165,7 @@ bool shade::Scene::Deserialize()
 			{
 				auto _entity = CreateEntity(entity["Tag"].as<shade::Tag>());
 				auto entityId = entity["Entity"].as<std::uint32_t>();
-				if (!DeserrEntity(_entity, entity))
+				if (!DeserrEntity(_entity, *this, entity))
 				{
 					SHADE_CORE_WARNING("Entity id: {0} has not been deserialized successful.", entityId);
 				}
@@ -201,7 +201,9 @@ glm::mat4 shade::Scene::ComputePCTransform(shade::Entity& entity)
 	}
 
 	if (entity.HasComponent<shade::Transform3DComponent>())
+	{
 		return transform * entity.GetComponent<shade::Transform3DComponent>().GetModelMatrix();
+	}
 	else
 		return transform;
 }

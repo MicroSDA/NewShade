@@ -21,10 +21,6 @@ namespace shade
 		const Shared<FrameBuffer>& GetDriectLightFrameBuffer();
 		const Shared<FrameBuffer>& GetSpotLightFrameBuffer();
 
-		float _ASPECT = 1.0;
-		float _NEAR   = 0.1;
-		float _FAR    = 1000.0;
-		float _FOV    = 45.0;
 	private:
 		
 		Shared<FrameBuffer>         m_DirectLightShadowFrameBuffer;
@@ -34,8 +30,8 @@ namespace shade
 		Shared<ShaderStorageBuffer>	m_SpotLightCascadeBuffer;
 
 	private:
-		Cascade ComputeDirectLightCascade(const shade::Shared<Camera>& camera, const glm::vec3& direction, const float& nearPlane, const float& farplane, const float& split);
-		glm::mat4 ComputeSpotLightCascade(const shade::Shared<Camera>& camera, const glm::vec3& position, const glm::vec3& direction, const float& nearPlane, const float& farplane);
+		Cascade   ComputeDirectLightCascade(const shade::Shared<Camera>& camera, const glm::vec3& direction, const float& nearPlane, const float& farplane, const float& split);
+		glm::mat4 ComputeSpotLightCascade(const float& fov, const glm::vec3& position, const glm::vec3& direction, const float& nearPlane, const float& farplane);
 		std::vector<glm::vec4>  GetCameraFrustumCorners(const glm::mat4& projection, const glm::mat4& veiw);
 	};
 }

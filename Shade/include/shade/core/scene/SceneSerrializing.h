@@ -159,8 +159,11 @@ static bool SerrModel3DComponent(shade::Entity& entity, YAML::Emitter& emitter)
 	return true;
 }
 
-static bool SerrEntity(shade::Entity& entity, YAML::Emitter& emitter)
+static bool SerrEntity(shade::Entity& entity, YAML::Emitter& emitter, const bool& isParentCall)
 {
+	if (entity.HasParent() && !isParentCall)
+		return true;
+
 	emitter << YAML::BeginMap << YAML::Key << "Entity" << YAML::Value << static_cast<std::uint32_t>(entity);
 	if (!SerrTagComponent(entity, emitter))
 		return false;
@@ -175,7 +178,14 @@ static bool SerrEntity(shade::Entity& entity, YAML::Emitter& emitter)
 	if (!SerrPointLightComponent(entity, emitter))
 		return false;
 
-
+	if (entity.HasChildren())
+	{
+		emitter << YAML::Key << "Children" << YAML::BeginSeq;
+		for (auto& child : entity.GetChildren())
+			SerrEntity(child, emitter, true);
+		emitter << YAML::EndSeq;
+	}
+	
 	emitter << YAML::EndMap;
 
 	return true;
@@ -269,12 +279,32 @@ static bool DesserSpotLightComponent(shade::Entity& entity, YAML::detail::iterat
 
 	return true;
 }
-static bool DeserrEntity(shade::Entity& entity, YAML::detail::iterator_value& value)
+/* Prototype */
+static bool DeseerChildren(shade::Entity& entity, shade::EntitiesDocker& docker, YAML::detail::iterator_value& value);
+
+static bool DeserrEntity(shade::Entity& entity, shade::EntitiesDocker& docker, YAML::detail::iterator_value& value)
 {
 	DeserrTransform3DComponent(entity, value);
 	DesserModel3DComponent(entity, value);
 	DesserDirectLightComponent(entity, value);
 	DesserPointLightComponent(entity, value);
 	DesserSpotLightComponent(entity, value);
+	DeseerChildren(entity, docker, value);
+	return true;
+}
+
+static bool DeseerChildren(shade::Entity& entity, shade::EntitiesDocker& docker, YAML::detail::iterator_value& value)
+{
+	if (value["Children"])
+	{
+		for (auto _child : value["Children"])
+		{
+			auto tag = value["Tag"].as<shade::Tag>();
+			auto child = docker.CreateEntity(tag);
+			DeserrEntity(child, docker, _child);
+			entity.AddChild(child);
+		}
+	}
+
 	return true;
 }

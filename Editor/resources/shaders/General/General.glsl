@@ -35,7 +35,7 @@ void main()
 	// Set vertex position
 	gl_Position 		= u_Camera.ViewProjection * a_Transform *  vec4(a_Position, 1.0);
 	// Clip
-	//gl_ClipDistance[0] 	= dot(u_Camera.View * vec4(a_Position, 1.0), u_ClipDistance);
+	gl_ClipDistance[0] 	= dot(u_Camera.View * vec4(a_Position, 1.0), u_ClipDistance);
 	// Pass other data to fragment shader
 	out_UV_Coordinates 	  = a_UV_Coordinates;
 	out_Normal  		  = normalize((a_Transform 	* vec4(a_Normal, 	0.0)).xyz);

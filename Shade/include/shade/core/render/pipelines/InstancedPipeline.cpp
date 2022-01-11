@@ -39,13 +39,15 @@ shade::Shared<shade::FrameBuffer > shade::InstancedPipeline::Process(const shade
 				if (material->TextureNormals)
 					material->TextureNormals->Bind(2);
 
-				previusPiepline->As<ShadowMapPipeline>().GetDriectLightFrameBuffer()->BindDepthAsTexture(3);
-				previusPiepline->As<ShadowMapPipeline>().GetSpotLightFrameBuffer()->BindDepthAsTexture(4);
 				/* If shadows pas*/
-				/*if (previousPass)
-					  previousPass->BindDepthAsTexture(3);*/
-
-			
+				auto* shadowMap = &previusPiepline->As<ShadowMapPipeline>();
+				if (shadowMap)
+				{
+					if (shadowMap->GetDriectLightFrameBuffer())
+						shadowMap->GetDriectLightFrameBuffer()->BindDepthAsTexture(3);
+					if (shadowMap->GetSpotLightFrameBuffer())
+						shadowMap->GetSpotLightFrameBuffer()->BindDepthAsTexture(4);
+				}
 			}
 
 			drawData[instance].TBO->Resize(sizeof(glm::mat4) * transforms.size());

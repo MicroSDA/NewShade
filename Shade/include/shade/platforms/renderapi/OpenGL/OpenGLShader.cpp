@@ -163,7 +163,6 @@ GLuint shade::OpenGLShader::CreateProgram()
 	m_GeometrySubrIndices.resize(gS_Count);
 	m_ComputeSubrIndices.resize(cS_Count);
 
-	SHADE_CORE_DEBUG("Path :::{0}, ID:::{1}", m_Path, program);
 	return program;
 }
 

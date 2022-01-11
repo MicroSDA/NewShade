@@ -44,7 +44,7 @@ void EditorLayer::OnCreate()
 	m_FrustumShader				= shade::ShadersLibrary::Get("Frustum");
 	m_BloomShader				= shade::ShadersLibrary::Get("Bloom");
 	m_ColorCorrectionShader		= shade::ShadersLibrary::Get("ColorCorrection");
-	//m_BoxShader					= shade::ShadersLibrary::Get("Box");
+	m_BoxShader					= shade::ShadersLibrary::Get("Box");
 	m_SpriteShader				= shade::ShadersLibrary::Get("Sprite");
 
 	m_Grid	= shade::Grid::Create(0, 0, 0);
@@ -55,9 +55,10 @@ void EditorLayer::OnCreate()
 	m_PPColorCorrection = shade::PPColorCorrection::Create();
 	m_PPColorCorrection->SetInOutTargets(m_FrameBuffer, m_FrameBuffer, m_ColorCorrectionShader);
 
-	m_InstancedPipeline = shade::InstancedPipeline::Create<shade::InstancedPipeline>({ m_InstancedShader		 });
-	m_ShadowMapPipeline = shade::InstancedPipeline::Create<shade::ShadowMapPipeline>({ m_DirectLightShadowShader });
-	m_GridPipeline      = shade::InstancedPipeline::Create<shade::GridPipeline>({ m_GridShader });
+	m_InstancedPipeline		= shade::RenderPipeline::Create<shade::InstancedPipeline>({ m_InstancedShader		 });
+	m_ShadowMapPipeline		= shade::RenderPipeline::Create<shade::ShadowMapPipeline>({ m_DirectLightShadowShader });
+	m_GridPipeline			= shade::RenderPipeline::Create<shade::GridPipeline>({ m_GridShader });
+	m_CameraFrustumPipeline = shade::RenderPipeline::Create<shade::CameraFrustumPipeline>({ m_FrustumShader });
 }
 
 void EditorLayer::OnUpdate(const shade::Shared<shade::Scene>& scene, const shade::Timer& deltaTime)
@@ -83,7 +84,7 @@ void EditorLayer::OnUpdate(const shade::Shared<shade::Scene>& scene, const shade
 
 	scene->GetEntities().view<shade::CameraComponent>().each([&](auto& entity, shade::CameraComponent& camera)
 		{
-			//shade::Render::SubmitInstance(m_FrustumShader, m_Box, nullptr, glm::inverse(camera->GetViewProjection()));
+			shade::Render::SubmitPipelineInstanced(m_CameraFrustumPipeline, m_Box, nullptr, glm::inverse(camera->GetViewProjection()));
 		});
 
 	m_SubmitedMeshCount = 0;
@@ -100,9 +101,6 @@ void EditorLayer::OnUpdate(const shade::Shared<shade::Scene>& scene, const shade
 				if (frustum.IsInFrustum(cpcTransform, mesh->GetMinHalfExt(), mesh->GetMaxHalfExt()))
 				{
 					shade::Render::SubmitPipelineInstanced(m_InstancedPipeline, mesh, mesh->GetMaterial(), cpcTransform);
-				
-					//if (m_IsShowFrustum)
-					//	shade::Render::Submit(m_BoxShader, shade::Box::Create(mesh->GetMinHalfExt(), mesh->GetMaxHalfExt()), nullptr, cpcTransform);
 					m_SubmitedMeshCount++;
 				}
 
@@ -152,19 +150,6 @@ void EditorLayer::OnRender(const shade::Shared<shade::Scene>& scene, const shade
 			ShowWindowBar("Mesh", &EditorLayer::Mesh, this, m_SelectedMesh);
 			ShowWindowBar("Material", &EditorLayer::Material, this, m_SelectedMaterial3D);
 			ShowWindowBar("Shaders library", &EditorLayer::ShadersLibrary, this);
-			
-			ShowWindowBar("SpotLight Shadow", [&]() 
-				{
-					DrawFlaot("Aspect", &m_ShadowMapPipeline->_ASPECT);
-					DrawFlaot("Near", &m_ShadowMapPipeline->_NEAR);
-					DrawFlaot("Far", &m_ShadowMapPipeline->_FAR);
-					DrawFlaot("Fov", &m_ShadowMapPipeline->_FOV);
-					static int id = 0;
-					DrawInt("ID", &id);
-					DrawImage(id, 500, 500);
-				
-				});
-			
 		}
 		ShowWindowBar("Scene", &EditorLayer::Scene, this, scene);
 
@@ -175,6 +160,7 @@ void EditorLayer::OnRender(const shade::Shared<shade::Scene>& scene, const shade
 			shade::Render::BeginScene(m_Camera, m_FrameBuffer);
 				shade::Render::ExecuteSubmitedPipeline(m_ShadowMapPipeline);
 				shade::Render::ExecuteSubmitedPipeline(m_InstancedPipeline);
+				shade::Render::ExecuteSubmitedPipeline(m_CameraFrustumPipeline);
 
 				if (m_isBloomEnabled)
 					shade::Render::PProcess::Process(m_PPBloom);
@@ -608,6 +594,15 @@ void EditorLayer::Scene(const shade::Shared<shade::Scene>& scene)
 					pcTransform = glm::inverse(parentTransform) * pcTransform;
 				}
 
+
+				/*glm::vec3 translation, rotation, scale;
+				shade::math::DecomposeMatrix(pcTransform, translation, rotation, scale);
+
+				glm::vec3 deltaRotation = rotation - transform.GetRotation();
+				transform.SetPostition(translation);
+				transform.GetRotation() += deltaRotation;*/
+				//transform.SetScale(scale);
+
 				transform.SetTransform(pcTransform);
 			}
 		}
@@ -796,12 +791,12 @@ void EditorLayer::CameraComponent(shade::Entity& entity)
 	DrawVec3F("Position", glm::value_ptr(camera->GetPosition()));
 	DrawVec3F("Diretction", glm::value_ptr(camera->GetForwardDirrection()));
 
-	float aspect = camera->GetAspect();
+	float fov = camera->GetFov();
 	float znear = camera->GetNear();
 	float zfar = camera->GetFar();
 
-	if (DrawFlaot("Aspect", &aspect))
-		camera->SetAspect(aspect);
+	if (DrawFlaot("Fov", &fov))
+		camera->SetFov(fov);
 	if (DrawFlaot("Near", &znear))
 		camera->SetNear(znear);
 	if (DrawFlaot("Far", &zfar))

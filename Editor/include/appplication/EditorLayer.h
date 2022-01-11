@@ -4,6 +4,7 @@
 #include <shade/core/render/pipelines/InstancedPipeline.h>
 #include <shade/core/render/pipelines/GridPipeline.h>
 #include <shade/core/render/pipelines/ShadowMapPipeline.h>
+#include <shade/core/render/pipelines/CameraFrustumPipeline.h>
 
 class EditorLayer : public shade::ImGuiLayer
 {
@@ -47,9 +48,10 @@ private:
 	shade::Shared<shade::Shader> m_SpriteShader;
 	
 
-	shade::Shared<shade::InstancedPipeline> m_InstancedPipeline;
-	shade::Shared<shade::ShadowMapPipeline> m_ShadowMapPipeline;
-	shade::Shared<shade::GridPipeline>      m_GridPipeline;
+	shade::Shared<shade::InstancedPipeline>			 m_InstancedPipeline;
+	shade::Shared<shade::ShadowMapPipeline>			 m_ShadowMapPipeline;
+	shade::Shared<shade::GridPipeline>				 m_GridPipeline;
+	shade::Shared<shade::CameraFrustumPipeline>      m_CameraFrustumPipeline;
 
 	/* Post process */
 	shade::Shared<shade::PPBloom> m_PPBloom;
