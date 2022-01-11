@@ -152,6 +152,13 @@ void EditorLayer::OnRender(const shade::Shared<shade::Scene>& scene, const shade
 			ShowWindowBar("Shaders library", &EditorLayer::ShadersLibrary, this);
 		}
 		ShowWindowBar("Scene", &EditorLayer::Scene, this, scene);
+		/*ShowWindowBar("Shadow", [&]()
+			{
+				static int id = 9;
+				DrawInt("Texture", &id);
+				DrawFlaot("Offset", &m_ShadowMapPipeline->FOVOFFSET);
+				DrawImage(id, 500, 500);
+			});*/
 
 	} ImGui::End(); // Begin("DockSpace")
 	{

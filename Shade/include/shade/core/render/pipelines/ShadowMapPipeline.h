@@ -20,7 +20,6 @@ namespace shade
 
 		const Shared<FrameBuffer>& GetDriectLightFrameBuffer();
 		const Shared<FrameBuffer>& GetSpotLightFrameBuffer();
-
 	private:
 		
 		Shared<FrameBuffer>         m_DirectLightShadowFrameBuffer;

@@ -1,6 +1,6 @@
 Scene: Shadow Test Scene
 Entities:
-  - Entity: 1048585
+  - Entity: 9
     Tag: Direct light
     Transform3D:
       Position: [0, 0, 0]
@@ -26,7 +26,7 @@ Entities:
       Scale: [10, 10, 1]
     Model3D:
       Asset: Cube
-  - Entity: 1048582
+  - Entity: 6
     Tag: Camera
   - Entity: 5
     Tag: Wall 1
@@ -55,7 +55,7 @@ Entities:
   - Entity: 2
     Tag: Spot light
     Transform3D:
-      Position: [-33.5379562, 3.10838509, 2.81027508]
+      Position: [-36.8847008, 2.24707079, 2.12984085]
       Rotation: [-1.04020464, -0.275118411, 2.24910212]
       Scale: [0.999980211, 0.999958277, 0.999975741]
     SpotLight:
@@ -65,8 +65,8 @@ Entities:
       Constant: 1
       Linear: 0.00100000005
       Qaudratic: 7.00000019e-05
-      Min angle: 0.97240001
-      Max angle: 0.954439998
+      Min angle: 0.980400026
+      Max angle: 0.945439994
   - Entity: 1
     Tag: Cube
     Transform3D:

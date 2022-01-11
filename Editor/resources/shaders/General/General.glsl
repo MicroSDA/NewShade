@@ -33,9 +33,9 @@ layout (std430, binding = 2) restrict readonly buffer UDirectLight
 void main()
 {
 	// Set vertex position
-	gl_Position 		= u_Camera.ViewProjection * a_Transform *  vec4(a_Position, 1.0);
+	gl_Position 		  = u_Camera.ViewProjection * a_Transform *  vec4(a_Position, 1.0);
 	// Clip
-	gl_ClipDistance[0] 	= dot(u_Camera.View * vec4(a_Position, 1.0), u_ClipDistance);
+	gl_ClipDistance[0] 	  = dot(u_Camera.View * vec4(a_Position, 1.0), u_ClipDistance);
 	// Pass other data to fragment shader
 	out_UV_Coordinates 	  = a_UV_Coordinates;
 	out_Normal  		  = normalize((a_Transform 	* vec4(a_Normal, 	0.0)).xyz);
@@ -132,7 +132,7 @@ vec4 BillinPhong(vec3 toCameraDirection)
 				}
 			 
 			}
-			float Shadow  = 1.0 - CSM_DirectLight(u_TDirectLightShadowMap, u_DirectLightCascade[CascadeLayer].ViewMatrix, CascadeLayer, u_DirectLightCascade.length(), u_DirectLightCascade[i].SplitDistance, u_Camera.View, a_Vertex, a_Normal, u_DirectLight[i].Direction);	
+			float Shadow  = CSM_DirectLight(u_TDirectLightShadowMap, u_DirectLightCascade[CascadeLayer].ViewMatrix, CascadeLayer, u_DirectLightCascade.length(), u_DirectLightCascade[i].SplitDistance, u_Camera.View, a_Vertex, a_Normal, u_DirectLight[i].Direction);	
 			/* Calc direct light*/
 			Color += BilinPhongDirectLight(TBN_Normal, u_DirectLight[i], u_Material, toCameraDirection, texture(u_TDiffuse, a_UV_Coordinates).rgba, texture(u_TSpecular, a_UV_Coordinates).rgba, Shadow); 
 			/* Cascades visualizing */
@@ -149,13 +149,7 @@ vec4 BillinPhong(vec3 toCameraDirection)
 		Color += BilinPhongPointLight(TBN_Normal, u_PointLight[i],   u_Material, a_Vertex, toCameraDirection, texture(u_TDiffuse, a_UV_Coordinates).rgba, texture(u_TSpecular, a_UV_Coordinates).rgba, 1.0);
 	for(int i = 0;i < u_SpotLight.length();  i++)
 	{
-		float Shadow  = SM_SpotLight(u_TSpotLightShadowMap,
-												  u_SpotLightCascade[0],
-												  u_Camera.View,
-												  a_Vertex,
-												  a_Normal,
-												  u_SpotLight[i].Direction);
-
+		float Shadow  = SM_SpotLight(u_TSpotLightShadowMap, u_SpotLightCascade[i], u_Camera.View,a_Vertex,a_Normal, u_SpotLight[i].Direction);
 		Color += BilinPhongSpotLight(TBN_Normal, u_SpotLight[i],  u_Material, a_Vertex, toCameraDirection, texture(u_TDiffuse, a_UV_Coordinates).rgba, texture(u_TSpecular, a_UV_Coordinates).rgba, Shadow);
 	}
 	return Color;	

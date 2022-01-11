@@ -68,18 +68,14 @@ shade::Shared<shade::FrameBuffer> shade::ShadowMapPipeline::Process(const shade:
 	/* Spot light shadows */
 	if (lights.SpotLightSources.size())
 	{
-		struct SpotLighCascade
-		{
-			alignas(16) glm::mat4 VeiwMatrix;
-		};
-		/* Probably need aligment for mat4 */
-		float fov = glm::acos(lights.SpotLightSources[0].MaxAngle) * 2.0;
+		
+		float fov = glm::acos(lights.SpotLightSources[0].MaxAngle - 0.2f);
 		float distance = 500.0f; // Nedd calc form linear and quadratic;
-		SpotLighCascade c { ComputeSpotLightCascade(fov, lights.SpotLightSources[0].Position, lights.SpotLightSources[0].Direction, 1.0f, distance)};
+		glm::mat4 VeiwMatrix = ComputeSpotLightCascade(fov, lights.SpotLightSources[0].Position, lights.SpotLightSources[0].Direction, 1.0f, distance);
 		//glm::mat4 ViewMatrix = ComputeSpotLightCascade(camera, lights.SpotLightSources[0].Position, lights.SpotLightSources[0].Direction, 0, 500);
-		if (m_SpotLightCascadeBuffer->GetSize() != sizeof(SpotLighCascade))
-			m_SpotLightCascadeBuffer->Resize(sizeof(SpotLighCascade));
-		m_SpotLightCascadeBuffer->SetData(&c, sizeof(SpotLighCascade));
+		if (m_SpotLightCascadeBuffer->GetSize() != sizeof(glm::mat4))
+			m_SpotLightCascadeBuffer->Resize(sizeof(glm::mat4));
+		m_SpotLightCascadeBuffer->SetData(glm::value_ptr(VeiwMatrix), sizeof(glm::mat4));
 		
 	}
 	/* Render */
