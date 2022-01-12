@@ -13,7 +13,6 @@ void shade::OpenGL_PColorCorrection::Process()
 	m_Shader->SendFloat("u_Settings.Gamma",    m_Gamma);
 	m_Shader->SendFloat("u_Settings.Exposure", m_Exposure);
 
-
 	/* Getting hdr picture */
 	m_InputFrameBuffer->BindAsImage(0,  0, 0,  FrameBuffer::Texture::Format::RGBA16F, FrameBuffer::Texture::Access::Read);
 	m_OutputFrameBuffer->BindAsImage(0, 1, 0,  FrameBuffer::Texture::Format::RGBA16F, FrameBuffer::Texture::Access::Write);

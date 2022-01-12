@@ -7,7 +7,7 @@ shade::ShadowMapPipeline::ShadowMapPipeline(const RenderPipeline::Specification&
 	m_Specification = spec;
 
 	m_DirectLightShadowFrameBuffer = shade::FrameBuffer::Create(shade::FrameBuffer::Layout(4096, 4096, {
-		shade::FrameBuffer::Texture::Format::DEPTH24STENCIL8_ARRAY_4 }));
+		shade::FrameBuffer::Texture::Format::DEPTH24STENCIL8 }, 1, 4));
 
 	m_SpotLightShadowFrameBuffer = shade::FrameBuffer::Create(shade::FrameBuffer::Layout(4096, 4096, {
 		shade::FrameBuffer::Texture::Format::RGBA10,
