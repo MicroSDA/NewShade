@@ -23,9 +23,8 @@ void EditorLayer::OnCreate()
 {
 	shade::Application::Get().GetEntities().view<shade::CameraComponent>().each([&](auto entity, auto& camera) { m_EditorCamera = camera; });
 
-	m_FrameBuffer = shade::FrameBuffer::Create(shade::FrameBuffer::Layout(100, 100, {
+	m_FrameBuffer = shade::FrameBuffer::Create(shade::FrameBuffer::Layout(10, 10, {
 		shade::FrameBuffer::Texture::Format::RGBA16F,
-		shade::FrameBuffer::Texture::Format::RED_INT,
 		shade::FrameBuffer::Texture::Format::DEPTH24STENCIL8 }));
 
 	m_IconsTexture = shade::Texture::Create<shade::Texture>();
@@ -59,6 +58,9 @@ void EditorLayer::OnCreate()
 	m_ShadowMapPipeline		= shade::RenderPipeline::Create<shade::ShadowMapPipeline>({ m_DirectLightShadowShader });
 	m_GridPipeline			= shade::RenderPipeline::Create<shade::GridPipeline>({ m_GridShader });
 	m_CameraFrustumPipeline = shade::RenderPipeline::Create<shade::CameraFrustumPipeline>({ m_FrustumShader });
+
+
+	
 }
 
 void EditorLayer::OnUpdate(const shade::Shared<shade::Scene>& scene, const shade::Timer& deltaTime)
@@ -178,9 +180,6 @@ void EditorLayer::OnRender(const shade::Shared<shade::Scene>& scene, const shade
 				//shade::Render::DrawSprite(m_SpriteShader, m_ShadowMapPipeline->GetResult()->GetDepthAttachment(), glm::mat4(1));
 			shade::Render::EndScene();
 		shade::Render::End();
-
-
-
 		/*if (m_isBloomEnabled)
 			shade::Render::PProcess::Process(m_PPBloom);
 		if (m_isColorCorrectionEnabled)

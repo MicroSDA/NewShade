@@ -23,6 +23,9 @@ namespace shade
 		static void AttachTexture(int buffer, const std::uint32_t& id, const std::int32_t& samples, const std::uint32_t& mipsCount, const GLenum& internalFormat, const GLenum& format, const std::uint32_t& width, const std::uint32_t& height, const std::uint32_t& index)
 		{
 			bool multisampled = samples > 1;
+
+			//multisampled = false;
+
 			if (multisampled)
 			{
 				glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, samples, internalFormat, width, height, GL_FALSE);
@@ -71,6 +74,7 @@ namespace shade
 		static void AttachDepthTexture(const std::uint32_t& id, const std::int32_t& samples, const GLenum& format, const GLenum& attachmentType, const std::uint32_t& width, const std::uint32_t& height)
 		{
 			bool multisampled = samples > 1;
+			//multisampled = false;
 			if (multisampled)
 			{
 				glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, samples, format, width, height, GL_FALSE);
@@ -243,6 +247,7 @@ void shade::OpenGLFrameBuffer::Invalidate()
 	glBindFramebuffer(GL_FRAMEBUFFER, m_RenderId);
 
 	bool multisample = m_Layout.Samples > 1;
+	//multisample = false;
 
 	// Attachments
 	if (m_DepthAttachmentSpec.TextureFormat != Texture::Format::None)
@@ -364,4 +369,13 @@ void shade::OpenGLFrameBuffer::Clear(shade::AttachmentClear clear)
 {
 	Bind();
 	glClear(static_cast<GLbitfield>(clear));
+}
+
+void shade::OpenGLFrameBuffer::FlushToScreen()
+{
+	/* Nedd to resilve depth issue !*/
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, m_RenderId);
+	glDrawBuffer(GL_FRONT);
+	glBlitFramebuffer(0, 0, m_Layout.Width, m_Layout.Height, 0, 0, m_Layout.Width, m_Layout.Height, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT, GL_NEAREST);
 }

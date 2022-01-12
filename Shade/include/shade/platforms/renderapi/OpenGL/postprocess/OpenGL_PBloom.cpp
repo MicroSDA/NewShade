@@ -18,7 +18,7 @@ void shade::OpenGL_PBloom::Process()
 			m_InputFrameBuffer->GetLayout().Height,
 			{
 				shade::FrameBuffer::Texture::Format::RGBA16F,
-			},
+			}, 1 ,
 			m_Samples));
 	}
 

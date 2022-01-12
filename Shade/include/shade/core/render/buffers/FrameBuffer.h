@@ -66,12 +66,12 @@ namespace shade
 		};
 		struct Layout
 		{
-			Layout(const std::uint32_t& width, const std::uint32_t& height, const Attachment& attachments, const std::uint32_t& mipsCount = 0, const std::uint32_t& layers = 1, const bool& swapChainTarget = false) :
-				Width(width), Height(height), Attachments(attachments), MipsCount(mipsCount), Layers(layers), IsSwapChainTarget(swapChainTarget)
+			Layout(const std::uint32_t& width, const std::uint32_t& height, const Attachment& attachments, const std::uint32_t& samplesCount = 1,  const std::uint32_t& mipsCount = 0, const std::uint32_t& layers = 1, const bool& swapChainTarget = false) :
+				Width(width), Height(height), Attachments(attachments), Samples(samplesCount), MipsCount(mipsCount), Layers(layers), IsSwapChainTarget(swapChainTarget)
 			{}
 			std::uint32_t Width = 0, Height = 0;
 			Attachment Attachments;
-			std::uint32_t Samples = 1;
+			std::uint32_t Samples = 4;
 			std::uint32_t Layers  = 1;
 			bool IsSwapChainTarget = false;
 			std::uint32_t	MipsCount = 0;
@@ -92,6 +92,7 @@ namespace shade
 		virtual const Layout& GetLayout() const = 0;
 		virtual void Clear(shade::AttachmentClear clear) = 0;
 		static Shared<FrameBuffer> Create(const Layout& layout);
+		virtual void FlushToScreen() = 0;
 	protected:
 		virtual void _ClearAttachmentInt(const std::uint32_t& attachment, const int& clearValue = 0) = 0;
 		virtual void _ClearAttachmentFloat(const std::uint32_t& attachment, const float& clearValue = 0) = 0;
