@@ -62,13 +62,13 @@ namespace shade
 		};
 		struct Layout
 		{
-			Layout(const std::uint32_t& width, const std::uint32_t& height, const Attachment& attachments, const std::uint32_t& samplesCount = 1, const std::uint32_t& layers = 1, const std::uint32_t& mipsCount = 0,const bool& swapChainTarget = false) :
+			Layout(const std::uint32_t& width, const std::uint32_t& height, const Attachment& attachments, const std::uint32_t& samplesCount = 1, const std::uint32_t& layers = 0, const std::uint32_t& mipsCount = 0,const bool& swapChainTarget = false) :
 				Width(width), Height(height), Attachments(attachments), Samples(samplesCount), MipsCount(mipsCount), Layers(layers), IsSwapChainTarget(swapChainTarget)
 			{}
 			std::uint32_t Width = 0, Height = 0;
 			Attachment Attachments;
 			std::uint32_t Samples = 1;
-			std::uint32_t Layers  = 1;
+			std::uint32_t Layers  = 0;
 			bool IsSwapChainTarget = false;
 			std::uint32_t	MipsCount = 0;
 		};

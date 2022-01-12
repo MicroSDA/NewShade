@@ -8,20 +8,43 @@ layout (location = 0) in vec3  a_Position;
 layout (location = 1) in vec2  a_UV_Coordinates;
 layout (location = 4) in mat4  a_Transform;
 
-layout (location = 0) out vec2  out_UV_Coordinates;
-
 layout (std430, binding = 6) restrict readonly buffer USpotLightCascade
 {
-	mat4 u_SpotLightCascade[];
+	SpotLightCascade u_SpotLightCascade[];
 };
 
 void main()
 {
     /* Set position without veiw matrix */
-	gl_Position = u_SpotLightCascade[0] * a_Transform * vec4(a_Position, 1.0);
-	out_UV_Coordinates = a_UV_Coordinates;
+	gl_Position = a_Transform * vec4(a_Position, 1.0);
 }
 /* !End of vertex shader */
+
+#type geometry
+#version 460 core
+#include "resources/shaders/General/Structures.glsl"
+
+layout(triangles) in;
+layout(triangle_strip, max_vertices = 204) out; // Hardware limitation reached, can only emit 204 vertices of this size
+
+layout (std430, binding = 6) restrict readonly buffer USpotLightCascade
+{
+	SpotLightCascade u_SpotLightCascade[];
+};
+
+void main()
+{    
+   for(int j = 0; j < u_SpotLightCascade.length(); j++)
+   {
+        for(int i= 0; i < gl_in.length();++i)
+        {
+            gl_Position = u_SpotLightCascade[j].ViewMatrix * gl_in[i].gl_Position;
+		    gl_Layer    = j;
+		    EmitVertex();  
+        }
+        EndPrimitive();
+    }
+}
 
 #type fragment
 #version 460 core
@@ -36,10 +59,10 @@ float LinearizeDepth(in vec2 uv)
     return (2.0 * zNear) / (zFar + zNear - depth * (zFar - zNear));
 }
 
-layout (location = 0) out vec4 FragColor;
+//layout (location = 0) out vec4 FragColor;
 
 void main()
 {
-    float c = LinearizeDepth(a_UV_Coordinates);
-    FragColor = vec4(c, c, c, 1.0); // perspective
+    // float c = LinearizeDepth(a_UV_Coordinates);
+    // FragColor = vec4(c, c, c, 1.0); // perspective
 }

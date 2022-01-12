@@ -61,8 +61,7 @@ layout (binding = 0) uniform sampler2D 		u_TDiffuse;
 layout (binding = 1) uniform sampler2D 		u_TSpecular;
 layout (binding = 2) uniform sampler2D 		u_TNormal;
 layout (binding = 3) uniform sampler2DArray u_TDirectLightShadowMap;
-
-layout (binding = 4) uniform sampler2D      u_TSpotLightShadowMap;
+layout (binding = 4) uniform sampler2DArray u_TSpotLightShadowMap;
 // Camera uniform buffer
 layout (std140, binding = 0) uniform UCamera
 {
@@ -91,7 +90,7 @@ layout (std430, binding = 5) restrict readonly buffer UDirectLightCascade
 
 layout (std430, binding = 6) restrict readonly buffer USpotLightCascade
 {
-	mat4 u_SpotLightCascade[];
+	SpotLightCascade u_SpotLightCascade[];
 };
 // Need to pack in SSBO material as well !!
 uniform Material          u_Material;
@@ -149,7 +148,7 @@ vec4 BillinPhong(vec3 toCameraDirection)
 		Color += BilinPhongPointLight(TBN_Normal, u_PointLight[i],   u_Material, a_Vertex, toCameraDirection, texture(u_TDiffuse, a_UV_Coordinates).rgba, texture(u_TSpecular, a_UV_Coordinates).rgba, 1.0);
 	for(int i = 0;i < u_SpotLight.length();  i++)
 	{
-		float Shadow  = SM_SpotLight(u_TSpotLightShadowMap, u_SpotLightCascade[i], u_Camera.View,a_Vertex,a_Normal, u_SpotLight[i].Direction);
+		float Shadow  = SM_SpotLight(u_TSpotLightShadowMap, u_SpotLightCascade[i].ViewMatrix, i, u_Camera.View, a_Vertex,a_Normal, u_SpotLight[i].Direction);
 		Color += BilinPhongSpotLight(TBN_Normal, u_SpotLight[i],  u_Material, a_Vertex, toCameraDirection, texture(u_TDiffuse, a_UV_Coordinates).rgba, texture(u_TSpecular, a_UV_Coordinates).rgba, Shadow);
 	}
 	return Color;	

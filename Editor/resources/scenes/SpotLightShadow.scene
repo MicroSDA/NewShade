@@ -1,0 +1,145 @@
+Scene: SpotLightShadow
+Entities:
+  - Entity: 13
+    Tag: Direct light
+    Transform3D:
+      Position: [0, 0, 0]
+      Rotation: [0, 0.330071658, 0]
+      Scale: [0.999997675, 1, 0.999997199]
+    DirectLight:
+      Ambient: [0.100000001, 0.100000001, 0.100000001]
+      Diffuse: [1, 1, 1]
+      Specular: [1, 1, 1]
+  - Entity: 12
+    Tag: Spot light
+    Transform3D:
+      Position: [44.8611832, 19.2826633, 1.63863349]
+      Rotation: [-0.17158705, 0.717192292, -0.429145575]
+      Scale: [0.999995887, 0.999999464, 0.999997973]
+    SpotLight:
+      Ambient: [9.99999997e-07, 9.99989993e-07, 9.99989993e-07]
+      Diffuse: [0.970237732, 1, 0]
+      Specular: [1, 1, 1]
+      Constant: 0.268999994
+      Linear: 0.00700000022
+      Qaudratic: 7.00000019e-05
+      Min angle: 0.995396197
+      Max angle: 0.991444886
+  - Entity: 11
+    Tag: Roof
+    Transform3D:
+      Position: [0, 18.2176342, 2.48865628]
+      Rotation: [-1.56137955, 2.98023224e-08, -0.0058645471]
+      Scale: [10, 10.0012522, 0.999961436]
+    Model3D:
+      Asset: Cube
+  - Entity: 10
+    Tag: Wall 2
+    Transform3D:
+      Position: [0, 9.05449486, -6.50549173]
+      Rotation: [0, -0, 0]
+      Scale: [10, 10, 1]
+    Model3D:
+      Asset: Cube
+  - Entity: 9
+    Tag: Camera
+  - Entity: 8
+    Tag: Wall 1
+    Transform3D:
+      Position: [0, 9.11758137, 11.6112146]
+      Rotation: [0, -0, 1.56514037]
+      Scale: [10, 10, 0.999999762]
+    Model3D:
+      Asset: Cube
+  - Entity: 7
+    Tag: Small cube
+    Transform3D:
+      Position: [9.1692791, 3.31260943, 2.135602]
+      Rotation: [0, -0, 0]
+      Scale: [0.806247413, 4.21543503, 9.64076614]
+    Model3D:
+      Asset: Cube
+  - Entity: 6
+    Tag: Floor
+    Transform3D:
+      Position: [-20.4958324, 0.281625271, 0]
+      Rotation: [0, -0, 0]
+      Scale: [100, 1, 100]
+    Model3D:
+      Asset: Cube
+  - Entity: 5
+    Tag: Spot light
+    Transform3D:
+      Position: [-27.176878, 3.79766083, 2.12984085]
+      Rotation: [-1.04020464, -0.275118411, 2.24910212]
+      Scale: [0.999980211, 0.999958277, 0.999975741]
+    SpotLight:
+      Ambient: [9.99999997e-07, 9.99989993e-07, 9.99989993e-07]
+      Diffuse: [0, 0.424379349, 1]
+      Specular: [0.937116861, 1, 0.864559829]
+      Constant: 1
+      Linear: 0.00100000005
+      Qaudratic: 7.00000019e-05
+      Min angle: 0.980400026
+      Max angle: 0.945439994
+  - Entity: 4
+    Tag: Cube
+    Transform3D:
+      Position: [-5.62852955, 2.24083138, 2.25595093]
+      Rotation: [0, -0, 0]
+      Scale: [1, 1, 1]
+    Model3D:
+      Asset: Cube
+  - Entity: 3
+    Tag: Cube
+    Transform3D:
+      Position: [9.10290241, 14.8126774, 2.12415934]
+      Rotation: [0, -0, 0]
+      Scale: [0.805999994, 4.21500015, 9.64099979]
+    Model3D:
+      Asset: Cube
+  - Entity: 2
+    Tag: Spot light
+    Transform3D:
+      Position: [-26.1192989, 11.1073685, 0]
+      Rotation: [-3.1415925, -1.32277858, -2.94273138]
+      Scale: [0.999995172, 0.999999642, 0.999994576]
+    SpotLight:
+      Ambient: [9.99999997e-07, 9.99989993e-07, 9.99989993e-07]
+      Diffuse: [1, 0, 0]
+      Specular: [1, 1, 1]
+      Constant: 0.551999986
+      Linear: 0.00700000022
+      Qaudratic: 7.00000019e-05
+      Min angle: 0.995396197
+      Max angle: 0.991444886
+  - Entity: 1
+    Tag: Spot light
+    Transform3D:
+      Position: [0, 15.9869709, 22.5113029]
+      Rotation: [-0.135637015, 0, 0]
+      Scale: [1, 0.999998152, 0.999998152]
+    SpotLight:
+      Ambient: [9.99999997e-07, 9.99989993e-07, 9.99989993e-07]
+      Diffuse: [0.482142806, 1, 0]
+      Specular: [1, 1, 1]
+      Constant: 0.540000021
+      Linear: 0.00700000022
+      Qaudratic: 7.00000019e-05
+      Min angle: 0.995396197
+      Max angle: 0.991444886
+  - Entity: 0
+    Tag: Spot light
+    Transform3D:
+      Position: [-11.6561413, 33.0591927, 13.0958548]
+      Rotation: [0, -0.944240332, 0]
+      Scale: [0.99999541, 1, 0.99999541]
+    SpotLight:
+      Ambient: [9.99999997e-07, 9.99989993e-07, 9.99989993e-07]
+      Diffuse: [1, 0, 0.851191521]
+      Specular: [1, 1, 1]
+      Constant: -0.0500000007
+      Linear: 0.00700000022
+      Qaudratic: 7.00000019e-05
+      Min angle: 0.995396197
+      Max angle: 0.991444886

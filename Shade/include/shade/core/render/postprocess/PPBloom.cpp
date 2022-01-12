@@ -19,7 +19,7 @@ shade::PPBloom::PPBloom() :
 {
 	m_BloomFrameBuffer = shade::FrameBuffer::Create(shade::FrameBuffer::Layout(1, 1,
 		{ shade::FrameBuffer::Texture::Format::RGBA16F,
-		}, 1, 1, m_Samples));
+		}, 1, 0, m_Samples));
 
 }
 

@@ -10,11 +10,10 @@ shade::ShadowMapPipeline::ShadowMapPipeline(const RenderPipeline::Specification&
 		shade::FrameBuffer::Texture::Format::DEPTH24STENCIL8 }, 1, 4));
 
 	m_SpotLightShadowFrameBuffer = shade::FrameBuffer::Create(shade::FrameBuffer::Layout(4096, 4096, {
-		shade::FrameBuffer::Texture::Format::RGBA10,
-		shade::FrameBuffer::Texture::Format::DEPTH24STENCIL8 }));
+		shade::FrameBuffer::Texture::Format::DEPTH24STENCIL8 }, 1, 0));
 
-	m_DirectLightCascadeBuffer = ShaderStorageBuffer::Create(sizeof(Cascade) * 4, 5);
-	m_SpotLightCascadeBuffer   = ShaderStorageBuffer::Create(sizeof(glm::mat4),   6);
+	m_DirectLightCascadeBuffer = ShaderStorageBuffer::Create(sizeof(DirectLightCascade) * 4, 5);
+	m_SpotLightCascadeBuffer   = ShaderStorageBuffer::Create(0,   6);
 
 	shade::ShadersLibrary::Create("SpotLightShadow", "resources/shaders/General/Effects/ShadowMappingSpotLIght.glsl");
 }
@@ -30,7 +29,7 @@ shade::Shared<shade::FrameBuffer> shade::ShadowMapPipeline::Process(const shade:
 		const int CascadeCount = 4;
 		float splitDistance[CascadeCount];
 
-		std::vector<Cascade> cascades;
+		std::vector<DirectLightCascade> cascades;
 		/* Calculate split distance */
 		float nearClip  = camera->GetNear();
 		float farClip   = camera->GetFar();
@@ -61,21 +60,32 @@ shade::Shared<shade::FrameBuffer> shade::ShadowMapPipeline::Process(const shade:
 				cascades.push_back(ComputeDirectLightCascade(camera, lights.DirectLightSources[0].Direction, splitDistance[i - 1], camera->GetFar(), splitDistance[i]));
 		}
 
-		if(m_DirectLightCascadeBuffer->GetSize() != sizeof(Cascade) * cascades.size())
-			m_DirectLightCascadeBuffer->Resize(sizeof(Cascade) * cascades.size());
-		m_DirectLightCascadeBuffer->SetData(cascades.data(), sizeof(Cascade) * cascades.size());
+		if(m_DirectLightCascadeBuffer->GetSize() != sizeof(DirectLightCascade) * cascades.size())
+			m_DirectLightCascadeBuffer->Resize(sizeof(DirectLightCascade) * cascades.size());
+		m_DirectLightCascadeBuffer->SetData(cascades.data(), sizeof(DirectLightCascade) * cascades.size());
 	}
 	/* Spot light shadows */
 	if (lights.SpotLightSources.size())
 	{
-		
-		float fov = glm::acos(lights.SpotLightSources[0].MaxAngle - 0.2f);
-		float distance = 500.0f; // Nedd calc form linear and quadratic;
-		glm::mat4 VeiwMatrix = ComputeSpotLightCascade(fov, lights.SpotLightSources[0].Position, lights.SpotLightSources[0].Direction, 1.0f, distance);
-		//glm::mat4 ViewMatrix = ComputeSpotLightCascade(camera, lights.SpotLightSources[0].Position, lights.SpotLightSources[0].Direction, 0, 500);
-		if (m_SpotLightCascadeBuffer->GetSize() != sizeof(glm::mat4))
-			m_SpotLightCascadeBuffer->Resize(sizeof(glm::mat4));
-		m_SpotLightCascadeBuffer->SetData(glm::value_ptr(VeiwMatrix), sizeof(glm::mat4));
+		std::vector<SpotLightCascade> spotLightCascades;
+
+		for (auto& light : lights.SpotLightSources)
+		{
+			float fov = glm::acos(light.MaxAngle - 0.2f);
+			float distance = 500.0f; // Nedd calc form linear and quadratic;
+			spotLightCascades.push_back(ComputeSpotLightCascade(fov, light.Position, light.Direction, 1.0f, distance));
+		}
+
+		if (m_SpotLightShadowFrameBuffer->GetLayout().Layers != lights.SpotLightSources.size())
+		{
+			auto layout = m_SpotLightShadowFrameBuffer->GetLayout();
+			layout.Layers = lights.SpotLightSources.size();
+			m_SpotLightShadowFrameBuffer = FrameBuffer::Create(layout);
+		}
+
+		if (m_SpotLightCascadeBuffer->GetSize() != sizeof(SpotLightCascade) * spotLightCascades.size())
+			m_SpotLightCascadeBuffer->Resize(sizeof(SpotLightCascade) * spotLightCascades.size());
+		m_SpotLightCascadeBuffer->SetData(spotLightCascades.data(), sizeof(SpotLightCascade) * spotLightCascades.size());
 		
 	}
 	/* Render */
@@ -86,6 +96,7 @@ shade::Shared<shade::FrameBuffer> shade::ShadowMapPipeline::Process(const shade:
 	/*  Before you render objects to the CSM, call glEnable(GL_DEPTH_CLAMP); and after, call glDisable(GL_DEPTH_CLAMP);
 		This will cause every object that gets rendered to not get cut out, so artifacts where some cascades cut out some geometry will disappear. */
 	Render::GetRenderApi()->Enable(0x864F); // DEPTH_CLAMP
+
 	for (auto &[instance, materials] : drawables.Drawables)
 	{
 		for (auto& [material, transforms] : materials.Materials)
@@ -130,7 +141,7 @@ const shade::Shared<shade::FrameBuffer>& shade::ShadowMapPipeline::GetSpotLightF
 	return m_SpotLightShadowFrameBuffer;
 }
 
-shade::ShadowMapPipeline::Cascade shade::ShadowMapPipeline::ComputeDirectLightCascade(const shade::Shared<Camera>& camera, const glm::vec3& direction, const float& nearPlane, const float& farplane, const float& split)
+shade::ShadowMapPipeline::DirectLightCascade shade::ShadowMapPipeline::ComputeDirectLightCascade(const shade::Shared<Camera>& camera, const glm::vec3& direction, const float& nearPlane, const float& farplane, const float& split)
 {
 	glm::mat4 projection = glm::perspective(camera->GetFov(), camera->GetAspect(), nearPlane, farplane);
 
@@ -173,16 +184,16 @@ shade::ShadowMapPipeline::Cascade shade::ShadowMapPipeline::ComputeDirectLightCa
 	/* Create ortho projection based on camera frustum corners */
 
 	const glm::mat4 lightProjection = glm::ortho(minExtents.x, maxExtents.x, minExtents.y, maxExtents.y, minExtents.z, maxExtents.z - minExtents.z);
-	return  Cascade{ lightProjection * lightView, radius };
+	return  DirectLightCascade{ lightProjection * lightView, radius };
 }
 
-glm::mat4 shade::ShadowMapPipeline::ComputeSpotLightCascade(const float& fov, const glm::vec3& position, const glm::vec3& direction, const float& nearPlane, const float& farplane)
+shade::ShadowMapPipeline::SpotLightCascade shade::ShadowMapPipeline::ComputeSpotLightCascade(const float& fov, const glm::vec3& position, const glm::vec3& direction, const float& nearPlane, const float& farplane)
 {
 	//glm::mat4 lightProjection = glm::perspective(camera->GetFov(), camera->GetAspect(), nearPlane, farplane);
 	glm::mat4 lightProjection = glm::perspective(fov, 1.0f, nearPlane, farplane);
 	glm::mat4 lightView       = glm::lookAt(position - direction, position, glm::vec3(0.0, 1.0, 0.0));
 
-	return lightProjection * lightView;
+	return SpotLightCascade{ lightProjection * lightView };
 }
 
 std::vector<glm::vec4> shade::ShadowMapPipeline::GetCameraFrustumCorners(const glm::mat4& projection, const glm::mat4& veiw)

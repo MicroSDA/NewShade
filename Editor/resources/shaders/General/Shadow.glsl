@@ -14,8 +14,7 @@ void main()
 #version 460 core
 #include "resources/shaders/General/Structures.glsl"
 
-
-layout(triangles, invocations = 5) in;
+layout(triangles, invocations = 4) in;
 layout(triangle_strip, max_vertices = 3) out;
     
 layout (std430, binding = 5) restrict readonly buffer UDirectlightCascade
@@ -27,8 +26,7 @@ void main()
 {          
     for (int i = 0; i < 3; ++i)
     {
-        gl_Position = 
-            u_DirectLightCascade[gl_InvocationID].ViewMatrix * gl_in[i].gl_Position;
+        gl_Position = u_DirectLightCascade[gl_InvocationID].ViewMatrix * gl_in[i].gl_Position;
         gl_Layer = gl_InvocationID;
         EmitVertex();
     }

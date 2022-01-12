@@ -171,11 +171,11 @@ void EditorLayer::OnRender(const shade::Shared<shade::Scene>& scene, const shade
 				shade::Render::ExecuteSubmitedPipeline(m_InstancedPipeline);
 				shade::Render::ExecuteSubmitedPipeline(m_CameraFrustumPipeline);
 
-				if (m_isBloomEnabled)
-					shade::Render::PProcess::Process(m_PPBloom);
-				if (m_isColorCorrectionEnabled)
-					shade::Render::PProcess::Process(m_PPColorCorrection);
-				shade::Render::ExecuteSubmitedPipeline(m_GridPipeline);
+				//if (m_isBloomEnabled)
+				//	shade::Render::PProcess::Process(m_PPBloom);
+				//if (m_isColorCorrectionEnabled)
+				//	shade::Render::PProcess::Process(m_PPColorCorrection);
+				//shade::Render::ExecuteSubmitedPipeline(m_GridPipeline);
 
 				//shade::Render::DrawSprite(m_SpriteShader, m_ShadowMapPipeline->GetResult()->GetDepthAttachment(), glm::mat4(1));
 			shade::Render::EndScene();

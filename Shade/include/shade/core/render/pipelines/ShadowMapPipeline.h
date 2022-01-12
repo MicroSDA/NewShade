@@ -8,10 +8,14 @@ namespace shade
 	class SHADE_API ShadowMapPipeline : public RenderPipeline
 	{
 	public:
-		struct Cascade
+		struct DirectLightCascade
 		{
 			alignas(16) glm::mat4 ViewMatrix;
 			alignas(16) float     ClipDistacne = 0.0f;
+		};
+		struct SpotLightCascade
+		{
+			alignas(16) glm::mat4 ViewMatrix;
 		};
 	public:
 		ShadowMapPipeline(const RenderPipeline::Specification& spec);
@@ -29,8 +33,8 @@ namespace shade
 		Shared<ShaderStorageBuffer>	m_SpotLightCascadeBuffer;
 
 	private:
-		Cascade   ComputeDirectLightCascade(const shade::Shared<Camera>& camera, const glm::vec3& direction, const float& nearPlane, const float& farplane, const float& split);
-		glm::mat4 ComputeSpotLightCascade(const float& fov, const glm::vec3& position, const glm::vec3& direction, const float& nearPlane, const float& farplane);
+		DirectLightCascade   ComputeDirectLightCascade(const shade::Shared<Camera>& camera, const glm::vec3& direction, const float& nearPlane, const float& farplane, const float& split);
+		SpotLightCascade     ComputeSpotLightCascade(const float& fov, const glm::vec3& position, const glm::vec3& direction, const float& nearPlane, const float& farplane);
 		std::vector<glm::vec4>  GetCameraFrustumCorners(const glm::mat4& projection, const glm::mat4& veiw);
 	};
 }

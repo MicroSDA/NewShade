@@ -76,7 +76,7 @@ namespace shade
 		}
 		static void AttachDepthTexture(const std::uint32_t& id, const std::int32_t& samples, const std::int32_t& layers,  const GLenum& format, const GLenum& attachmentType, const std::uint32_t& width, const std::uint32_t& height)
 		{
-			if (layers > 1)
+			if (layers > 0)
 			{
 				glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, format, width, height, layers, 0, attachmentType, GL_FLOAT, nullptr);
 				glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -259,7 +259,7 @@ void shade::OpenGLFrameBuffer::Invalidate()
 
 	if (m_Layout.Samples > 1)
 		target = 1;
-	else if (m_Layout.Layers > 1)
+	else if (m_Layout.Layers > 0)
 		target = 2;
 	
 	// Attachments
@@ -271,7 +271,7 @@ void shade::OpenGLFrameBuffer::Invalidate()
 			util::CreateTextures(m_DepthAttachment, 1, target);
 			util::BindTexture(target, m_DepthAttachment);
 
-			if (m_Layout.Layers > 1)
+			if (m_Layout.Layers > 0)
 			{
 				util::AttachDepthTexture(m_DepthAttachment, m_Layout.Samples, m_Layout.Layers, GL_DEPTH_COMPONENT24, GL_DEPTH_COMPONENT, m_Layout.Width, m_Layout.Height);
 			}
@@ -352,7 +352,7 @@ void shade::OpenGLFrameBuffer::BindDepthAsTexture(const std::uint32_t& unit) con
 {
 	switch (m_Layout.Layers)
 	{
-	case 1:
+	case 0:
 		glActiveTexture(GL_TEXTURE0 + unit);
 		glBindTexture(GL_TEXTURE_2D, GetDepthAttachment());
 		break;
