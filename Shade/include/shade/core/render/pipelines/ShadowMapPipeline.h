@@ -21,7 +21,7 @@ namespace shade
 		ShadowMapPipeline(const RenderPipeline::Specification& spec);
 		virtual Shared<FrameBuffer> Process(const shade::Shared<FrameBuffer>& target, const shade::Shared<FrameBuffer>& previousPass, const Shared<RenderPipeline>& previusPipline, const DrawablePools& drawables, std::unordered_map<Shared<Drawable>, BufferDrawData>& drawData) override;
 		virtual const Shared<FrameBuffer>& GetResult() const override;
-
+		float _OFFSET = 0.0;
 		const Shared<FrameBuffer>& GetDriectLightFrameBuffer();
 		const Shared<FrameBuffer>& GetSpotLightFrameBuffer();
 	private:

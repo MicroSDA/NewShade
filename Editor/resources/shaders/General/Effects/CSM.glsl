@@ -57,9 +57,9 @@ float Variance_SpotLight(sampler2DArray ShadowMap, vec3 ProjectionCoords, float 
          float _Depth = texture(ShadowMap, vec3(ProjectionCoords.xy + (PoissonDisk[i] * TexelSize), CascadeLayer)).r;
          vec2  Moments = vec2(_Depth, _Depth * _Depth);
          float P = step(Depth, Moments.x);
-         float Variance = max(Moments.y - Moments.x * Moments.x, 0.00002);
+         float Variance = max(Moments.y - Moments.x * Moments.x, 0.000002);
          float D = Depth - Moments.x;
-         float Max = LineStep(0.5, 1.0, Variance / (Variance + D * D));
+         float Max = LineStep(0.999, 1.0, Variance / (Variance + D * D));
          Value += max(P, Max);
     }
     Value /= SamplesCount;

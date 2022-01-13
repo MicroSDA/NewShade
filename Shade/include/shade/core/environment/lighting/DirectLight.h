@@ -9,7 +9,6 @@ namespace shade
 		struct RenderData
 		{
 			alignas(16) glm::vec3 Direction;
-			alignas(16) glm::vec3 AmbientColor;
 			alignas(16) glm::vec3 DiffuseColor;
 			alignas(16) glm::vec3 SpecularColor;
 			alignas(16) glm::vec3 Position;

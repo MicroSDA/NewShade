@@ -71,8 +71,10 @@ shade::Shared<shade::FrameBuffer> shade::ShadowMapPipeline::Process(const shade:
 
 		for (auto& light : lights.SpotLightSources)
 		{
-			float fov = glm::acos(light.MaxAngle - 0.2f);
-			float distance = 500.0f; // Nedd calc form linear and quadratic;
+			/* light.Constant + light.Linear * distanceBetween + light.Qaudratic * (distanceBetween * distanceBetween);*/
+			float fov = glm::acos(light.MaxAngle) * 2.0;
+			//float distance = 500.0f; // Nedd calc form linear and quadratic;
+			float distance = light.Distance + 1.0f; // Nedd calc form linear and quadratic;
 			spotLightCascades.push_back(ComputeSpotLightCascade(fov, light.Position, light.Direction, 1.0f, distance));
 		}
 

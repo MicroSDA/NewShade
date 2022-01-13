@@ -1,7 +1,7 @@
 
 vec4 BilinPhongDirectLight(vec3 normal, DirectLight light, Material material, vec3 toCameraDirection, vec4 diffuseTexture, vec4 specularTexture, float shadow)
 {
-	vec4 ambientColor	 = vec4((diffuseTexture.rgb * material.AmbientColor * light.AmbientColor), diffuseTexture.a);
+	vec4 ambientColor	 = vec4((diffuseTexture.rgb * material.AmbientColor), diffuseTexture.a);
 	vec4 diffuseColor	 = vec4(0.0, 0.0, 0.0, 0.0);
 	vec4 specularColor	 = vec4(0.0, 0.0, 0.0, 0.0);
 
@@ -21,10 +21,6 @@ vec4 BilinPhongDirectLight(vec3 normal, DirectLight light, Material material, ve
 	}
 
 	return vec4(ambientColor + max(((diffuseColor + specularColor) * shadow), 0.0));
-	//return vec4(ambientColor + ((diffuseColor + specularColor) - shadow));
-    //return vec4(ambientColor + vec4(1, 0, 0, 1.0));
-
-	//return vec4(ambientColor + ((diffuseColor + specularColor) * shadow));
 }
 
 vec4 BilinPhongPointLight(vec3 normal, PointLight light, Material material, vec3 vertex, vec3 toCameraDirection, vec4 diffuseTexture, vec4 specularTexture, float Shadow)
@@ -35,14 +31,14 @@ vec4 BilinPhongPointLight(vec3 normal, PointLight light, Material material, vec3
 	// Probably bottle neck here
 	DirectLight directLight;
 	directLight.Direction 	 	= lightDirection;
-	directLight.AmbientColor  	= light.AmbientColor;
 	directLight.DiffuseColor  	= light.DiffuseColor;
 	directLight.SpecularColor 	= light.SpecularColor;
   	//----------------------------------------------
-	vec4 totalColor				= BilinPhongDirectLight(normal, directLight, material, toCameraDirection, diffuseTexture, specularTexture, Shadow);
-	float attenuation       	= light.Constant + light.Linear * distanceBetween + light.Qaudratic * (distanceBetween * distanceBetween);
-
-	return totalColor / attenuation;
+	float attenuation  = clamp(1.0 - (distanceBetween * distanceBetween) / (light.Distance * light.Distance), 0.0, 1.0);
+	attenuation       *= mix(attenuation, 1.0, light.Falloff);
+	
+	vec4   totalColor = BilinPhongDirectLight(normal, directLight, material, toCameraDirection, diffuseTexture, specularTexture, Shadow);
+	return totalColor * light.Intensity * attenuation;
 }
 
 vec4 BilinPhongSpotLight(vec3 normal, SpotLight light, Material material, vec3 vertex, vec3 toCameraDirection, vec4 diffuseTexture, vec4 specularTexture, float Shadow)
@@ -58,12 +54,11 @@ vec4 BilinPhongSpotLight(vec3 normal, SpotLight light, Material material, vec3 v
         // Probably bottle neck here
         PointLight pointLight;
         pointLight.Position 		= light.Position;
-        pointLight.AmbientColor 	= light.AmbientColor;
         pointLight.DiffuseColor 	= light.DiffuseColor;
         pointLight.SpecularColor 	= light.SpecularColor;
-        pointLight.Constant 		= light.Constant;
-        pointLight.Linear 			= light.Linear;
-        pointLight.Qaudratic 		= light.Qaudratic;
+        pointLight.Intensity 		= light.Intensity;
+        pointLight.Distance 		= light.Distance;
+        pointLight.Falloff 			= light.Falloff;
         //--------------------------------------------
         vec4 totalColor				= BilinPhongPointLight(normal, pointLight, material, vertex, toCameraDirection, diffuseTexture, specularTexture, Shadow);
 

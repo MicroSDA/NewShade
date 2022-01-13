@@ -1,39 +1,12 @@
 #include "shade_pch.h"
 #include "PointLight.h"
-/*  Range Constant Linear  Quadratic
-
-	3250, 1.0,     0.0014  0.000007
-
-	600,  1.0,     0.007   0.0002
-
-	325,  1.0,     0.014,  0.0007
-
-	200,  1.0,     0.022,  0.0019
-
-	160,  1.0,     0.027,  0.0028
-
-	100,  1.0,     0.045,  0.0075
-
-	65,   1.0,     0.07,   0.017
-
-	50,   1.0,     0.09,   0.032
-
-	32,   1.0,     0.14,   0.07
-
-	20,   1.0,     0.22,   0.20
-
-	13,   1.0,     0.35,   0.44
-
-	7,    1.0,     0.7,    1.8
-*/
 
 std::uint32_t  shade::PointLight::m_TotalCount = 0;
 
-
 shade::PointLight::PointLight() : shade::Light(shade::Environment::Type::PointLight),
-	m_Constant(1.0f),
-	m_Linear(0.001f),
-	m_Qaudratic(0.001f)
+	m_Intesity(1.0f),
+	m_Distance(10.0f),
+	m_Falloff(0.25f)
 {
 	// Icnrease count
 	m_TotalCount++;
@@ -45,54 +18,54 @@ shade::PointLight::~PointLight()
 	m_TotalCount--;
 }
 
- void shade::PointLight::SetConstant(const float& constant)
+ void shade::PointLight::SetIntensity(const float& intensity)
 {
-	m_Constant = constant;
+	m_Intesity = intensity;
 }
 
- void shade::PointLight::SetLinear(const float& linear)
+ void shade::PointLight::SetDistance(const float& distnace)
 {
-	m_Linear = linear;
+	m_Distance = distnace;
 }
 
- void shade::PointLight::SetQaudratic(const float& qaudratic)
+ void shade::PointLight::SetFalloff(const float& falloff)
 {
-	m_Qaudratic = qaudratic;
+	m_Falloff = falloff;
 }
 
- const float& shade::PointLight::GetConstant() const
+ const float& shade::PointLight::GetIntensity() const
 {
-	return m_Constant;
+	return m_Intesity;
 }
 
-float& shade::PointLight::GetConstant()
+float& shade::PointLight::GetIntensity()
 {
-	return const_cast<float&>(const_cast<const shade::PointLight*>(this)->GetConstant());
+	return const_cast<float&>(const_cast<const shade::PointLight*>(this)->GetIntensity());
 }
 
- const float& shade::PointLight::GetLinear() const
+ const float& shade::PointLight::GetDistance() const
 {
-	return  m_Linear;
+	return  m_Distance;
 }
 
-float& shade::PointLight::GetLinear()
+float& shade::PointLight::GetDistance()
 {
-	return const_cast<float&>(const_cast<const shade::PointLight*>(this)->GetLinear());
+	return const_cast<float&>(const_cast<const shade::PointLight*>(this)->GetDistance());
 }
 
- const float& shade::PointLight::GetQaudratic() const
+ const float& shade::PointLight::GetFalloff() const
 {
-	return m_Qaudratic;
+	return m_Falloff;
 }
 
-float& shade::PointLight::GetQaudratic()
+float& shade::PointLight::GetFalloff()
 {
-	return const_cast<float&>(const_cast<const shade::PointLight*>(this)->GetQaudratic());
+	return const_cast<float&>(const_cast<const shade::PointLight*>(this)->GetFalloff());
 }
 
 shade::PointLight::RenderData shade::PointLight::GetRenderData(const glm::vec3& position)
 {
-	return RenderData{ position, m_AmbientColor, m_DiffuseColor, m_SpecularColor, m_Constant, m_Linear, m_Qaudratic};
+	return RenderData{ position, m_DiffuseColor, m_SpecularColor, m_Intesity, m_Distance, m_Falloff};
 }
 
 std::uint32_t shade::PointLight::GetTotalCount()

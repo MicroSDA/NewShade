@@ -1,37 +1,12 @@
 #include "shade_pch.h"
 #include "SpotLight.h"
-/*  Range Constant Linear  Quadratic
 
-	3250, 1.0,     0.0014  0.000007
-
-	600,  1.0,     0.007   0.0002
-
-	325,  1.0,     0.014,  0.0007
-
-	200,  1.0,     0.022,  0.0019
-
-	160,  1.0,     0.027,  0.0028
-
-	100,  1.0,     0.045,  0.0075
-
-	65,   1.0,     0.07,   0.017
-
-	50,   1.0,     0.09,   0.032
-
-	32,   1.0,     0.14,   0.07
-
-	20,   1.0,     0.22,   0.20
-
-	13,   1.0,     0.35,   0.44
-
-	7,    1.0,     0.7,    1.8
-*/
 std::uint32_t  shade::SpotLight::m_TotalCount = 0;
 
 shade::SpotLight::SpotLight() : shade::Light(shade::Environment::Type::SpotLight),
-	m_Constant(1.0f),
-	m_Linear(0.007f),
-	m_Qaudratic(0.00007f),
+	m_Intesity(1.0f),
+	m_Distance(10.0f),
+	m_Falloff(0.25f),
 	m_MinAngle(glm::cos(glm::radians(5.5f))),
 	m_MaxAngle(glm::cos(glm::radians(7.5f)))
 {
@@ -75,49 +50,49 @@ shade::SpotLight::~SpotLight()
 	 return const_cast<float&>(const_cast<const shade::SpotLight*>(this)->GetMaxAngle());
  }
 
- void shade::SpotLight::SetConstant(const float& constant)
+ void shade::SpotLight::SetIntensity(const float& intensity)
  {
-	 m_Constant = constant;
+	 m_Intesity = intensity;
  }
 
- void shade::SpotLight::SetLinear(const float& linear)
+ void shade::SpotLight::SetDistance(const float& distance)
  {
-	 m_Linear = linear;
+	 m_Distance = distance;
  }
 
- void shade::SpotLight::SetQaudratic(const float& qaudratic)
+ void shade::SpotLight::SetFalloff(const float& falloff)
  {
-	 m_Qaudratic = qaudratic;
+	 m_Falloff = falloff;
  }
 
- const float& shade::SpotLight::GetConstant() const
+ const float& shade::SpotLight::GetIntensity() const
  {
-	 return m_Constant;
+	 return m_Intesity;
  }
 
- float& shade::SpotLight::GetConstant()
+ float& shade::SpotLight::GetIntensity()
  {
-	 return const_cast<float&>(const_cast<const shade::SpotLight*>(this)->GetConstant());
+	 return const_cast<float&>(const_cast<const shade::SpotLight*>(this)->GetIntensity());
  }
 
- const float& shade::SpotLight::GetLinear() const
+ const float& shade::SpotLight::GetDistance() const
  {
-	 return m_Linear;
+	 return m_Distance;
  }
 
- float& shade::SpotLight::GetLinear()
+ float& shade::SpotLight::GetDistance()
  {
-	 return const_cast<float&>(const_cast<const shade::SpotLight*>(this)->GetLinear());
+	 return const_cast<float&>(const_cast<const shade::SpotLight*>(this)->GetDistance());
  }
 
-const float& shade::SpotLight::GetQaudratic() const
+const float& shade::SpotLight::GetFalloff() const
 {
-	return m_Qaudratic;
+	return m_Falloff;
 }
 
-float& shade::SpotLight::GetQaudratic()
+float& shade::SpotLight::GetFalloff()
 {
-	return const_cast<float&>(const_cast<const shade::SpotLight*>(this)->GetQaudratic());
+	return const_cast<float&>(const_cast<const shade::SpotLight*>(this)->GetFalloff());
 }
 
 shade::SpotLight::RenderData shade::SpotLight::GetRenderData(const glm::vec3& position, const glm::vec3& derection) const
@@ -125,12 +100,11 @@ shade::SpotLight::RenderData shade::SpotLight::GetRenderData(const glm::vec3& po
 	return RenderData { 
 		position,
 		glm::normalize(derection),
-		m_AmbientColor,
 		m_DiffuseColor,
 		m_SpecularColor,
-		m_Constant,
-		m_Linear,
-		m_Qaudratic,
+		m_Intesity,
+		m_Distance,
+		m_Falloff,
 		m_MinAngle,
 		m_MaxAngle
 	};

@@ -96,7 +96,6 @@ void EditorLayer::OnUpdate(const shade::Shared<shade::Scene>& scene, const shade
 			for (auto& mesh : model->GetMeshes())
 			{
 				auto cpcTransform = scene->ComputePCTransform(entity);
-
 				/* Shadow pass outside of frustum*/
 				shade::Render::SubmitPipelineInstanced(m_ShadowMapPipeline, mesh, mesh->GetMaterial(), cpcTransform);
 
@@ -105,7 +104,6 @@ void EditorLayer::OnUpdate(const shade::Shared<shade::Scene>& scene, const shade
 					shade::Render::SubmitPipelineInstanced(m_InstancedPipeline, mesh, mesh->GetMaterial(), cpcTransform);
 					m_SubmitedMeshCount++;
 				}
-
 			}
 		});
 
@@ -118,10 +116,12 @@ void EditorLayer::OnUpdate(const shade::Shared<shade::Scene>& scene, const shade
 	scene->GetEntities().view<shade::PointLightComponent, shade::Transform3DComponent>().each([&](auto& entity, shade::PointLightComponent& enviroment, shade::Transform3DComponent& transform)
 		{
 			shade::Render::SubmitLight(enviroment, scene->ComputePCTransform(entity));
+			
 		});
 	scene->GetEntities().view<shade::SpotLightComponent, shade::Transform3DComponent>().each([&](auto& entity, shade::SpotLightComponent& enviroment, shade::Transform3DComponent& transform)
 		{
 			shade::Render::SubmitLight(enviroment, scene->ComputePCTransform(entity));
+			shade::Render::SubmitPipelineInstanced(m_CameraFrustumPipeline, m_Box, nullptr, (transform.GetModelMatrix()));
 		});
 }
 
@@ -154,13 +154,13 @@ void EditorLayer::OnRender(const shade::Shared<shade::Scene>& scene, const shade
 			ShowWindowBar("Shaders library", &EditorLayer::ShadersLibrary, this);
 		}
 		ShowWindowBar("Scene", &EditorLayer::Scene, this, scene);
-		/*ShowWindowBar("Shadow", [&]()
+		ShowWindowBar("Shadow", [&]()
 			{
 				static int id = 9;
 				DrawInt("Texture", &id);
-				DrawFlaot("Offset", &m_ShadowMapPipeline->FOVOFFSET);
-				DrawImage(id, 500, 500);
-			});*/
+				DrawFlaot("Offset", &m_ShadowMapPipeline->_OFFSET);
+				//DrawImage(id, 500, 500);
+			});
 
 	} ImGui::End(); // Begin("DockSpace")
 	{
@@ -171,11 +171,11 @@ void EditorLayer::OnRender(const shade::Shared<shade::Scene>& scene, const shade
 				shade::Render::ExecuteSubmitedPipeline(m_InstancedPipeline);
 				shade::Render::ExecuteSubmitedPipeline(m_CameraFrustumPipeline);
 
-				//if (m_isBloomEnabled)
-				//	shade::Render::PProcess::Process(m_PPBloom);
-				//if (m_isColorCorrectionEnabled)
-				//	shade::Render::PProcess::Process(m_PPColorCorrection);
-				//shade::Render::ExecuteSubmitedPipeline(m_GridPipeline);
+				if (m_isBloomEnabled)
+					shade::Render::PProcess::Process(m_PPBloom);
+				if (m_isColorCorrectionEnabled)
+					shade::Render::PProcess::Process(m_PPColorCorrection);
+				shade::Render::ExecuteSubmitedPipeline(m_GridPipeline);
 
 				//shade::Render::DrawSprite(m_SpriteShader, m_ShadowMapPipeline->GetResult()->GetDepthAttachment(), glm::mat4(1));
 			shade::Render::EndScene();
@@ -759,7 +759,6 @@ void EditorLayer::DirectLightComponent(shade::Entity& entity)
 {
 	auto& light = entity.GetComponent<shade::DirectLightComponent>();
 
-	DrawColor3("Ambient", glm::value_ptr(light->GetAmbientColor()));
 	DrawColor3("Diffuse", glm::value_ptr(light->GetDiffuseColor()));
 	DrawColor3("Specular", glm::value_ptr(light->GetSpecularColor()));
 }
@@ -768,24 +767,22 @@ void EditorLayer::PointLightComponent(shade::Entity& entity)
 {
 	auto& light = entity.GetComponent<shade::PointLightComponent>();
 
-	DrawColor3("Ambient", glm::value_ptr(light->GetAmbientColor()));
 	DrawColor3("Diffuse", glm::value_ptr(light->GetDiffuseColor()));
 	DrawColor3("Specular", glm::value_ptr(light->GetSpecularColor()));
-	DrawFlaot("Constant", &light->GetConstant());
-	DrawFlaot("Liner", &light->GetLinear());
-	DrawFlaot("Qaudratic", &light->GetQaudratic());
+	DrawFlaot("Intensity", &light->GetIntensity());
+	DrawFlaot("Distance", &light->GetDistance());
+	DrawFlaot("Falloff", &light->GetFalloff());
 }
 
 void EditorLayer::SpotLightComponent(shade::Entity& entity)
 {
 	auto& light = entity.GetComponent<shade::SpotLightComponent>();
 
-	DrawColor3("Ambient", glm::value_ptr(light->GetAmbientColor()));
 	DrawColor3("Diffuse", glm::value_ptr(light->GetDiffuseColor()));
 	DrawColor3("Specular", glm::value_ptr(light->GetSpecularColor()));
-	DrawFlaot("Constant", &light->GetConstant());
-	DrawFlaot("Liner", &light->GetLinear());
-	DrawFlaot("Qaudratic", &light->GetQaudratic());
+	DrawFlaot("Intensity", &light->GetIntensity());
+	DrawFlaot("Distance", &light->GetDistance());
+	DrawFlaot("Falloff", &light->GetFalloff());
 	DrawFlaot("Min", &light->GetMinAngle());
 	DrawFlaot("Max", &light->GetMaxAngle());
 }
@@ -1127,7 +1124,12 @@ void EditorLayer::Material(const shade::Shared<shade::Material3D>& material)
 				DrawImage(material->TextureNormals->GetRenderID(), 100, 100, true);
 			ImGui::TreePop();
 		}
-
+		
+		ImGui::Separator();
+		if (DrawButtonImage("##Save", m_IconsTexture, { 20, 20 }, { 128, 128 }, { 306, 898 }, -1))
+		{
+			material->Serialize();
+		}
 	}
 }
 

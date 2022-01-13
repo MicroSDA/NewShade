@@ -11,7 +11,6 @@ struct Camera
 struct DirectLight
 {
 	vec3 Direction;
-	vec3 AmbientColor;
 	vec3 DiffuseColor;
 	vec3 SpecularColor;
 	vec3 Position;
@@ -21,26 +20,24 @@ struct DirectLight
 struct PointLight
 {
 	vec3		Position;
-	vec3    AmbientColor;
-	vec3    DiffuseColor;
-	vec3    SpecularColor;
-	float		Constant;
-	float		Linear;
-	float		Qaudratic;
+	vec3        DiffuseColor;
+	vec3        SpecularColor;
+	float		Intensity;
+	float		Distance;
+	float		Falloff;
 };
 
 struct SpotLight
 {
 	vec3 		Position;
 	vec3 		Direction;
-	vec3    AmbientColor;
-	vec3    DiffuseColor;
-	vec3    SpecularColor;
-	float		Constant;
-	float		Linear;
-	float		Qaudratic;
-  float   MinAngle;
-  float   MaxAngle;
+	vec3    	DiffuseColor;
+	vec3    	SpecularColor;
+	float		Intensity;
+	float		Distance;
+	float		Falloff;
+  	float   MinAngle;
+  	float   MaxAngle;
 };
 
 struct Material

@@ -10,12 +10,11 @@ namespace shade
 		{
 			alignas(16) glm::vec3	Position;
 			alignas(16) glm::vec3	Direction;
-			alignas(16) glm::vec3   AmbientColor;
 			alignas(16) glm::vec3   DiffuseColor;
 			alignas(16) glm::vec3   SpecularColor;
-			float					Constant;
-			float					Linear;
-			float					Qaudratic;
+			float					Intesity;
+			float					Distance;
+			float					Falloff;
 			float					MinAngle;
 			float					MaxAngle;
 		};
@@ -26,9 +25,9 @@ namespace shade
 
 		 void SetMinAngle(const float& angle);
 		 void SetMaxAngle(const float& angle);
-		 void SetConstant(const float& constant);
-		 void SetLinear(const float& linear);
-		 void SetQaudratic(const float& qaudratic);
+		 void SetIntensity(const float& intensity);
+		 void SetDistance(const float& distance);
+		 void SetFalloff(const float& falloff);
 
 		
 		 const float& GetMinAngle() const;
@@ -36,18 +35,18 @@ namespace shade
 		 const float& GetMaxAngle() const;
 		 float& GetMaxAngle();
 
-		 const float& GetConstant() const;
-		 float& GetConstant();
-		 const float& GetLinear() const;
-		 float& GetLinear();
-		 const float& GetQaudratic() const;
-		 float& GetQaudratic();
+		 const float& GetIntensity() const;
+		 float& GetIntensity();
+		 const float& GetDistance() const;
+		 float& GetDistance();
+		 const float& GetFalloff() const;
+		 float& GetFalloff();
 
 		 RenderData GetRenderData(const glm::vec3& position, const glm::vec3& derection) const;
 	private:
-		float		m_Constant;
-		float		m_Linear;
-		float		m_Qaudratic;
+		float		m_Intesity;
+		float		m_Distance;
+		float		m_Falloff;
 		float		m_MinAngle;
 		float		m_MaxAngle;
 		static std::uint32_t  m_TotalCount;	
