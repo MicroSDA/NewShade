@@ -57,7 +57,27 @@ float Variance_SpotLight(sampler2DArray ShadowMap, vec3 ProjectionCoords, float 
          float _Depth = texture(ShadowMap, vec3(ProjectionCoords.xy + (PoissonDisk[i] * TexelSize), CascadeLayer)).r;
          vec2  Moments = vec2(_Depth, _Depth * _Depth);
          float P = step(Depth, Moments.x);
-         float Variance = max(Moments.y - Moments.x * Moments.x, 0.000002);
+         float Variance = max(Moments.y - Moments.x * Moments.x, 0.00002);
+         float D = Depth - Moments.x;
+         float Max = LineStep(0.999, 1.0, Variance / (Variance + D * D));
+         Value += max(P, Max);
+    }
+    Value /= SamplesCount;
+    return min(Value, 1.0);
+}
+
+float Variance_PointLight(samplerCube ShadowMap, vec3 ProjectionCoords, float Depth, float Distance)
+{
+    const int   SamplesCount = 16;
+    float       Value        = 0.0;
+    vec2        TexelSize    = 1.0 / vec2(textureSize(ShadowMap, 0));
+    for(int i = 0; i < SamplesCount; i++)
+    {
+         //float  _Depth = texture(ShadowMap, ProjectionCoords.xyz + vec3(PoissonDisk[i] * TexelSize, 0.0)).r  * (100.0);
+         float  _Depth = texture(ShadowMap, vec3(vec2(ProjectionCoords.xy + vec2(PoissonDisk[i] * TexelSize)), ProjectionCoords.z)).r * Distance;
+         vec2  Moments = vec2(_Depth, _Depth * _Depth);
+         float P = step(Depth, Moments.x);
+         float Variance = max(Moments.y - Moments.x * Moments.x, 0.00002);
          float D = Depth - Moments.x;
          float Max = LineStep(0.999, 1.0, Variance / (Variance + D * D));
          Value += max(P, Max);
@@ -114,26 +134,60 @@ float CSM_DirectLight(sampler2DArray ShadowMap, mat4 LightViewMatrix, int Cascad
         return 1.0;
 
     return Variance_DirectLight(ShadowMap, ProjectionCoords, CurentDepth, CascadeLayer);
+}
 
-    /* Calculate bias */
-    /*float Offset = 0.05;
-    if(CascadeLayer == CascadeCount - 1)
-        Offset /= SplitDistance * 2.0;
-    else
-        Offset /= SplitDistance * 1.9;
-    float Bias = max(Offset * (1.0 - normalize(dot(Normal, LightDirection))), Offset);
-    return PCF_DirectLight(ShadowMap, ProjectionCoords, CurentDepth, Bias, CascadeLayer);*/
+float SM_PointLight(samplerCube ShadowMap, vec3 FragPosWorldSapce, vec3 Normal, vec3 LightPosition, float Distance)
+{
+    vec3  FragPosLightSpace = FragPosWorldSapce - LightPosition;
+    vec3 direction          = normalize(FragPosLightSpace);
+    /* Perspective divide */
+    vec3 ProjectionCoords = FragPosLightSpace.xyz;
+    float CurentDepth = length(FragPosLightSpace);
+    CurentDepth = CurentDepth - LineStep(0.0, 5.0,  Distance);
+    return Variance_PointLight(ShadowMap, ProjectionCoords, CurentDepth, Distance);
+
+    // vec3 FragPosLightSpace = FragPosWorldSapce - LightDirection;
+    // // ise the fragment to light vector to sample from the depth map    
+    // float closestDepth = texture(ShadowMap, FragPosLightSpace.xyz).r;
+    // // it is currently in linear range between [0,1], let's re-transform it back to original depth value
+    // closestDepth *= 100.0;
+    // // now get current linear depth as the length between the fragment and light position
+    // float currentDepth = length(FragPosLightSpace);
+   
+    // // test for shadows
+    // float bias = 0.05; // we use a much larger bias since depth is now in [near_plane, far_plane] range
+    // float shadow = currentDepth -  bias >= closestDepth ? 1.0 : 0.0;        
+    // return 1.0 - shadow;
+        
+    //return shadow;
+
+//     float Value = 0.0;
+//     for(int i = 0; i < 6; i++)
+//     {
+//         vec4 FragPosLightSpace = LightViewMatrix[i] * vec4(FragPosWorldSapce, 1.0);
+//         /* Perspective divide */
+//         vec3 ProjectionCoords = FragPosLightSpace.xyz / FragPosLightSpace.w;
+//         /* Set between 0 - 1 range */
+//         ProjectionCoords  = ProjectionCoords * 0.5 + 0.5;
+//         float CurentDepth = ProjectionCoords.z;
+//         if (!ShadowInRange(ProjectionCoords.z) || !ShadowInRange(ProjectionCoords.x) || !ShadowInRange(ProjectionCoords.y))
+//             Value += 1.0;
+//         else
+//            Value  += Variance_PointLight(ShadowMap, ProjectionCoords, CurentDepth, i); 
+//     }
+
+//    return Value / 6;
 }
 
 float SM_SpotLight(sampler2DArray ShadowMap, mat4 LightViewMatrix, int CascadeLayer, mat4 CameraView, vec3 FragPosWorldSapce, vec3 Normal, vec3 LightDirection)
 {
-     vec4 FragPosLightSpace = LightViewMatrix * vec4(FragPosWorldSapce, 1.0);
+    vec4 FragPosLightSpace = LightViewMatrix * vec4(FragPosWorldSapce, 1.0);
     /* Perspective divide */
     vec3 ProjectionCoords = FragPosLightSpace.xyz / FragPosLightSpace.w;
     /* Set between 0 - 1 range */
     ProjectionCoords  = ProjectionCoords * 0.5 + 0.5;
     float CurentDepth = ProjectionCoords.z;
-   if (!ShadowInRange(ProjectionCoords.z) || !ShadowInRange(ProjectionCoords.x) || !ShadowInRange(ProjectionCoords.y))
+    if (!ShadowInRange(ProjectionCoords.z) || !ShadowInRange(ProjectionCoords.x) || !ShadowInRange(ProjectionCoords.y))
         return 1.0;  
     /* Calculate bias */
     //float Bias = max(0.25 * (1.0 - dot(Normal, LightDirection)), 0.0005);

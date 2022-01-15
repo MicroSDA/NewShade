@@ -1,0 +1,70 @@
+Scene: PointLightShadow
+Entities:
+  - Entity: 7
+    Tag: Cube
+    Transform3D:
+      Position: [28.8179665, 1.96344328, 0]
+      Rotation: [0, -0, 0]
+      Scale: [1, 68.9794159, 105.74189]
+    Model3D:
+      Asset: Cube
+  - Entity: 6
+    Tag: Cube
+    Transform3D:
+      Position: [-24.9240704, 10.8814163, 0]
+      Rotation: [0, -0, 0]
+      Scale: [1, 21.9965019, 74.8856888]
+    Model3D:
+      Asset: Cube
+  - Entity: 5
+    Tag: Cube
+    Transform3D:
+      Position: [0, 6.50312233, 26.2568073]
+      Rotation: [0, -0, 0]
+      Scale: [87.7173843, 16.3208961, 1]
+    Model3D:
+      Asset: Cube
+  - Entity: 4
+    Tag: Cube
+    Transform3D:
+      Position: [0, 9.62763119, -15.8201036]
+      Rotation: [0, -0, 0]
+      Scale: [43.598423, 17.526989, 0.505449772]
+    Model3D:
+      Asset: Cube
+  - Entity: 3
+    Tag: Cube
+    Transform3D:
+      Position: [0, 21.6935711, 0]
+      Rotation: [0, -0, 0]
+      Scale: [30.3603477, 1, 383.642822]
+    Model3D:
+      Asset: Cube
+  - Entity: 2
+    Tag: Cube
+    Transform3D:
+      Position: [0, -0.640336275, 0]
+      Rotation: [0, -0, 0]
+      Scale: [63.6278496, 1, 51.9475212]
+    Model3D:
+      Asset: Cube
+  - Entity: 1
+    Tag: Cube
+    Transform3D:
+      Position: [0, 7.7534914, 0]
+      Rotation: [0, -0, 0]
+      Scale: [1, 1, 1]
+    Model3D:
+      Asset: Cube
+  - Entity: 0
+    Tag: Point light
+    Transform3D:
+      Position: [-1.65759778, 8.79843616, 3.3495965]
+      Rotation: [0, 0.276820213, 0]
+      Scale: [0.999999166, 1, 0.999999166]
+    PointLight:
+      Diffuse: [1, 1, 1]
+      Specular: [1, 1, 1]
+      Intensity: 1
+      Distance: 50
+      Falloff: 0.25

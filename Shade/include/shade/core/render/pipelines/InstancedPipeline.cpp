@@ -47,6 +47,8 @@ shade::Shared<shade::FrameBuffer > shade::InstancedPipeline::Process(const shade
 						shadowMap->GetDriectLightFrameBuffer()->BindDepthAsTexture(3);
 					if (shadowMap->GetSpotLightFrameBuffer())
 						shadowMap->GetSpotLightFrameBuffer()->BindDepthAsTexture(4);
+					if (shadowMap->GetPointLightFrameBuffer())
+						shadowMap->GetPointLightFrameBuffer()->BindDepthAsTexture(5);
 				}
 			}
 

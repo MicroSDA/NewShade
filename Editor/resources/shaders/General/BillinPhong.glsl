@@ -20,7 +20,7 @@ vec4 BilinPhongDirectLight(vec3 normal, DirectLight light, Material material, ve
 		}
 	}
 
-	return vec4(ambientColor + max(((diffuseColor + specularColor) * shadow), 0.0));
+	return vec4(ambientColor + ((diffuseColor + specularColor) * shadow));
 }
 
 vec4 BilinPhongPointLight(vec3 normal, PointLight light, Material material, vec3 vertex, vec3 toCameraDirection, vec4 diffuseTexture, vec4 specularTexture, float Shadow)
@@ -61,7 +61,6 @@ vec4 BilinPhongSpotLight(vec3 normal, SpotLight light, Material material, vec3 v
         pointLight.Falloff 			= light.Falloff;
         //--------------------------------------------
         vec4 totalColor				= BilinPhongPointLight(normal, pointLight, material, vertex, toCameraDirection, diffuseTexture, specularTexture, Shadow);
-
         return totalColor * spotFactor;
     }
     else

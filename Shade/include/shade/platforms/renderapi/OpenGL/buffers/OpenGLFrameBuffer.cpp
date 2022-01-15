@@ -110,6 +110,7 @@ namespace shade
 			switch (format)
 			{
 			case FrameBuffer::Texture::Format::DEPTH24STENCIL8: 
+			case FrameBuffer::Texture::Format::DEPTH24STENCIL8_CUBE_MAP:
 				return true;
 			default: return false;
 			}
@@ -280,6 +281,34 @@ void shade::OpenGLFrameBuffer::Invalidate()
 				util::AttachDepthTexture(m_DepthAttachment, m_Layout.Samples, m_Layout.Layers, GL_DEPTH24_STENCIL8, GL_DEPTH_STENCIL_ATTACHMENT, m_Layout.Width, m_Layout.Height);
 			}
 			break;
+		case Texture::Format::DEPTH24STENCIL8_CUBE_MAP:
+
+			glGenTextures(1, &m_DepthAttachment);
+			glBindTexture(GL_TEXTURE_CUBE_MAP, m_DepthAttachment);
+			for (unsigned int i = 0; i < 6; ++i)
+				glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_DEPTH_COMPONENT24, m_Layout.Width, m_Layout.Height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+			glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+			glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+			glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+			glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+			glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+			// attach depth texture as FBO's depth buffer
+			glBindFramebuffer(GL_FRAMEBUFFER, m_DepthAttachment);
+			glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, m_DepthAttachment, 0);
+
+			//glCreateTextures(GL_TEXTURE_CUBE_MAP, 1, &m_DepthAttachment);
+			//glBindTexture(GL_TEXTURE_CUBE_MAP, m_DepthAttachment);
+			//glTexStorage2D(GL_TEXTURE_CUBE_MAP, 1, GL_DEPTH_COMPONENT, m_Layout.Width, m_Layout.Height);
+			//	
+
+			//glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+			//glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+			//glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+			//glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+			//glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+			//glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, m_DepthAttachment, 0);
+
+			break;
 		}
 	}
 
@@ -350,16 +379,24 @@ void shade::OpenGLFrameBuffer::BindAttachmentAsTexture(const std::uint32_t& atta
 
 void shade::OpenGLFrameBuffer::BindDepthAsTexture(const std::uint32_t& unit) const
 {
-	switch (m_Layout.Layers)
+	if (m_DepthAttachmentSpec.TextureFormat == Texture::Format::DEPTH24STENCIL8_CUBE_MAP)
 	{
-	case 0:
 		glActiveTexture(GL_TEXTURE0 + unit);
-		glBindTexture(GL_TEXTURE_2D, GetDepthAttachment());
-		break;
-	default:
-		glActiveTexture(GL_TEXTURE0 + unit);
-		glBindTexture(GL_TEXTURE_2D_ARRAY, GetDepthAttachment());
-		break;
+		glBindTexture(GL_TEXTURE_CUBE_MAP, GetDepthAttachment());
+	}
+	else
+	{
+		switch (m_Layout.Layers)
+		{
+		case 0:
+			glActiveTexture(GL_TEXTURE0 + unit);
+			glBindTexture(GL_TEXTURE_2D, GetDepthAttachment());
+			break;
+		default:
+			glActiveTexture(GL_TEXTURE0 + unit);
+			glBindTexture(GL_TEXTURE_2D_ARRAY, GetDepthAttachment());
+			break;
+		}
 	}
 }
 

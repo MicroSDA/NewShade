@@ -58,9 +58,6 @@ void EditorLayer::OnCreate()
 	m_ShadowMapPipeline		= shade::RenderPipeline::Create<shade::ShadowMapPipeline>({ m_DirectLightShadowShader });
 	m_GridPipeline			= shade::RenderPipeline::Create<shade::GridPipeline>({ m_GridShader });
 	m_CameraFrustumPipeline = shade::RenderPipeline::Create<shade::CameraFrustumPipeline>({ m_FrustumShader });
-
-
-	
 }
 
 void EditorLayer::OnUpdate(const shade::Shared<shade::Scene>& scene, const shade::Timer& deltaTime)
@@ -154,13 +151,7 @@ void EditorLayer::OnRender(const shade::Shared<shade::Scene>& scene, const shade
 			ShowWindowBar("Shaders library", &EditorLayer::ShadersLibrary, this);
 		}
 		ShowWindowBar("Scene", &EditorLayer::Scene, this, scene);
-		ShowWindowBar("Shadow", [&]()
-			{
-				static int id = 9;
-				DrawInt("Texture", &id);
-				DrawFlaot("Offset", &m_ShadowMapPipeline->_OFFSET);
-				//DrawImage(id, 500, 500);
-			});
+		
 
 	} ImGui::End(); // Begin("DockSpace")
 	{
@@ -1028,6 +1019,21 @@ void EditorLayer::Render()
 		ImGui::Checkbox("Enable", &m_isColorCorrectionEnabled);
 		DrawFlaot("Gamma", &m_PPColorCorrection->GetGamma(), 1.f, 0.f, FLT_MAX, 80.f);
 		DrawFlaot("Exposure", &m_PPColorCorrection->GetExposure(), 1.f, 0.f, FLT_MAX, 80.f);
+		ImGui::TreePop();
+	}
+	if (ImGui::TreeNodeEx("Shadows ", ImGuiTreeNodeFlags_Framed))
+	{
+		static bool dShadowsCast = true;
+		static bool sShadowsCast = true;
+		static bool pShadowsCast = true;
+
+		ImGui::Checkbox("Direct shadows", &dShadowsCast);
+		ImGui::Checkbox("Spot shadows",   &sShadowsCast);
+		ImGui::Checkbox("Point shadows",  &pShadowsCast);
+
+		m_ShadowMapPipeline->SetDirectLightShadowCast(dShadowsCast);
+		m_ShadowMapPipeline->SetSpotLightShadowCast(sShadowsCast);
+		m_ShadowMapPipeline->SetPointLightShadowCast(pShadowsCast);
 		ImGui::TreePop();
 	}
 

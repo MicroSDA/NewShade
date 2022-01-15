@@ -58,7 +58,15 @@ struct DirectLightCascade
 	mat4  ViewMatrix;
 	float SplitDistance;
 };
+
 struct SpotLightCascade
 {
 	mat4  ViewMatrix;
+	float Distance;
+};
+
+struct PointLightCascade
+{
+	mat4  ViewMatrix;
+	float Distance;
 };

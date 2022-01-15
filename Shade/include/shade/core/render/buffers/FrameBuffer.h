@@ -28,6 +28,7 @@ namespace shade
 				RGBA16F,
 				RED_INT,
 				DEPTH24STENCIL8,
+				DEPTH24STENCIL8_CUBE_MAP,
 			};
 			enum class Access : std::uint32_t
 			{
