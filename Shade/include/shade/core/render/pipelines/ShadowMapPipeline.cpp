@@ -13,7 +13,7 @@ shade::ShadowMapPipeline::ShadowMapPipeline(const RenderPipeline::Specification&
 		shade::FrameBuffer::Texture::Format::DEPTH24STENCIL8 }, 1, 0));
 
 	m_PointLightShadowFrameBuffer = shade::FrameBuffer::Create(shade::FrameBuffer::Layout(1024 * m_PShadowMapMultiplier, 1024 * m_PShadowMapMultiplier, {
-		shade::FrameBuffer::Texture::Format::DEPTH24STENCIL8_CUBE_MAP }, 1, 0));
+		shade::FrameBuffer::Texture::Format::DEPTH24STENCIL8_CUBE_MAP }, 1, 1));
 
 	m_DirectLightCascadeBuffer  = ShaderStorageBuffer::Create(sizeof(DirectLightCascade) * 4, 5);
 	m_SpotLightCascadeBuffer    = ShaderStorageBuffer::Create(0,   6);
@@ -118,12 +118,12 @@ shade::Shared<shade::FrameBuffer> shade::ShadowMapPipeline::Process(const shade:
 			pointLightCascades.push_back(ComputePointLightCascade(fov, light.Position, glm::vec3( 0.0, 0.0,-1.0), glm::vec3(0.0, -1.0,  0.0), _near, distance));	//-z
 		}
 
-		/*if (m_PointLightShadowFrameBuffer->GetLayout().Layers != lights.PointLightSources.size() * 6)
+		if (m_PointLightShadowFrameBuffer->GetLayout().Layers != lights.PointLightSources.size())
 		{
 			auto layout = m_PointLightShadowFrameBuffer->GetLayout();
-			layout.Layers = lights.PointLightSources.size() * 6;
+			layout.Layers = lights.PointLightSources.size();
 			m_PointLightShadowFrameBuffer = FrameBuffer::Create(layout);
-		}*/
+		}
 
 		if (m_PointLightCascadeBuffer->GetSize() != sizeof(PointLightCascade) * pointLightCascades.size())
 			m_PointLightCascadeBuffer->Resize(sizeof(PointLightCascade) * pointLightCascades.size());

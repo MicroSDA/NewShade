@@ -4,7 +4,6 @@
 std::uint32_t  shade::SpotLight::m_TotalCount = 0;
 
 shade::SpotLight::SpotLight() : shade::Light(shade::Environment::Type::SpotLight),
-	m_Intesity(1.0f),
 	m_Distance(10.0f),
 	m_Falloff(0.25f),
 	m_MinAngle(glm::cos(glm::radians(5.5f))),
@@ -50,10 +49,6 @@ shade::SpotLight::~SpotLight()
 	 return const_cast<float&>(const_cast<const shade::SpotLight*>(this)->GetMaxAngle());
  }
 
- void shade::SpotLight::SetIntensity(const float& intensity)
- {
-	 m_Intesity = intensity;
- }
 
  void shade::SpotLight::SetDistance(const float& distance)
  {
@@ -65,15 +60,6 @@ shade::SpotLight::~SpotLight()
 	 m_Falloff = falloff;
  }
 
- const float& shade::SpotLight::GetIntensity() const
- {
-	 return m_Intesity;
- }
-
- float& shade::SpotLight::GetIntensity()
- {
-	 return const_cast<float&>(const_cast<const shade::SpotLight*>(this)->GetIntensity());
- }
 
  const float& shade::SpotLight::GetDistance() const
  {
@@ -102,7 +88,7 @@ shade::SpotLight::RenderData shade::SpotLight::GetRenderData(const glm::vec3& po
 		glm::normalize(derection),
 		m_DiffuseColor,
 		m_SpecularColor,
-		m_Intesity,
+		m_Intensity,
 		m_Distance,
 		m_Falloff,
 		m_MinAngle,

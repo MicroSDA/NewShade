@@ -103,6 +103,7 @@ static bool SerrDirectLightComponent(shade::Entity& entity, YAML::Emitter& emitt
 		emitter << YAML::Key << "DirectLight" << YAML::BeginMap;
 		emitter << YAML::Key << "Diffuse" << YAML::Value << comp->GetDiffuseColor();
 		emitter << YAML::Key << "Specular" << YAML::Value << comp->GetSpecularColor();
+		emitter << YAML::Key << "Intensity" << YAML::Value << comp->GetIntensity();
 		emitter << YAML::EndMap;
 	}
 
@@ -231,9 +232,9 @@ static bool DesserDirectLightComponent(shade::Entity& entity, YAML::detail::iter
 	{
 		auto light = value["DirectLight"];
 		auto& directLight = entity.AddComponent<shade::DirectLightComponent>(shade::CreateShared<shade::DirectLight>());
-
 		directLight->SetDiffuseColor(light["Diffuse"].as<glm::vec3>());
 		directLight->SetSpecularColor(light["Specular"].as<glm::vec3>());
+		directLight->SetIntensity(light["Intensity"].as<float>());
 	}
 
 	return true;

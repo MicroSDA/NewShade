@@ -20,12 +20,9 @@ namespace shade
 		virtual ~PointLight();
 		static std::uint32_t GetTotalCount();
 
-		void SetIntensity(const float& intensity);
 		void SetDistance(const float& distance);
 		void SetFalloff(const float& falloff);
 
-		const float& GetIntensity() const;
-		float& GetIntensity();
 		const float& GetDistance()  const;
 		float& GetDistance();
 		const float& GetFalloff() const;
@@ -33,7 +30,6 @@ namespace shade
 
 		RenderData GetRenderData(const glm::vec3& position);
 	protected:
-		float		m_Intesity;
 		float		m_Distance;
 		float		m_Falloff;
 	private:

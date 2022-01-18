@@ -6,17 +6,31 @@ Entities:
       - Entity: 21
         Tag: Direct light
         Transform3D:
-          Position: [-55.5994568, -3.55365133, -22.2196331]
-          Rotation: [-0.231133223, -0.133718237, 0.00500842882]
-          Scale: [0.999923348, 0.999912798, 0.999911308]
+          Position: [-55.5994568, 3.49216723, -22.2196331]
+          Rotation: [-0.524388134, -1.04878283, 0.0716742948]
+          Scale: [0.999926388, 0.999912739, 0.999912798]
         DirectLight:
-          Diffuse: [1, 0.999989986, 0.999989986]
-          Specular: [1, 0.999989986, 0.999989986]
-          Intensity: 0.200000003
+          Diffuse: [9.99999997e-07, 9.99989993e-07, 9.99989993e-07]
+          Specular: [9.99999997e-07, 9.99989993e-07, 9.99989993e-07]
+		  Intensity: 4
+      - Entity: 22
+        Tag: Spot light
+        Transform3D:
+          Position: [23.6100941, 11.3066111, 48.2095146]
+          Rotation: [1.43969142, 0.902472377, 0.82929033]
+          Scale: [0.999987364, 0.999977112, 0.999958992]
+        SpotLight:
+          Diffuse: [1, 0.297968388, 0]
+          Specular: [0.986455977, 0.60814625, 0.447579354]
+          Intensity: 3.40400004
+          Distance: 150
+          Falloff: 1
+          Min angle: 0.943400025
+          Max angle: 0.728439987
       - Entity: 23
         Tag: Spot light
         Transform3D:
-          Position: [-55.5093117, 31.0280228, -6.80908012]
+          Position: [-55.5093117, 30.9323406, 31.233139]
           Rotation: [-0.868308961, -0.153936982, 0.620153308]
           Scale: [0.999994099, 0.999996006, 0.999995947]
         SpotLight:
@@ -30,7 +44,7 @@ Entities:
       - Entity: 24
         Tag: Point light
         Transform3D:
-          Position: [-2.9174118, 15.3095818, -27.0496845]
+          Position: [-54.966835, 1.68033564, -34.2618027]
           Rotation: [0, -0, 0]
           Scale: [1, 1, 1]
         PointLight:
@@ -47,7 +61,7 @@ Entities:
         Transform3D:
           Position: [-22.0247707, 0, -24.3541908]
           Rotation: [0, -0, 0]
-          Scale: [275.598328, 1, 437.391052]
+          Scale: [100, 1, 100]
         Model3D:
           Asset: Cube
       - Entity: 9
@@ -138,59 +152,59 @@ Entities:
           Scale: [1, 4.7064867, 12.1522141]
         Model3D:
           Asset: Cube
-      - Entity: 3
-        Tag: Door
-        Transform3D:
-          Position: [-33.066391, 6.69496489, -26.4579716]
-          Rotation: [0, -0.98414135, 0]
-          Scale: [0.999999106, 6.85803032, 5.02120352]
-        Model3D:
-          Asset: Cube
-      - Entity: 6
-        Tag: Cube
-        Transform3D:
-          Position: [-28.9547596, 16.284462, -24.2533188]
-          Rotation: [0, -0, 0]
-          Scale: [1, 2.81693983, 25.1597977]
-        Model3D:
-          Asset: Cube
-      - Entity: 4
-        Tag: Forward  right
-        Transform3D:
-          Position: [-28.993, 7.28999996, -9.80233765]
-          Rotation: [0, -0, 0]
-          Scale: [1, 6.43300009, 9.38300037]
-        Model3D:
-          Asset: Cube
-      - Entity: 5
-        Tag: Forward left
-        Transform3D:
-          Position: [-28.9930325, 7.2896266, -38.5264435]
-          Rotation: [0, -0, 0]
-          Scale: [1, 6.43261242, 9.38326073]
-        Model3D:
-          Asset: Cube
-      - Entity: 1
-        Tag: Stolb
-        Transform3D:
-          Position: [-55.3834915, 6.96817064, -1.44018745]
-          Rotation: [0, -0, 0]
-          Scale: [0.840154886, 25.4457455, 0.607379615]
-        Model3D:
-          Asset: Cube
-      - Entity: 0
-        Tag: Lamp
-        Transform3D:
-          Position: [-55.4196434, 31.8056202, -4.24515629]
-          Rotation: [-1.56786287, 0, 0]
-          Scale: [0.69950527, 3.07042861, 0.619844854]
-        Model3D:
-          Asset: Cube
+  - Entity: 6
+    Tag: Cube
+    Transform3D:
+      Position: [-28.9547596, 16.284462, -24.2533188]
+      Rotation: [0, -0, 0]
+      Scale: [1, 2.81693983, 25.1597977]
+    Model3D:
+      Asset: Cube
+  - Entity: 5
+    Tag: Forward left
+    Transform3D:
+      Position: [-28.9930325, 7.2896266, -38.5264435]
+      Rotation: [0, -0, 0]
+      Scale: [1, 6.43261242, 9.38326073]
+    Model3D:
+      Asset: Cube
+  - Entity: 4
+    Tag: Forward  right
+    Transform3D:
+      Position: [-28.993, 7.28999996, -9.80233765]
+      Rotation: [0, -0, 0]
+      Scale: [1, 6.43300009, 9.38300037]
+    Model3D:
+      Asset: Cube
+  - Entity: 3
+    Tag: Door
+    Transform3D:
+      Position: [-33.066391, 6.69496489, -26.4579716]
+      Rotation: [0, -0.98414135, 0]
+      Scale: [0.999999106, 6.85803032, 5.02120352]
+    Model3D:
+      Asset: Cube
   - Entity: 2
     Tag: Nanosuit
     Transform3D:
-      Position: [-53.5619965, 1.06850588, -11.4038181]
-      Rotation: [-3.1415925, -0.711506724, -3.14159107]
-      Scale: [0.790003657, 0.789995372, 0.789995134]
+      Position: [-62.0204964, 1.06850588, 27.8487263]
+      Rotation: [-4.16901867e-06, 1.24155009, -3.91102776e-06]
+      Scale: [0.790003896, 0.789995372, 0.789995015]
     Model3D:
       Asset: Nanosuit
+  - Entity: 1
+    Tag: Stolb
+    Transform3D:
+      Position: [-55.3834915, 6.96817064, -1.44018745]
+      Rotation: [0, -0, 0]
+      Scale: [0.840154886, 25.4457455, 0.607379615]
+    Model3D:
+      Asset: Cube
+  - Entity: 0
+    Tag: Lamp
+    Transform3D:
+      Position: [-55.4196434, 31.8056202, -4.24515629]
+      Rotation: [-1.56786287, 0, 0]
+      Scale: [0.69950527, 3.07042861, 0.619844854]
+    Model3D:
+      Asset: Cube

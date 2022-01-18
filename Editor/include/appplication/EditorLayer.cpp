@@ -749,7 +749,7 @@ void EditorLayer::Transform3DComponent(shade::Entity& entity)
 void EditorLayer::DirectLightComponent(shade::Entity& entity)
 {
 	auto& light = entity.GetComponent<shade::DirectLightComponent>();
-
+	DrawFlaot("Intensity", &light->GetIntensity());
 	DrawColor3("Diffuse", glm::value_ptr(light->GetDiffuseColor()));
 	DrawColor3("Specular", glm::value_ptr(light->GetSpecularColor()));
 }
@@ -757,10 +757,9 @@ void EditorLayer::DirectLightComponent(shade::Entity& entity)
 void EditorLayer::PointLightComponent(shade::Entity& entity)
 {
 	auto& light = entity.GetComponent<shade::PointLightComponent>();
-
+	DrawFlaot("Intensity", &light->GetIntensity());
 	DrawColor3("Diffuse", glm::value_ptr(light->GetDiffuseColor()));
 	DrawColor3("Specular", glm::value_ptr(light->GetSpecularColor()));
-	DrawFlaot("Intensity", &light->GetIntensity());
 	DrawFlaot("Distance", &light->GetDistance());
 	DrawFlaot("Falloff", &light->GetFalloff());
 }
@@ -768,10 +767,9 @@ void EditorLayer::PointLightComponent(shade::Entity& entity)
 void EditorLayer::SpotLightComponent(shade::Entity& entity)
 {
 	auto& light = entity.GetComponent<shade::SpotLightComponent>();
-
+	DrawFlaot("Intensity", &light->GetIntensity());
 	DrawColor3("Diffuse", glm::value_ptr(light->GetDiffuseColor()));
 	DrawColor3("Specular", glm::value_ptr(light->GetSpecularColor()));
-	DrawFlaot("Intensity", &light->GetIntensity());
 	DrawFlaot("Distance", &light->GetDistance());
 	DrawFlaot("Falloff", &light->GetFalloff());
 	DrawFlaot("Min", &light->GetMinAngle());

@@ -63,16 +63,15 @@ namespace shade
 
 		}
 
-		static void AttachDepthTextureLayerd(const std::uint32_t& id, const std::int32_t& layers, const GLenum& format, const GLenum& attachmentType, const std::uint32_t& width, const std::uint32_t& height)
+		static void AttachDepthCubeMapLayerd(const std::uint32_t& id, const std::int32_t& layers, const GLenum& format, const GLenum& attachmentType, const std::uint32_t& width, const std::uint32_t& height)
 		{
-			glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, format, width, height, layers, 0, attachmentType, GL_FLOAT, nullptr);
-			glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-			glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-			glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-			glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-			glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER);
-
-			glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, id, 0);
+			glTexImage3D(GL_TEXTURE_CUBE_MAP_ARRAY, 0, format, width, height, layers * 6, 0, format, GL_FLOAT, nullptr);
+			glTexParameteri(GL_TEXTURE_CUBE_MAP_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+			glTexParameteri(GL_TEXTURE_CUBE_MAP_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+			glTexParameteri(GL_TEXTURE_CUBE_MAP_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+			glTexParameteri(GL_TEXTURE_CUBE_MAP_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+			glTexParameteri(GL_TEXTURE_CUBE_MAP_ARRAY, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+			glFramebufferTexture(GL_FRAMEBUFFER, attachmentType, id, 0);
 		}
 		static void AttachDepthTexture(const std::uint32_t& id, const std::int32_t& samples, const std::int32_t& layers,  const GLenum& format, const GLenum& attachmentType, const std::uint32_t& width, const std::uint32_t& height)
 		{
@@ -239,6 +238,31 @@ void shade::OpenGLFrameBuffer::_ClearAttachmentFloat(const std::uint32_t& attach
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
+static void CheckGLErrors()
+{
+	for (GLenum err; (err = glGetError()) != GL_NO_ERROR; )
+	{
+		switch (err)
+		{
+		case GL_INVALID_ENUM:
+			SHADE_CORE_DEBUG("Error GL_INVALID_ENUM: {0}", err);
+			break;
+		case GL_INVALID_VALUE:
+			SHADE_CORE_DEBUG("Error GL_INVALID_VALUE: {0}", err);
+			break;
+		case GL_INVALID_OPERATION:
+			SHADE_CORE_DEBUG("Error GL_INVALID_OPERATION: {0}", err);
+			break;
+		case GL_STACK_OVERFLOW:
+			SHADE_CORE_DEBUG("Error GL_STACK_OVERFLOW: {0}", err);
+			break;
+		default:
+			SHADE_CORE_DEBUG("Error : {0}", err);
+			break;
+		}
+
+	}
+}
 
 void shade::OpenGLFrameBuffer::Invalidate()
 {
@@ -282,32 +306,9 @@ void shade::OpenGLFrameBuffer::Invalidate()
 			}
 			break;
 		case Texture::Format::DEPTH24STENCIL8_CUBE_MAP:
-
 			glGenTextures(1, &m_DepthAttachment);
-			glBindTexture(GL_TEXTURE_CUBE_MAP, m_DepthAttachment);
-			for (unsigned int i = 0; i < 6; ++i)
-				glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_DEPTH_COMPONENT24, m_Layout.Width, m_Layout.Height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
-			glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-			glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-			glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-			glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-			glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-			// attach depth texture as FBO's depth buffer
-			glBindFramebuffer(GL_FRAMEBUFFER, m_DepthAttachment);
-			glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, m_DepthAttachment, 0);
-
-			//glCreateTextures(GL_TEXTURE_CUBE_MAP, 1, &m_DepthAttachment);
-			//glBindTexture(GL_TEXTURE_CUBE_MAP, m_DepthAttachment);
-			//glTexStorage2D(GL_TEXTURE_CUBE_MAP, 1, GL_DEPTH_COMPONENT, m_Layout.Width, m_Layout.Height);
-			//	
-
-			//glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-			//glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-			//glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-			//glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-			//glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-			//glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, m_DepthAttachment, 0);
-
+			glBindTexture(GL_TEXTURE_CUBE_MAP_ARRAY, m_DepthAttachment);
+			util::AttachDepthCubeMapLayerd(m_DepthAttachment, m_Layout.Layers <= 1 ? 1: m_Layout.Layers, GL_DEPTH_COMPONENT, GL_DEPTH_ATTACHMENT, m_Layout.Width, m_Layout.Height);
 			break;
 		}
 	}
@@ -354,12 +355,13 @@ void shade::OpenGLFrameBuffer::Invalidate()
 	{
 		// Only depth-pass
 		glDrawBuffer(GL_NONE);
-		//glReadBuffer(GL_NONE);
+		glReadBuffer(GL_NONE);
 	}
 
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
 	{
-		SHADE_CORE_WARNING("Frame buffer isn't completed.");
+		
+		SHADE_CORE_WARNING("Frame buffer isn't completed : {0}", glCheckFramebufferStatus(GL_FRAMEBUFFER));
 	}
 
 
@@ -382,7 +384,8 @@ void shade::OpenGLFrameBuffer::BindDepthAsTexture(const std::uint32_t& unit) con
 	if (m_DepthAttachmentSpec.TextureFormat == Texture::Format::DEPTH24STENCIL8_CUBE_MAP)
 	{
 		glActiveTexture(GL_TEXTURE0 + unit);
-		glBindTexture(GL_TEXTURE_CUBE_MAP, GetDepthAttachment());
+		//glBindTexture(GL_TEXTURE_CUBE_MAP, GetDepthAttachment());
+		glBindTexture(GL_TEXTURE_CUBE_MAP_ARRAY, GetDepthAttachment());
 	}
 	else
 	{

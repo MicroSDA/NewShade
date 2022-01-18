@@ -25,7 +25,6 @@ namespace shade
 
 		 void SetMinAngle(const float& angle);
 		 void SetMaxAngle(const float& angle);
-		 void SetIntensity(const float& intensity);
 		 void SetDistance(const float& distance);
 		 void SetFalloff(const float& falloff);
 
@@ -35,8 +34,6 @@ namespace shade
 		 const float& GetMaxAngle() const;
 		 float& GetMaxAngle();
 
-		 const float& GetIntensity() const;
-		 float& GetIntensity();
 		 const float& GetDistance() const;
 		 float& GetDistance();
 		 const float& GetFalloff() const;
@@ -44,7 +41,6 @@ namespace shade
 
 		 RenderData GetRenderData(const glm::vec3& position, const glm::vec3& derection) const;
 	private:
-		float		m_Intesity;
 		float		m_Distance;
 		float		m_Falloff;
 		float		m_MinAngle;

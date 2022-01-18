@@ -3,10 +3,10 @@
 
 shade::Light::Light(const shade::Environment::Type& type) : shade::Environment(type),
 	m_DiffuseColor(1.0f, 1.0f, 1.0f),
-	m_SpecularColor(1.0f, 1.0f, 1.0f)
+	m_SpecularColor(1.0f, 1.0f, 1.0f),
+	m_Intensity(1.0f)
 {
 }
-
 
 void shade::Light::SetDiffuseColor(const float& r, const float& g, const float& b)
 {
@@ -28,6 +28,10 @@ void shade::Light::SetSpecularColor(const glm::vec3& color)
 	m_SpecularColor = color;
 }
 
+void shade::Light::SetIntensity(const float& intensity)
+{
+	m_Intensity = intensity;
+}
 
 const glm::vec3& shade::Light::GetDiffuseColor() const
 {
@@ -47,4 +51,14 @@ glm::vec3& shade::Light::GetDiffuseColor()
 glm::vec3& shade::Light::GetSpecularColor()
 {
 	return const_cast<glm::vec3&>(const_cast<const shade::Light*>(this)->GetSpecularColor());
+}
+
+const float& shade::Light::GetIntensity() const
+{
+	return m_Intensity;
+}
+
+float& shade::Light::GetIntensity()
+{
+	return const_cast<float&>(const_cast<const shade::Light*>(this)->GetIntensity());
 }

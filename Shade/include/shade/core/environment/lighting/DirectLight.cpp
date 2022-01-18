@@ -17,7 +17,7 @@ shade::DirectLight::~DirectLight()
 
 shade::DirectLight::RenderData shade::DirectLight::GetRenderData(const glm::vec3& direction)
 {
-	return RenderData{ glm::normalize(direction), m_DiffuseColor, m_SpecularColor};
+	return RenderData{ glm::normalize(direction), m_DiffuseColor, m_SpecularColor, m_Intensity };
 }
 
 std::uint32_t shade::DirectLight::GetTotalCount()

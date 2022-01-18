@@ -1,4 +1,3 @@
-
 struct Camera
 {
 	mat4 ViewProjection;
@@ -10,11 +9,10 @@ struct Camera
 
 struct DirectLight
 {
-	vec3 Direction;
-	vec3 DiffuseColor;
-	vec3 SpecularColor;
-	vec3 Position;
-	mat4 ViewMatrix;
+	vec3  Direction;
+	vec3  DiffuseColor;
+	vec3  SpecularColor;
+	float Intensity;
 };
 
 struct PointLight
@@ -36,8 +34,8 @@ struct SpotLight
 	float		Intensity;
 	float		Distance;
 	float		Falloff;
-  	float   MinAngle;
-  	float   MaxAngle;
+  	float   	MinAngle;
+  	float   	MaxAngle;
 };
 
 struct Material

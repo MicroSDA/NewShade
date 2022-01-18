@@ -1,28 +1,28 @@
 Scene: C
 Entities:
   - Entity: 2
-    Tag: Cube
-    Transform3D:
-      Position: [0, 1.18812263, -7.3078723]
-      Rotation: [0, -0, 0]
-      Scale: [1, 1, 1]
-    Model3D:
-      Asset: Cube
-  - Entity: 1
-    Tag: Flor
-    Transform3D:
-      Position: [0, 0, 0]
-      Rotation: [0, -0, 0]
-      Scale: [40.0838394, 0.227221325, 40]
-    Model3D:
-      Asset: Cube
-  - Entity: 0
     Tag: Direct light
     Transform3D:
       Position: [0, 0, 0]
       Rotation: [0, 0, 0]
       Scale: [1, 1, 1]
     DirectLight:
-      Ambient: [0.100000001, 0.100000001, 0.100000001]
       Diffuse: [1, 1, 1]
       Specular: [1, 1, 1]
+      Intensity: 1
+  - Entity: 1
+    Tag: Cube
+    Transform3D:
+      Position: [0, 0, 0]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    Model3D:
+      Asset: Cube
+  - Entity: 0
+    Tag: Cube
+    Transform3D:
+      Position: [0, -2.29848289, 0]
+      Rotation: [0, -0, 0]
+      Scale: [8.002038, 1, 5.21462917]
+    Model3D:
+      Asset: Cube

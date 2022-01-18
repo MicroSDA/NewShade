@@ -4,7 +4,6 @@
 std::uint32_t  shade::PointLight::m_TotalCount = 0;
 
 shade::PointLight::PointLight() : shade::Light(shade::Environment::Type::PointLight),
-	m_Intesity(1.0f),
 	m_Distance(10.0f),
 	m_Falloff(0.25f)
 {
@@ -18,11 +17,6 @@ shade::PointLight::~PointLight()
 	m_TotalCount--;
 }
 
- void shade::PointLight::SetIntensity(const float& intensity)
-{
-	m_Intesity = intensity;
-}
-
  void shade::PointLight::SetDistance(const float& distnace)
 {
 	m_Distance = distnace;
@@ -31,16 +25,6 @@ shade::PointLight::~PointLight()
  void shade::PointLight::SetFalloff(const float& falloff)
 {
 	m_Falloff = falloff;
-}
-
- const float& shade::PointLight::GetIntensity() const
-{
-	return m_Intesity;
-}
-
-float& shade::PointLight::GetIntensity()
-{
-	return const_cast<float&>(const_cast<const shade::PointLight*>(this)->GetIntensity());
 }
 
  const float& shade::PointLight::GetDistance() const
@@ -65,7 +49,7 @@ float& shade::PointLight::GetFalloff()
 
 shade::PointLight::RenderData shade::PointLight::GetRenderData(const glm::vec3& position)
 {
-	return RenderData{ position, m_DiffuseColor, m_SpecularColor, m_Intesity, m_Distance, m_Falloff};
+	return RenderData{ position, m_DiffuseColor, m_SpecularColor, m_Intensity, m_Distance, m_Falloff};
 }
 
 std::uint32_t shade::PointLight::GetTotalCount()

@@ -48,8 +48,6 @@ void main()
         gl_Layer            = j;
         out_Distance        = u_PointLight[int(j / 6)].Distance;
         out_LightPosition   = u_PointLight[int(j / 6)].Position.xyz;
-        // out_Distance        = u_PointLight[0].Distance;
-        // out_LightPosition   = u_PointLight[0].Position.xyz;
         for(int i = 0; i < gl_in.length(); i++)
         {
             gl_Position               = u_PointLightCascade[j].ViewMatrix * gl_in[i].gl_Position;
@@ -70,6 +68,6 @@ layout (location = 2)  in float in_Distance;
 
 void main()
 {
-    float lightDistance = length(in_FragmentPosition - in_LightPosition);
-    gl_FragDepth = lightDistance / in_Distance;
+    float LightDistance = length(in_FragmentPosition - in_LightPosition);
+    gl_FragDepth = LightDistance / in_Distance;
 }
