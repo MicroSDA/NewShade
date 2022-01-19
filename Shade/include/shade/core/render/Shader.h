@@ -53,7 +53,7 @@ namespace shade
 	class SHADE_API ShadersLibrary
 	{
 	public:
-		static void Create(const std::string& name, const std::string& filepath);
+		static shade::Shared<shade::Shader> Create(const std::string& name, const std::string& filepath);
 		static Shared<Shader> Get(const std::string& name);
 		static std::unordered_map<std::string, Shared<Shader>>& GetLibrary();
 		static void Remove(const std::string& name);

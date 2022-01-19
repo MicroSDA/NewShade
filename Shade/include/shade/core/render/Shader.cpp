@@ -137,13 +137,19 @@ void shade::Shader::FindInclude(std::string& source)
 // Shader Library
 std::unordered_map<std::string, shade::Shared<shade::Shader>> shade::ShadersLibrary::m_sLibrary;
 
-void shade::ShadersLibrary::Create(const std::string& name, const std::string& filePath)
+shade::Shared<shade::Shader> shade::ShadersLibrary::Create(const std::string& name, const std::string& filePath)
 {
 	auto& shader = m_sLibrary.find(name);
 	if (shader == m_sLibrary.end())
+	{
 		m_sLibrary[name] = Shader::Create(filePath);
+		return m_sLibrary[name];
+	}
 	else
+	{
 		SHADE_CORE_WARNING("Shader '{0}' is already exist in library!", name);
+		return nullptr;
+	}
 }
 
 shade::Shared<shade::Shader> shade::ShadersLibrary::Get(const std::string& name)

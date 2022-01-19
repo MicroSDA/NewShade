@@ -2,10 +2,8 @@
 #include "ShadowMapPipeline.h"
 #include "shade/core/render/Render.h"
 
-shade::ShadowMapPipeline::ShadowMapPipeline(const RenderPipeline::Specification& spec)
+shade::ShadowMapPipeline::ShadowMapPipeline()
 {
-	m_Specification = spec;
-
 	m_DirectLightShadowFrameBuffer = shade::FrameBuffer::Create(shade::FrameBuffer::Layout(1024 * m_DShadowMapMultiplier, 1024 * m_DShadowMapMultiplier, {
 		shade::FrameBuffer::Texture::Format::DEPTH24STENCIL8 }, 1, 4));
 
@@ -19,17 +17,21 @@ shade::ShadowMapPipeline::ShadowMapPipeline(const RenderPipeline::Specification&
 	m_SpotLightCascadeBuffer    = ShaderStorageBuffer::Create(0,   6);
 	m_PointLightCascadeBuffer   = ShaderStorageBuffer::Create(0,   7);
 
-	shade::ShadersLibrary::Create("SpotLightShadow", "resources/shaders/General/Effects/ShadowMappingSpotLight.glsl");
-	shade::ShadersLibrary::Create("PointLightShadow", "resources/shaders/General/Effects/ShadowMappingPointLight.glsl");
+
+	m_DShader = ShadersLibrary::Create("DlShadowMapping","resources/shaders/General/Effects/ShadowMappingDirectLight.glsl");
+	m_SShader = ShadersLibrary::Create("SlShadowMapping","resources/shaders/General/Effects/ShadowMappingSpotLight.glsl");
+	m_PShader = ShadersLibrary::Create("PlShadowMapping","resources/shaders/General/Effects/ShadowMappingPointLight.glsl");
 }
 
 shade::Shared<shade::FrameBuffer> shade::ShadowMapPipeline::Process(const shade::Shared<FrameBuffer>& target, const shade::Shared<FrameBuffer>& previousPass, const Shared<RenderPipeline>& previusPipline, const DrawablePools& drawables, std::unordered_map<Shared<Drawable>, BufferDrawData>& drawData)
 {
 	auto& camera =  Render::GetLastActiveCamera();
 	auto& lights =  Render::GetSubmitedLight();
-
+	/*  Before you render objects to the CSM, call glEnable(GL_DEPTH_CLAMP); and after, call glDisable(GL_DEPTH_CLAMP);
+		This will cause every object that gets rendered to not get cut out, so artifacts where some cascades cut out some geometry will disappear. */
+	Render::GetRenderApi()->Enable(0x864F); // DEPTH_CLAMP
 	/* Direc light shadows */
-	if (lights.DirectLightSources.size())
+	if (lights.DirectLightSources.size() && m_IsDirectShadowCast)
 	{
 		const int CascadeCount = 4;
 		float splitDistance[CascadeCount];
@@ -65,20 +67,36 @@ shade::Shared<shade::FrameBuffer> shade::ShadowMapPipeline::Process(const shade:
 				cascades.push_back(ComputeDirectLightCascade(camera, lights.DirectLightSources[0].Direction, splitDistance[i - 1], camera->GetFar(), splitDistance[i]));
 		}
 
+		if (m_DirectLightShadowFrameBuffer->GetLayout().Layers != CascadeCount)
+		{
+			auto layout = m_DirectLightShadowFrameBuffer->GetLayout();
+			layout.Layers = CascadeCount;
+			m_DirectLightShadowFrameBuffer = FrameBuffer::Create(layout);
+		}
+		/* Fill buffer */
 		if(m_DirectLightCascadeBuffer->GetSize() != sizeof(DirectLightCascade) * cascades.size())
 			m_DirectLightCascadeBuffer->Resize(sizeof(DirectLightCascade) * cascades.size());
 		m_DirectLightCascadeBuffer->SetData(cascades.data(), sizeof(DirectLightCascade) * cascades.size());
 
-		/*if (m_DirectLightShadowFrameBuffer->GetLayout().Width != target->GetLayout().Width * m_ShadowMapMultiplier || m_DirectLightShadowFrameBuffer->GetLayout().Height != target->GetLayout().Height * m_ShadowMapMultiplier)
+		/* Render */
+		m_DShader->Bind();
+		m_DirectLightShadowFrameBuffer->Clear(AttacmentClearFlag::Depth);
+		if (lights.DirectLightSources.size() && m_IsDirectShadowCast)
 		{
-			auto layout		= m_DirectLightShadowFrameBuffer->GetLayout();
-			layout.Width	= target->GetLayout().Width * m_ShadowMapMultiplier;
-			layout.Height	= target->GetLayout().Height * m_ShadowMapMultiplier;
-			m_DirectLightShadowFrameBuffer = FrameBuffer::Create(layout);
-		}*/
+			for (auto& [instance, materials] : drawables.Drawables)
+			{
+				for (auto& [material, transforms] : materials.Materials)
+				{
+					drawData[instance].TBO->Resize(sizeof(glm::mat4) * transforms.size());
+					drawData[instance].TBO->SetData(transforms.data(), sizeof(glm::mat4) * transforms.size(), 0);
+
+					Render::GetRenderApi()->DrawInstanced(Drawable::DrawMode::Triangles, drawData[instance].VAO, drawData[instance].IBO, transforms.size());
+				}
+			}
+		}
 	}
 	/* Spot light shadows */
-	if (lights.SpotLightSources.size())
+	if (lights.SpotLightSources.size() && m_IsSpotShadowCast)
 	{
 		std::vector<SpotLightCascade> spotLightCascades;
 
@@ -100,9 +118,22 @@ shade::Shared<shade::FrameBuffer> shade::ShadowMapPipeline::Process(const shade:
 			m_SpotLightCascadeBuffer->Resize(sizeof(SpotLightCascade) * spotLightCascades.size());
 		m_SpotLightCascadeBuffer->SetData(spotLightCascades.data(), sizeof(SpotLightCascade) * spotLightCascades.size());
 		
+		/* Render */
+		m_SShader->Bind();
+		m_SpotLightShadowFrameBuffer->Clear(AttacmentClearFlag::Depth);
+		for (auto& [instance, materials] : drawables.Drawables)
+		{
+			for (auto& [material, transforms] : materials.Materials)
+			{
+				drawData[instance].TBO->Resize(sizeof(glm::mat4) * transforms.size());
+				drawData[instance].TBO->SetData(transforms.data(), sizeof(glm::mat4) * transforms.size(), 0);
+
+				Render::GetRenderApi()->DrawInstanced(Drawable::DrawMode::Triangles, drawData[instance].VAO, drawData[instance].IBO, transforms.size());
+			}
+		}
 	}
 	/* Point light shadows */
-	if (lights.PointLightSources.size())
+	if (lights.PointLightSources.size() && m_IsPointShadowCast)
 	{
 		std::vector<PointLightCascade> pointLightCascades;
 		for (auto& light : lights.PointLightSources)
@@ -128,48 +159,9 @@ shade::Shared<shade::FrameBuffer> shade::ShadowMapPipeline::Process(const shade:
 		if (m_PointLightCascadeBuffer->GetSize() != sizeof(PointLightCascade) * pointLightCascades.size())
 			m_PointLightCascadeBuffer->Resize(sizeof(PointLightCascade) * pointLightCascades.size());
 		m_PointLightCascadeBuffer->SetData(pointLightCascades.data(), sizeof(PointLightCascade) * pointLightCascades.size());
-	}
-	/* Render */
-	auto& shader = m_Specification.Shader;
-	shader->Bind(); shader->ExecuteSubrutines();
-	m_DirectLightShadowFrameBuffer->Clear(AttacmentClearFlag::Depth);
-	/*  Before you render objects to the CSM, call glEnable(GL_DEPTH_CLAMP); and after, call glDisable(GL_DEPTH_CLAMP);
-		This will cause every object that gets rendered to not get cut out, so artifacts where some cascades cut out some geometry will disappear. */
-	Render::GetRenderApi()->Enable(0x864F); // DEPTH_CLAMP
-	if (lights.DirectLightSources.size() && m_IsDirectShadowCast)
-	{
-		for (auto& [instance, materials] : drawables.Drawables)
-		{
-			for (auto& [material, transforms] : materials.Materials)
-			{
-				drawData[instance].TBO->Resize(sizeof(glm::mat4) * transforms.size());
-				drawData[instance].TBO->SetData(transforms.data(), sizeof(glm::mat4) * transforms.size(), 0);
 
-				Render::GetRenderApi()->DrawInstanced(Drawable::DrawMode::Triangles, drawData[instance].VAO, drawData[instance].IBO, transforms.size());
-			}
-		}
-	}
-	if (lights.SpotLightSources.size() && m_IsSpotShadowCast)
-	{
-		/* Spot light */
-		ShadersLibrary::Get("SpotLightShadow")->Bind();
-		m_SpotLightShadowFrameBuffer->Clear(AttacmentClearFlag::Depth);
-		for (auto& [instance, materials] : drawables.Drawables)
-		{
-			for (auto& [material, transforms] : materials.Materials)
-			{
-				drawData[instance].TBO->Resize(sizeof(glm::mat4) * transforms.size());
-				drawData[instance].TBO->SetData(transforms.data(), sizeof(glm::mat4) * transforms.size(), 0);
-
-				Render::GetRenderApi()->DrawInstanced(Drawable::DrawMode::Triangles, drawData[instance].VAO, drawData[instance].IBO, transforms.size());
-			}
-		}
-	}
-	if (lights.PointLightSources.size() && m_IsPointShadowCast)
-	{
-
-		/* Point light */
-		ShadersLibrary::Get("PointLightShadow")->Bind();
+		/* Render */
+		m_PShader->Bind();
 		m_PointLightShadowFrameBuffer->Clear(AttacmentClearFlag::Depth);
 		for (auto& [instance, materials] : drawables.Drawables)
 		{
@@ -183,8 +175,33 @@ shade::Shared<shade::FrameBuffer> shade::ShadowMapPipeline::Process(const shade:
 		}
 	}
 	Render::GetRenderApi()->Disable(0x864F);
-	shader->UnBind();
-
+	if (!m_IsDirectShadowCast)
+	{
+		auto layout = m_DirectLightShadowFrameBuffer->GetLayout();
+		if (layout.Layers != 0)
+		{
+			layout.Layers = 0;
+			m_DirectLightShadowFrameBuffer = shade::FrameBuffer::Create(layout);
+		}
+	}
+	if (!m_IsSpotShadowCast)
+	{
+		auto layout = m_SpotLightShadowFrameBuffer->GetLayout();
+		if (layout.Layers != 0)
+		{
+			layout.Layers = 0;
+			m_SpotLightShadowFrameBuffer = shade::FrameBuffer::Create(layout);
+		}
+	}
+	if (!m_IsPointShadowCast)
+	{
+		auto layout = m_PointLightShadowFrameBuffer->GetLayout();
+		if (layout.Layers != 0)
+		{
+			layout.Layers = 0;
+			m_PointLightShadowFrameBuffer = shade::FrameBuffer::Create(layout);
+		}
+	}
 	return target;
 }
 

@@ -24,7 +24,7 @@ namespace shade
 			alignas(16)	float     Distance = 0.0f;
 		};
 	public:
-		ShadowMapPipeline(const RenderPipeline::Specification& spec);
+		ShadowMapPipeline();
 		virtual Shared<FrameBuffer> Process(const shade::Shared<FrameBuffer>& target, const shade::Shared<FrameBuffer>& previousPass, const Shared<RenderPipeline>& previusPipline, const DrawablePools& drawables, std::unordered_map<Shared<Drawable>, BufferDrawData>& drawData) override;
 		virtual const Shared<FrameBuffer>& GetResult() const override;
 		const Shared<FrameBuffer>& GetDriectLightFrameBuffer();
@@ -43,6 +43,10 @@ namespace shade
 		Shared<ShaderStorageBuffer>	m_DirectLightCascadeBuffer;
 		Shared<ShaderStorageBuffer>	m_SpotLightCascadeBuffer;
 		Shared<ShaderStorageBuffer>	m_PointLightCascadeBuffer;
+
+		Shared<Shader> m_DShader;
+		Shared<Shader> m_SShader;
+		Shared<Shader> m_PShader;
 
 		float						m_DShadowMapMultiplier = 4.0f;
 		float						m_SShadowMapMultiplier = 2.0f;

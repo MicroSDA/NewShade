@@ -2,17 +2,15 @@
 #include "GridPipeline.h"
 #include "shade/core/render/Render.h"
 
-shade::GridPipeline::GridPipeline(const RenderPipeline::Specification& spec)
+shade::GridPipeline::GridPipeline()
 {
-    m_Specification = spec;
+    m_Shader = ShadersLibrary::Create("Grid", "resources/shaders/Grid.glsl");
 }
 
 shade::Shared<shade::FrameBuffer> shade::GridPipeline::Process(const shade::Shared<FrameBuffer>& target, const shade::Shared<FrameBuffer>& previousPass, const Shared<RenderPipeline>& previusPipline, const DrawablePools& drawables, std::unordered_map<Shared<Drawable>, BufferDrawData>& drawData)
 {
-	auto& shader = m_Specification.Shader;
-	shader->Bind(); //shader->ExecuteSubrutines();
-
 	target->Bind();
+	m_Shader->Bind();
 
 	for (auto& [instance, materials] : drawables.Drawables)
 	{
@@ -24,8 +22,6 @@ shade::Shared<shade::FrameBuffer> shade::GridPipeline::Process(const shade::Shar
 			Render::GetRenderApi()->DrawInstanced(instance->GetDrawMode(), drawData[instance].VAO, drawData[instance].IBO, transforms.size());
 		}
 	}
-
-	shader->UnBind();
 	return target;
 }
 

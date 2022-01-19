@@ -31,8 +31,9 @@ float LineStep(float low, float hight, float v)
 float Variance_DirectLight(sampler2DArray ShadowMap, vec3 ProjectionCoords, float Depth, int CascadeLayer)
 { 
     const int   SamplesCount   = 16;
-    float       Value        = 0.0;
-    vec2        TexelSize    = 1.0 / vec2(textureSize(ShadowMap, 0));
+    float       Value          = 0.0;
+    vec2        TexelSize      = 1.0 / vec2(textureSize(ShadowMap, 0));
+
     for(int i = 0; i < SamplesCount; i++)
     {
          float _Depth = texture(ShadowMap, vec3(ProjectionCoords.xy + (PoissonDisk[i] * TexelSize), CascadeLayer)).r;

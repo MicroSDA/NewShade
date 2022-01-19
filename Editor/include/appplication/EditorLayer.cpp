@@ -37,13 +37,8 @@ void EditorLayer::OnCreate()
 	m_LogoTexture->Deserialize();
 	m_LogoTexture->AssetInit();
 
-	m_InstancedShader			= shade::ShadersLibrary::Get("General");
-	m_DirectLightShadowShader	= shade::ShadersLibrary::Get("DirectLightShadow");
-	m_GridShader				= shade::ShadersLibrary::Get("Grid");
-	m_FrustumShader				= shade::ShadersLibrary::Get("Frustum");
 	m_BloomShader				= shade::ShadersLibrary::Get("Bloom");
 	m_ColorCorrectionShader		= shade::ShadersLibrary::Get("ColorCorrection");
-	m_BoxShader					= shade::ShadersLibrary::Get("Box");
 	m_SpriteShader				= shade::ShadersLibrary::Get("Sprite");
 
 	m_Grid	= shade::Grid::Create(0, 0, 0);
@@ -54,10 +49,10 @@ void EditorLayer::OnCreate()
 	m_PPColorCorrection = shade::PPColorCorrection::Create();
 	m_PPColorCorrection->SetInOutTargets(m_FrameBuffer, m_FrameBuffer, m_ColorCorrectionShader);
 
-	m_InstancedPipeline		= shade::RenderPipeline::Create<shade::InstancedPipeline>({ m_InstancedShader		 });
-	m_ShadowMapPipeline		= shade::RenderPipeline::Create<shade::ShadowMapPipeline>({ m_DirectLightShadowShader });
-	m_GridPipeline			= shade::RenderPipeline::Create<shade::GridPipeline>({ m_GridShader });
-	m_CameraFrustumPipeline = shade::RenderPipeline::Create<shade::CameraFrustumPipeline>({ m_FrustumShader });
+	m_InstancedPipeline		= shade::RenderPipeline::Create<shade::InstancedPipeline>();
+	m_ShadowMapPipeline		= shade::RenderPipeline::Create<shade::ShadowMapPipeline>();
+	m_GridPipeline			= shade::RenderPipeline::Create<shade::GridPipeline>();
+	m_CameraFrustumPipeline = shade::RenderPipeline::Create<shade::CameraFrustumPipeline>();
 }
 
 void EditorLayer::OnUpdate(const shade::Shared<shade::Scene>& scene, const shade::Timer& deltaTime)
@@ -701,7 +696,7 @@ void EditorLayer::MainMenu(const shade::Shared<shade::Scene>& scene)
 						auto model = IModel3D::Import(path.string());
 						if (model)
 						{
-							auto entity = scene->CreateEntity("ImportedModel");
+							auto entity = scene->CreateEntity(path.filename().string());
 							entity.AddComponent<shade::Transform3DComponent>();
 							entity.AddComponent<shade::Model3DComponent>(model);
 						}

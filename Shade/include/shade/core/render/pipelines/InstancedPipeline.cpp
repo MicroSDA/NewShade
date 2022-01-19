@@ -3,17 +3,16 @@
 #include "shade/core/render/Render.h"
 #include "shade/core/render/pipelines/ShadowMapPipeline.h"
 
-shade::InstancedPipeline::InstancedPipeline(const RenderPipeline::Specification& spec)
+shade::InstancedPipeline::InstancedPipeline()
 {
-	m_Specification = spec;
+	m_Shader = ShadersLibrary::Create("General", "resources/shaders/General/General.glsl");
+	m_Shader->SelectSubrutine("u_sLighting", "BillinPhong", shade::Shader::Type::Fragment);
 }
 
 shade::Shared<shade::FrameBuffer > shade::InstancedPipeline::Process(const shade::Shared<FrameBuffer>& target, const shade::Shared<FrameBuffer>& previousPass, const Shared<RenderPipeline>& previusPiepline, const DrawablePools& drawables, std::unordered_map<Shared<Drawable>, BufferDrawData>& drawData)
 {
-	auto& shader = m_Specification.Shader;
-	shader->Bind(); shader->ExecuteSubrutines();
-
 	target->Bind();
+	m_Shader->Bind(); m_Shader->ExecuteSubrutines();
 
 	for (auto& [instance, materials] : drawables.Drawables)
 	{
@@ -21,15 +20,15 @@ shade::Shared<shade::FrameBuffer > shade::InstancedPipeline::Process(const shade
 		{
 			if (material)
 			{
-				shader->SendFloat3("u_Material.AmbientColor", glm::value_ptr(material->ColorAmbient));
-				shader->SendFloat3("u_Material.DiffuseColor", glm::value_ptr(material->ColorDiffuse));
-				shader->SendFloat3("u_Material.SpecularColor", glm::value_ptr(material->ColorSpecular));
-				shader->SendFloat3("u_Material.TransparentColor", glm::value_ptr(material->ColorTransparent));
-				shader->SendFloat("u_Material.Emissive", material->Emmisive);
-				shader->SendFloat("u_Material.Shinines", material->Shininess);
-				shader->SendFloat("u_Material.ShininesStrength", material->ShininessStrength);
-				shader->SendFloat("u_Material.Opacity", material->Opacity);
-				shader->SendFloat("u_Material.Refracti", material->Refracti);
+				m_Shader->SendFloat3("u_Material.AmbientColor", glm::value_ptr(material->ColorAmbient));
+				m_Shader->SendFloat3("u_Material.DiffuseColor", glm::value_ptr(material->ColorDiffuse));
+				m_Shader->SendFloat3("u_Material.SpecularColor", glm::value_ptr(material->ColorSpecular));
+				m_Shader->SendFloat3("u_Material.TransparentColor", glm::value_ptr(material->ColorTransparent));
+				m_Shader->SendFloat("u_Material.Emissive", material->Emmisive);
+				m_Shader->SendFloat("u_Material.Shinines", material->Shininess);
+				m_Shader->SendFloat("u_Material.ShininesStrength", material->ShininessStrength);
+				m_Shader->SendFloat("u_Material.Opacity", material->Opacity);
+				m_Shader->SendFloat("u_Material.Refracti", material->Refracti);
 
 				/* Attach texures to their slots*/
 				if (material->TextureDiffuse)
@@ -58,7 +57,7 @@ shade::Shared<shade::FrameBuffer > shade::InstancedPipeline::Process(const shade
 			Render::GetRenderApi()->DrawInstanced(instance->GetDrawMode(), drawData[instance].VAO, drawData[instance].IBO, transforms.size());
 		}
 	}
-	shader->UnBind();
+	m_Shader->UnBind();
 
 	return target;
 }

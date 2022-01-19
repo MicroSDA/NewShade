@@ -14,26 +14,18 @@ namespace shade
 	class SHADE_API RenderPipeline
 	{
 	public:
-		struct Specification
-		{
-			Shared<Shader>					Shader;
-		};
-	public:
 		template<typename T>
-		static Shared<T> Create(const Specification& spec);
+		static Shared<T> Create();
 		template<typename T>
 		T& As();
 		virtual ~RenderPipeline() = default;
 		virtual const Shared<FrameBuffer>& GetResult()  const = 0;
-		const Specification& GetSpecification() const;
 		virtual Shared<FrameBuffer> Process(const shade::Shared<FrameBuffer>& target, const shade::Shared<FrameBuffer>& previousPass, const Shared<RenderPipeline>& previusPipline, const DrawablePools& drawables, std::unordered_map<Shared<Drawable>, BufferDrawData>& drawData) = 0;
-	protected:
-		Specification		m_Specification;
 	};
 	template<typename T>
-	inline Shared<T> RenderPipeline::Create(const RenderPipeline::Specification& spec)
+	inline Shared<T> RenderPipeline::Create()
 	{
-		return shade::CreateShared<T>(spec);
+		return shade::CreateShared<T>();
 	}
 	template<typename T>
 	inline T& RenderPipeline::As()

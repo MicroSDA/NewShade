@@ -10,15 +10,11 @@ void Editor::OnCreate()
 	//Should be first before tuching opengl functions
 	auto& widnow = CreateWindow({"Shade editor", 1600, 800, false });
 	// Create shaders 
-	shade::ShadersLibrary::Create("General",			"resources/shaders/General/General.glsl");
-	shade::ShadersLibrary::Create("DirectLightShadow",	"resources/shaders/General/Effects/ShadowMappingDirectLight.glsl");
-	shade::ShadersLibrary::Create("Grid",				"resources/shaders/Grid.glsl");
-	//shade::ShadersLibrary::Create("Box",				"resources/shaders/Primitives/Box.glsl");
-	shade::ShadersLibrary::Create("Frustum",			"resources/shaders/Frustum.glsl");
+
 	shade::ShadersLibrary::Create("Bloom",		        "resources/shaders/PostProcess/Bloom/Bloom.glsl");
 	shade::ShadersLibrary::Create("ColorCorrection",    "resources/shaders/PostProcess/ColorCorrection/ColorCorrection.glsl");
 	shade::ShadersLibrary::Create("Sprite",				"resources/shaders/2D/Sprite.glsl");
-	shade::ShadersLibrary::Get("General")->SelectSubrutine("u_sLighting", "BillinPhong", shade::Shader::Type::Fragment);
+	
 
 	// Load assets data list
 	shade::AssetManager::LoadAssetDataListFromFile("resources/assets/Assets.xml");
