@@ -5,6 +5,7 @@
 #include <shade/core/render/pipelines/GridPipeline.h>
 #include <shade/core/render/pipelines/ShadowMapPipeline.h>
 #include <shade/core/render/pipelines/CameraFrustumPipeline.h>
+#include <shade/core/render/pipelines/AABBPipeline.h>
 
 class EditorLayer : public shade::ImGuiLayer
 {
@@ -45,6 +46,7 @@ private:
 	shade::Shared<shade::ShadowMapPipeline>			 m_ShadowMapPipeline;
 	shade::Shared<shade::GridPipeline>				 m_GridPipeline;
 	shade::Shared<shade::CameraFrustumPipeline>      m_CameraFrustumPipeline;
+	shade::Shared<shade::AABBPipeline>				 m_AABBPipeline;
 
 	/* Post process */
 	shade::Shared<shade::PPBloom> m_PPBloom;
@@ -58,6 +60,7 @@ private:
 	/* Debug */
 	bool m_IsShowGrid		= true;
 	bool m_IsShowFrustum	= false;
+	bool m_IsShowAABB		= false;
 	/* Relocate to renderer */
 	unsigned int m_SubmitedMeshCount = 0;
 

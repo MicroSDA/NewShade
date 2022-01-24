@@ -69,14 +69,14 @@ float Variance_SpotLight(sampler2DArray ShadowMap, vec3 ProjectionCoords, float 
 
 float Variance_PointLight(samplerCubeArray ShadowMap, vec3 ProjectionCoords, float Depth, float Distance, int CascadeLayer)
 {
-    const int   SamplesCount =  16;
+    const int   SamplesCount = 16;
     float       Value        = 0.0;
     vec2        TexelSize    = 1.0 / vec2(textureSize(ShadowMap, 0));
-
+    int         Poisson      = 0;
     for(int i = 0; i < SamplesCount; i++)
     {
-         float  _Depth = texture(ShadowMap,    vec4(vec3(ProjectionCoords.xy + vec2(PoissonDisk[i] * TexelSize * Distance), ProjectionCoords.z), CascadeLayer)).r * Distance;
-         Value += Depth - clamp(_Depth, 0.0, 1.0)>= _Depth ? 1.0 : 0.0;    
+        float  _Depth = texture(ShadowMap,    vec4(vec3(ProjectionCoords.xy + vec2(PoissonDisk[i] * TexelSize * Depth), ProjectionCoords.z), CascadeLayer)).r * Distance;
+        Value += Depth - clamp(_Depth, 0.0, 1.0) >= _Depth ? 1.0 : 0.0;  
     }
     Value /= SamplesCount;
     return 1.0 - Value;
@@ -134,46 +134,13 @@ float CSM_DirectLight(sampler2DArray ShadowMap, mat4 LightViewMatrix, int Cascad
 
 float SM_PointLight(samplerCubeArray ShadowMap, int CascadeLayer, vec3 FragPosWorldSapce, vec3 Normal, vec3 LightPosition, float Distance)
 {
-    vec3  FragPosLightSpace = FragPosWorldSapce - LightPosition;
-    vec3 direction          = normalize(FragPosLightSpace);
-    /* Perspective divide */
-    vec3 ProjectionCoords = FragPosLightSpace.xyz;
-    float CurentDepth = length(FragPosLightSpace);
-    CurentDepth = CurentDepth;
-    //return 0.0;
+    vec3 FragPosLightSpace = FragPosWorldSapce - LightPosition;
+    vec3 ProjectionCoords  = FragPosLightSpace.xyz;
+    float CurentDepth      = length(FragPosLightSpace);
+    if(CurentDepth <= 0.0 || CurentDepth > Distance)
+        return 0.0;
+
     return Variance_PointLight(ShadowMap, ProjectionCoords, CurentDepth, Distance, CascadeLayer);
-
-    // vec3 FragPosLightSpace = FragPosWorldSapce - LightDirection;
-    // // ise the fragment to light vector to sample from the depth map    
-    // float closestDepth = texture(ShadowMap, FragPosLightSpace.xyz).r;
-    // // it is currently in linear range between [0,1], let's re-transform it back to original depth value
-    // closestDepth *= 100.0;
-    // // now get current linear depth as the length between the fragment and light position
-    // float currentDepth = length(FragPosLightSpace);
-   
-    // // test for shadows
-    // float bias = 0.05; // we use a much larger bias since depth is now in [near_plane, far_plane] range
-    // float shadow = currentDepth -  bias >= closestDepth ? 1.0 : 0.0;        
-    // return 1.0 - shadow;
-        
-    //return shadow;
-
-//     float Value = 0.0;
-//     for(int i = 0; i < 6; i++)
-//     {
-//         vec4 FragPosLightSpace = LightViewMatrix[i] * vec4(FragPosWorldSapce, 1.0);
-//         /* Perspective divide */
-//         vec3 ProjectionCoords = FragPosLightSpace.xyz / FragPosLightSpace.w;
-//         /* Set between 0 - 1 range */
-//         ProjectionCoords  = ProjectionCoords * 0.5 + 0.5;
-//         float CurentDepth = ProjectionCoords.z;
-//         if (!ShadowInRange(ProjectionCoords.z) || !ShadowInRange(ProjectionCoords.x) || !ShadowInRange(ProjectionCoords.y))
-//             Value += 1.0;
-//         else
-//            Value  += Variance_PointLight(ShadowMap, ProjectionCoords, CurentDepth, i); 
-//     }
-
-//    return Value / 6;
 }
 
 float SM_SpotLight(sampler2DArray ShadowMap, mat4 LightViewMatrix, int CascadeLayer, mat4 CameraView, vec3 FragPosWorldSapce, vec3 Normal, vec3 LightDirection)

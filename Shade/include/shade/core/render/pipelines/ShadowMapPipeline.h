@@ -59,7 +59,7 @@ namespace shade
 	private:
 		DirectLightCascade   ComputeDirectLightCascade(const shade::Shared<Camera>& camera, const glm::vec3& direction, const float& nearPlane, const float& farplane, const float& split);
 		SpotLightCascade     ComputeSpotLightCascade(const float& fov, const glm::vec3& position, const glm::vec3& direction, const float& nearPlane, const float& farplane);
-		PointLightCascade    ComputePointLightCascade(const float& fov, const glm::vec3& position, const glm::vec3& direction, const glm::vec3& up, const float& nearPlane, const float& farplane);
+		PointLightCascade    ComputePointLightCascade(const float& fov, const float& apsect, const glm::vec3& position, const glm::vec3& direction, const glm::vec3& up, const float& nearPlane, const float& farplane);
 		std::vector<glm::vec4>  GetCameraFrustumCorners(const glm::mat4& projection, const glm::mat4& veiw);
 	};
 }

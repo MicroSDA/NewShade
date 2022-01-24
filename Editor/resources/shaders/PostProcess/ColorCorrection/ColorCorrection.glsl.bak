@@ -90,5 +90,7 @@ void main()
 	// Gamma
 	color.rgb  = pow(color.rgb, vec3(1.0 / u_Settings.Gamma));
 	
+	color.rgb = color.brg;
+	
 	imageStore(u_OutputColor, possition, vec4(ACES(color.rgb), color.a));
 }

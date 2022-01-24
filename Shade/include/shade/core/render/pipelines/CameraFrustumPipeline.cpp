@@ -4,7 +4,7 @@
 
 shade::CameraFrustumPipeline::CameraFrustumPipeline()
 {
-	m_Shader = ShadersLibrary::Create("Frustum", "resources/shaders/Frustum.glsl");
+	m_Shader = ShadersLibrary::Create("Frustum", "resources/shaders/Util/Frustum.glsl");
 }
 
 shade::Shared<shade::FrameBuffer> shade::CameraFrustumPipeline::Process(const shade::Shared<FrameBuffer>& target, const shade::Shared<FrameBuffer>& previousPass, const Shared<RenderPipeline>& previusPipline, const DrawablePools& drawables, std::unordered_map<Shared<Drawable>, BufferDrawData>& drawData)

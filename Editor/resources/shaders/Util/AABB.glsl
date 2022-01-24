@@ -2,7 +2,8 @@
 #version 460 core
 #include "resources/shaders/General/Structures.glsl"
 // Input attributes
-layout (location = 0) in    vec3 a_Position;
+layout (location = 0) in   vec3  a_Position;
+layout (location = 4) in   mat4  a_Transform;
 // Camera uniform buffer
 layout(std140, binding = 0) uniform UniformCamera
 {
@@ -13,7 +14,7 @@ uniform mat4 u_Transform;
 
 void main()
 {
-	gl_Position = u_Camera.Projection * u_Camera.View * u_Transform * vec4(a_Position, 1.0);
+	gl_Position = u_Camera.ViewProjection * a_Transform * vec4(a_Position, 1.0);
 }
 
 #type fragment

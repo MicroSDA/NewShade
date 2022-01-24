@@ -48,6 +48,7 @@ void main()
         gl_Layer            = j;
         out_Distance        = u_PointLight[int(j / 6)].Distance;
         out_LightPosition   = u_PointLight[int(j / 6)].Position.xyz;
+
         for(int i = 0; i < gl_in.length(); i++)
         {
             gl_Position               = u_PointLightCascade[j].ViewMatrix * gl_in[i].gl_Position;

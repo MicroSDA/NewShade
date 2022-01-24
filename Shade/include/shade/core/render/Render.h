@@ -115,8 +115,6 @@ namespace shade
 		static Shared<ShaderStorageBuffer>	m_sDirectLightsBuffer;
 		static Shared<ShaderStorageBuffer>	m_sPointLightsBuffer;
 		static Shared<ShaderStorageBuffer>	m_sSpotLightsBuffer;
-		//static Shared<ShaderStorageBuffer>	m_sShadowCascadesBuffer;
-		static Shared<ShaderStorageBuffer>	m_sShadowSpotLightBuffer;
 
 		static Shared<Camera>				m_sCamera;
 

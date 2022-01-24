@@ -4,7 +4,7 @@
 
 shade::GridPipeline::GridPipeline()
 {
-    m_Shader = ShadersLibrary::Create("Grid", "resources/shaders/Grid.glsl");
+    m_Shader = ShadersLibrary::Create("Grid", "resources/shaders/Util/Grid.glsl");
 }
 
 shade::Shared<shade::FrameBuffer> shade::GridPipeline::Process(const shade::Shared<FrameBuffer>& target, const shade::Shared<FrameBuffer>& previousPass, const Shared<RenderPipeline>& previusPipline, const DrawablePools& drawables, std::unordered_map<Shared<Drawable>, BufferDrawData>& drawData)

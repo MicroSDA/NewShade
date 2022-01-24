@@ -65,7 +65,7 @@ namespace shade
 
 		static void AttachDepthCubeMapLayerd(const std::uint32_t& id, const std::int32_t& layers, const GLenum& format, const GLenum& attachmentType, const std::uint32_t& width, const std::uint32_t& height)
 		{
-			glTexImage3D(GL_TEXTURE_CUBE_MAP_ARRAY, 0, format, width, height, layers * 6, 0, format, GL_FLOAT, nullptr);
+			glTexImage3D(GL_TEXTURE_CUBE_MAP_ARRAY, 0, format, width, height, layers * 6, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
 			glTexParameteri(GL_TEXTURE_CUBE_MAP_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 			glTexParameteri(GL_TEXTURE_CUBE_MAP_ARRAY, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 			glTexParameteri(GL_TEXTURE_CUBE_MAP_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -308,7 +308,7 @@ void shade::OpenGLFrameBuffer::Invalidate()
 		case Texture::Format::DEPTH24STENCIL8_CUBE_MAP:
 			glGenTextures(1, &m_DepthAttachment);
 			glBindTexture(GL_TEXTURE_CUBE_MAP_ARRAY, m_DepthAttachment);
-			util::AttachDepthCubeMapLayerd(m_DepthAttachment, m_Layout.Layers <= 1 ? 1: m_Layout.Layers, GL_DEPTH_COMPONENT, GL_DEPTH_ATTACHMENT, m_Layout.Width, m_Layout.Height);
+			util::AttachDepthCubeMapLayerd(m_DepthAttachment, m_Layout.Layers <= 1 ? 1: m_Layout.Layers, GL_DEPTH_COMPONENT32F, GL_DEPTH_ATTACHMENT, m_Layout.Width, m_Layout.Height);
 			break;
 		}
 	}

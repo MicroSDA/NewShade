@@ -6,13 +6,12 @@
 shade::InstancedPipeline::InstancedPipeline()
 {
 	m_Shader = ShadersLibrary::Create("General", "resources/shaders/General/General.glsl");
-	m_Shader->SelectSubrutine("u_sLighting", "BillinPhong", shade::Shader::Type::Fragment);
 }
 
 shade::Shared<shade::FrameBuffer > shade::InstancedPipeline::Process(const shade::Shared<FrameBuffer>& target, const shade::Shared<FrameBuffer>& previousPass, const Shared<RenderPipeline>& previusPiepline, const DrawablePools& drawables, std::unordered_map<Shared<Drawable>, BufferDrawData>& drawData)
 {
 	target->Bind();
-	m_Shader->Bind(); m_Shader->ExecuteSubrutines();
+	m_Shader->Bind(); 
 
 	for (auto& [instance, materials] : drawables.Drawables)
 	{
@@ -20,6 +19,8 @@ shade::Shared<shade::FrameBuffer > shade::InstancedPipeline::Process(const shade
 		{
 			if (material)
 			{
+				m_Shader->SelectSubrutine("u_sLighting", "BillinPhong", shade::Shader::Type::Fragment);
+
 				m_Shader->SendFloat3("u_Material.AmbientColor", glm::value_ptr(material->ColorAmbient));
 				m_Shader->SendFloat3("u_Material.DiffuseColor", glm::value_ptr(material->ColorDiffuse));
 				m_Shader->SendFloat3("u_Material.SpecularColor", glm::value_ptr(material->ColorSpecular));
@@ -50,10 +51,15 @@ shade::Shared<shade::FrameBuffer > shade::InstancedPipeline::Process(const shade
 						shadowMap->GetPointLightFrameBuffer()->BindDepthAsTexture(5);
 				}
 			}
+			else
+			{
+				//m_Shader->SelectSubrutine("u_sLighting", "FlatColor", shade::Shader::Type::Fragment);
+			}
 
 			drawData[instance].TBO->Resize(sizeof(glm::mat4) * transforms.size());
 			drawData[instance].TBO->SetData(transforms.data(), sizeof(glm::mat4) * transforms.size(), 0);
 
+			m_Shader->ExecuteSubrutines();
 			Render::GetRenderApi()->DrawInstanced(instance->GetDrawMode(), drawData[instance].VAO, drawData[instance].IBO, transforms.size());
 		}
 	}

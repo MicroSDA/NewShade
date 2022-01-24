@@ -19,6 +19,7 @@ namespace shade
 		const entt::registry& GetEntities() const;
 		entt::registry& GetEntities();
 		shade::Entity   GetEntity(const std::uint32_t& id);
+		const bool IsValid(const Entity& entity);
 	private:
 		entt::registry     m_Registry;
 	};

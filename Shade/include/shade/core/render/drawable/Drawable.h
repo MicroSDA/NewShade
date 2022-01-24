@@ -30,7 +30,7 @@ namespace shade
 		void SetVertices(Vertices& vertices);
 		void SetIndices(Indices& indices);
 		void SetMaterial(const Shared<Material3D>& material);
-
+		
 		const Vertices& GetVertices() const;
 		const Indices& GetIndices()  const;
 		const Shared<Material3D>& GetMaterial() const;
@@ -39,17 +39,22 @@ namespace shade
 		Indices&	GetIndices();
 		Shared<Material3D>&	GetMaterial();
 
+		/* TODO swith to physics or so in future */
 		void GenerateHalfExt();
-		const glm::vec3& GetMinHalfExt();
-		const glm::vec3& GetMaxHalfExt();
+		const glm::vec3& GetMinHalfExt() const;
+		const glm::vec3& GetMaxHalfExt() const;
+
+		void SetMinHalfExt(const glm::vec3& ext);
+		void SetMaxHalfExt(const glm::vec3& ext);
 
 		const DrawMode& GetDrawMode() const;
 	private:
 		DrawMode			 m_DrawMode = DrawMode::Triangles;
 		Vertices			 m_Vertices;
 		Indices				 m_Indices;
-		glm::vec3			 m_MinHalfExt;
-		glm::vec3			 m_MaxHalfExt;
 		Shared<Material3D>	 m_Material;
+
+		glm::vec3			 m_MinHalfExt = glm::vec3(-1.0f);
+		glm::vec3			 m_MaxHalfExt = glm::vec3(1.0f);
 	};
 }

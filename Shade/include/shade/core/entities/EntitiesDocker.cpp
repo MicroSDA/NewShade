@@ -51,3 +51,8 @@ shade::Entity shade::EntitiesDocker::GetEntity(const std::uint32_t& id)
 {
     return Entity{ m_Registry.entity(entt::entity(id)),this };
 }
+
+const bool shade::EntitiesDocker::IsValid(const Entity& entity)
+{
+    return m_Registry.valid(entity);
+}

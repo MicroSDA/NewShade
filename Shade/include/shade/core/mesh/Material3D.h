@@ -27,7 +27,7 @@ namespace shade
 			Factor SFactor, DFactor;
 		};
 		/* Base collors spec*/
-		glm::vec3				ColorAmbient		= glm::vec3(1.f);
+		glm::vec3				ColorAmbient		= glm::vec3(0.f);
 		glm::vec3				ColorDiffuse		= glm::vec3(1.f);
 		glm::vec3				ColorSpecular		= glm::vec3(1.f);
 		glm::vec3				ColorTransparent	= glm::vec3(-1.f); // Miuse one, so defualt transparent color doesnt exist

@@ -99,6 +99,7 @@ layout (std430, binding = 7) restrict readonly buffer UPointLightCascade
 	PointLightCascade u_PointLightCascade[];
 };
 // Need to pack in SSBO material as well !!
+uniform int               u_HasMaterial;
 uniform Material          u_Material;
 // Subroutines
 subroutine vec4 LightingCalculation(vec3 toCameraDirection);
@@ -107,7 +108,47 @@ vec4 FlatColor(vec3 toCameraDirection)
 {
 	// Without normal map and textures
 	vec4 Color = vec4(0.0, 0.0, 0.0, 0.0);
+	for(int i = 0;i < u_DirectLight.length(); i++)
+		{
+			if(u_DirectLight[i].Intensity > 0.0)
+			{
+				/* Direct light cascade shadow */	
+				vec4    FragPosVeiwSpace    = u_Camera.View * vec4(a_Vertex, 1.0);
+				float   Depth               = abs(FragPosVeiwSpace.z);
+				int     CascadeLayer        = 0;
 
+				for(int i = 0; i < u_DirectLightCascade.length(); i++)
+				{
+					if(Depth <= u_DirectLightCascade[i].SplitDistance)
+					{	CascadeLayer = i;	break;	}
+				}
+				/* Calc shadows */
+				float Shadow  = CSM_DirectLight(u_TDirectLightShadowMap, u_DirectLightCascade[CascadeLayer].ViewMatrix, CascadeLayer, u_DirectLightCascade.length(), u_DirectLightCascade[i].SplitDistance, u_Camera.View, a_Vertex, a_Normal, u_DirectLight[i].Direction);	
+				/* Calc direct light*/
+				Color 		 += BilinPhongDirectLight(a_Normal, u_DirectLight[i], u_Material, toCameraDirection, vec4(1, 1, 1, 1), vec4(1, 1, 1, 1), Shadow); 
+			}
+		}
+	for(int i = 0; i < u_PointLight.length();  i++)
+	{
+		if(u_PointLight[i].Intensity > 0.0)
+		{
+			/* Calc shadows */
+			float Shadow = SM_PointLight(u_TPointLightShadowMap, i, a_Vertex, a_Normal, u_PointLight[i].Position, u_PointLight[i].Distance);
+			/* Calc point light */
+			Color 		+= BilinPhongPointLight(a_Normal, u_PointLight[i],   u_Material, a_Vertex, toCameraDirection, vec4(1, 1, 1, 1), vec4(1, 1, 1, 1), Shadow);
+		}
+	}	
+	for(int i = 0; i < u_SpotLight.length();  i++)
+	{
+		if(u_SpotLight[i].Intensity > 0.0)
+		{
+			/* Calc shadows */
+			float Shadow  = SM_SpotLight(u_TSpotLightShadowMap, u_SpotLightCascade[i].ViewMatrix, i, u_Camera.View, a_Vertex,a_Normal, u_SpotLight[i].Direction);
+			/* Calc spot light */
+			Color 		 += BilinPhongSpotLight(a_Normal, u_SpotLight[i],  u_Material, a_Vertex, toCameraDirection, vec4(1, 1, 1, 1), vec4(1, 1, 1, 1), Shadow);
+		}
+	}
+	return Color;
 	/*for(int i = 0;i < u_DirectLight.length(); i++)
 		Color += BilinPhongDirectLight(a_Normal, u_DirectLight[i], u_Material,           toCameraDirection, vec4(1.0, 1.0, 1.0, 1.0), vec4(1.0, 1.0, 1.0, 1.0), 1.0); 
 	for(int i = 0;i < u_PointLight.length();  i++)
@@ -115,7 +156,7 @@ vec4 FlatColor(vec3 toCameraDirection)
 	for(int i = 0;i < u_SpotLight.length();  i++)
 		Color += BilinPhongSpotLight(a_Normal, u_SpotLight[i],     u_Material, a_Vertex, toCameraDirection, vec4(1.0, 1.0, 1.0, 1.0), vec4(1.0, 1.0, 1.0, 1.0)); */
 
-	return Color;	 
+	 
 };
 subroutine (LightingCalculation)
 vec4 BillinPhong(vec3 toCameraDirection) 

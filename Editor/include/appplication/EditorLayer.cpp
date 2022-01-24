@@ -53,6 +53,7 @@ void EditorLayer::OnCreate()
 	m_ShadowMapPipeline		= shade::RenderPipeline::Create<shade::ShadowMapPipeline>();
 	m_GridPipeline			= shade::RenderPipeline::Create<shade::GridPipeline>();
 	m_CameraFrustumPipeline = shade::RenderPipeline::Create<shade::CameraFrustumPipeline>();
+	m_AABBPipeline			= shade::RenderPipeline::Create<shade::AABBPipeline>();
 }
 
 void EditorLayer::OnUpdate(const shade::Shared<shade::Scene>& scene, const shade::Timer& deltaTime)
@@ -94,6 +95,8 @@ void EditorLayer::OnUpdate(const shade::Shared<shade::Scene>& scene, const shade
 				if (frustum.IsInFrustum(cpcTransform, mesh->GetMinHalfExt(), mesh->GetMaxHalfExt()))
 				{
 					shade::Render::SubmitPipelineInstanced(m_InstancedPipeline, mesh, mesh->GetMaterial(), cpcTransform);
+					if(m_IsShowAABB)
+						shade::Render::SubmitPipelineInstanced(m_AABBPipeline, shade::Box::Create(mesh->GetMinHalfExt(), mesh->GetMaxHalfExt()), nullptr, cpcTransform);
 					m_SubmitedMeshCount++;
 				}
 			}
@@ -102,8 +105,7 @@ void EditorLayer::OnUpdate(const shade::Shared<shade::Scene>& scene, const shade
 	/* Light */
 	scene->GetEntities().view<shade::DirectLightComponent, shade::Transform3DComponent>().each([&](auto& entity, shade::DirectLightComponent& enviroment, shade::Transform3DComponent& transform)
 		{
-			//shade::Render::SubmitLight(enviroment, scene->ComputePCTransform(entity));
-			shade::Render::SubmitLight(enviroment, transform.GetModelMatrix());
+			shade::Render::SubmitLight(enviroment, scene->ComputePCTransform(entity));
 		});
 	scene->GetEntities().view<shade::PointLightComponent, shade::Transform3DComponent>().each([&](auto& entity, shade::PointLightComponent& enviroment, shade::Transform3DComponent& transform)
 		{
@@ -155,7 +157,8 @@ void EditorLayer::OnRender(const shade::Shared<shade::Scene>& scene, const shade
 			shade::Render::BeginScene(m_Camera, m_FrameBuffer);
 				shade::Render::ExecuteSubmitedPipeline(m_ShadowMapPipeline);
 				shade::Render::ExecuteSubmitedPipeline(m_InstancedPipeline);
-				shade::Render::ExecuteSubmitedPipeline(m_CameraFrustumPipeline);
+				shade::Render::ExecuteSubmitedPipeline(m_AABBPipeline);
+				//shade::Render::ExecuteSubmitedPipeline(m_CameraFrustumPipeline);
 
 				if (m_isBloomEnabled)
 					shade::Render::PProcess::Process(m_PPBloom);
@@ -231,7 +234,6 @@ void EditorLayer::OnEvent(const shade::Shared<shade::Scene>& scene, shade::Event
 					entity.AddComponent<shade::Transform3DComponent>();
 				}, shade::Asset::Lifetime::Destroy);
 		}
-
 	}
 	if (event.GetEventType() == shade::EventType::MouseButtonPressed)
 	{
@@ -436,31 +438,34 @@ void EditorLayer::Inspector(shade::Entity& entity)
 {
 	static ImVec4 editIcon = ImVec4{ 128, 128, 897, 750 };
 
-	TagComponent(entity);
-	DrawComponent<shade::Transform3DComponent>("Transform", entity, &EditorLayer::Transform3DComponent, [&](auto isTreeOpen)->bool
-		{
-			return EditComponentButton<shade::Transform3DComponent>(entity, m_IconsTexture, editIcon, isTreeOpen);
-		}, this, entity);
-	DrawComponent<shade::Model3DComponent>("Model", entity, &EditorLayer::Model3dComponent, [&](auto isTreeOpen)->bool
-		{
-			return EditComponentButton<shade::Model3DComponent>(entity, m_IconsTexture, editIcon, isTreeOpen);
-		}, this, entity);
-	DrawComponent<shade::DirectLightComponent>("Direct light", entity, &EditorLayer::DirectLightComponent, [&](auto isTreeOpen)->bool
-		{
-			return EditComponentButton<shade::DirectLightComponent>(entity, m_IconsTexture, editIcon, isTreeOpen);
-		}, this, entity);
-	DrawComponent<shade::PointLightComponent>("Point light", entity, &EditorLayer::PointLightComponent, [&](auto isTreeOpen)->bool
-		{
-			return EditComponentButton<shade::PointLightComponent>(entity, m_IconsTexture, editIcon, isTreeOpen);
-		}, this, entity);
-	DrawComponent<shade::SpotLightComponent>("Spot light", entity, &EditorLayer::SpotLightComponent, [&](auto isTreeOpen)->bool
-		{
-			return EditComponentButton<shade::SpotLightComponent>(entity, m_IconsTexture, editIcon, isTreeOpen);
-		}, this, entity);
-	DrawComponent<shade::CameraComponent>("Camera", entity, &EditorLayer::CameraComponent, [&](auto isTreeOpen)->bool
-		{
-			return EditComponentButton<shade::CameraComponent>(entity, m_IconsTexture, editIcon, isTreeOpen);
-		}, this, entity);
+	if (entity.IsValid())
+	{
+		TagComponent(entity);
+		DrawComponent<shade::Transform3DComponent>("Transform", entity, &EditorLayer::Transform3DComponent, [&](auto isTreeOpen)->bool
+			{
+				return EditComponentButton<shade::Transform3DComponent>(entity, m_IconsTexture, editIcon, isTreeOpen);
+			}, this, entity);
+		DrawComponent<shade::Model3DComponent>("Model", entity, &EditorLayer::Model3dComponent, [&](auto isTreeOpen)->bool
+			{
+				return EditComponentButton<shade::Model3DComponent>(entity, m_IconsTexture, editIcon, isTreeOpen);
+			}, this, entity);
+		DrawComponent<shade::DirectLightComponent>("Direct light", entity, &EditorLayer::DirectLightComponent, [&](auto isTreeOpen)->bool
+			{
+				return EditComponentButton<shade::DirectLightComponent>(entity, m_IconsTexture, editIcon, isTreeOpen);
+			}, this, entity);
+		DrawComponent<shade::PointLightComponent>("Point light", entity, &EditorLayer::PointLightComponent, [&](auto isTreeOpen)->bool
+			{
+				return EditComponentButton<shade::PointLightComponent>(entity, m_IconsTexture, editIcon, isTreeOpen);
+			}, this, entity);
+		DrawComponent<shade::SpotLightComponent>("Spot light", entity, &EditorLayer::SpotLightComponent, [&](auto isTreeOpen)->bool
+			{
+				return EditComponentButton<shade::SpotLightComponent>(entity, m_IconsTexture, editIcon, isTreeOpen);
+			}, this, entity);
+		DrawComponent<shade::CameraComponent>("Camera", entity, &EditorLayer::CameraComponent, [&](auto isTreeOpen)->bool
+			{
+				return EditComponentButton<shade::CameraComponent>(entity, m_IconsTexture, editIcon, isTreeOpen);
+			}, this, entity);
+	}
 }
 
 void EditorLayer::ScenePlayStop(const shade::Shared<shade::Scene>& scene)
@@ -668,6 +673,7 @@ void EditorLayer::MainMenu(const shade::Shared<shade::Scene>& scene)
 						scene->GetAssetData().Attribute("Path").set_value(path.string().c_str());
 						scene->Deserialize();
 						shade::Application::Get().SetCurrentScene(scene);
+						m_SelectedEntity = shade::Entity();
 					}
 				}
 
@@ -932,65 +938,6 @@ void EditorLayer::Model3dComponent(shade::Entity& entity)
 		}
 		ImGui::TreePop();
 	}
-
-
-	//ImGui::Button("Cube");
-	/*if (ImGui::TreeNodeEx("Meshes: ", ImGuiTreeNodeFlags_KeppFramedWhenOpen))
-	{
-		auto& model = entity.GetComponent<shade::Model3DComponent>();
-
-		for (auto i = 0; i < model->GetMeshes().size(); i++)
-		{
-			// When model is imported, asset data is nullptr and we have crash in the GetAssetData()
-			DrawTreeNode(model->GetMeshes()[i]->GetAssetData().Attribute("Id").as_string(),
-				[&](const shade::Shared<shade::Mesh>& mesh)
-				{
-					DrawTreeNode("Material", [&](shade::Material3D* material)
-						{
-							// TODO FIX FLAOT!!
-							DrawColor3("Ambinet",			glm::value_ptr(material->ColorAmbient));
-							DrawColor3("Diffuse",			glm::value_ptr(material->ColorDiffuse));
-							DrawColor3("Specular",			glm::value_ptr(material->ColorSpecular));
-							DrawFlaot("Emissive",			&material->Emmisive);
-							DrawFlaot("Shininess",			&material->Shininess);
-							DrawFlaot("Shininess strength", &material->ShininessStrength);
-							DrawFlaot("Opacity",			&material->Opacity);
-							DrawFlaot("Refracti",			&material->Refracti);
-							ImGui::Text("Shading %d",		material->Shading);
-							ImGui::Checkbox("WireFrame",	&material->WireFrame);
-
-							if (ImGui::Button("Save")) { material->Serialize(); }
-
-						}, mesh->GetMaterial().get());
-
-					DrawTreeNode("Textures", [&](shade::Material3D* material)
-						{
-							DrawImage(material->TextureDiffuse->GetRenderID(), 100, 100, true);
-							DrawImage(material->TextureSpecular->GetRenderID(), 100, 100, true);
-							DrawImage(material->TextureNormals->GetRenderID(), 100, 100, true);
-
-						}, mesh->GetMaterial().get());
-
-					DrawTreeNode("Vertices", [&](shade::Vertex3D* vertices, uint32_t count)
-						{
-							for (auto i = 0; i < count; i++)
-							{
-
-
-								DrawVec3F(std::string("P##" + std::to_string(i)).c_str(),   glm::value_ptr(vertices[i].Position), 100, 100, true);
-								DrawVec3F(std::string("N##" + std::to_string(i)).c_str(),   glm::value_ptr(vertices[i].Normal), 100, 100, true);
-								DrawVec3F(std::string("T##" + std::to_string(i)).c_str(),   glm::value_ptr(vertices[i].Tangent), 100, 100, true);
-								ImGui::Separator();
-
-							}
-						}, mesh->GetVertices().data(), mesh->GetVertices().size());
-
-					if (ImGui::Button("Save")) mesh->Serialize();
-				}, model->GetMeshes()[i]);
-		}
-
-		ImGui::TreePop();
-	}*/
 }
 
 void EditorLayer::Render()
@@ -1031,8 +978,9 @@ void EditorLayer::Render()
 	}
 
 	ImGui::Separator();
-	ImGui::Checkbox("Show grid", &m_IsShowGrid);
+	ImGui::Checkbox("Show grid",    &m_IsShowGrid);
 	ImGui::Checkbox("Show frustum", &m_IsShowFrustum);
+	ImGui::Checkbox("Show AABB",    &m_IsShowAABB);
 	ImGui::Text("Submited meshes [%d]", m_SubmitedMeshCount);
 	ImGui::Text("Video memory in usage: %d(mbs)", shade::Render::GetVideoMemoryUsage());
 }
@@ -1144,7 +1092,7 @@ void EditorLayer::Model3D(const shade::Shared<shade::Model3D>& model)
 		if (ImGui::MenuItem("None"))
 			m_SelectedModel3D = nullptr;
 
-		for (auto& asset : shade::AssetManager::GetAssetsDataList())
+		for (auto& asset : shade::AssetManager::GetPrefabsDataList())
 		{
 			if (strcmp(asset.second.Attribute("Type").as_string(), "Model3D") == 0)
 			{
@@ -1233,55 +1181,18 @@ void EditorLayer::Mesh(const shade::Shared<shade::Mesh>& mesh)
 		}
 
 	}
+
+	if (mesh)
+	{
+		ImGui::Separator();
+
+		if (DrawButtonImage("##AABB", m_IconsTexture, { 20, 20 }, { 128, 128 }, { 10, 10 }, -1))
+			mesh->GenerateHalfExt();
+		ImGui::SameLine();
+		if (DrawButtonImage("##Save", m_IconsTexture, { 20, 20 }, { 128, 128 }, { 306, 898 }, -1))
+			mesh->Serialize();
+	}
 }
-
-/*void EditorLayer::EnvironmentComponent(shade::Entity& entity)
-{
-
-	auto& environment = entity.GetComponent<shade::EnvironmentComponent>();
-	switch (environment->GetType())
-	{
-	case shade::Environment::Type::DirectLight:
-	{
-		auto light = static_cast<shade::DirectLight*>(environment.get());
-		DrawVec3F("Direction", glm::value_ptr(light->GetDirection()));
-		DrawColor3("Ambient", glm::value_ptr(light->GetAmbientColor()));
-		DrawColor3("Diffuse", glm::value_ptr(light->GetDiffuseColor()));
-		DrawColor3("Specular", glm::value_ptr(light->GetSpecularColor()));
-
-		break;
-	}
-	case shade::Environment::Type::PointLight:
-	{
-		auto light = static_cast<shade::PointLight*>(environment.get());
-		DrawVec3F("Position", glm::value_ptr(light->GetPosition()));
-		DrawColor3("Ambient", glm::value_ptr(light->GetAmbientColor()));
-		DrawColor3("Diffuse", glm::value_ptr(light->GetDiffuseColor()));
-		DrawColor3("Specular", glm::value_ptr(light->GetSpecularColor()));
-		DrawFlaot("Constant", &light->GetConstant());
-		DrawFlaot("Liner", &light->GetLinear());
-		DrawFlaot("Qaudratic", &light->GetQaudratic());
-		break;
-	}
-	case shade::Environment::Type::SpotLight:
-	{
-		auto light = static_cast<shade::SpotLight*>(environment.get());
-		DrawVec3F("Position", glm::value_ptr(light->GetPosition()));
-		DrawVec3F("Direction", glm::value_ptr(light->GetDirection()));
-		DrawColor3("Ambient", glm::value_ptr(light->GetAmbientColor()));
-		DrawColor3("Diffuse", glm::value_ptr(light->GetDiffuseColor()));
-		DrawColor3("Specular", glm::value_ptr(light->GetSpecularColor()));
-		DrawFlaot("Constant", &light->GetConstant());
-		DrawFlaot("Liner", &light->GetLinear());
-		DrawFlaot("Qaudratic", &light->GetQaudratic());
-		DrawFlaot("Min", &light->GetMinAngle());
-		DrawFlaot("Max", &light->GetMaxAngle());
-		break;
-	}
-	default:
-		break;
-	}
-}*/
 
 void EditorLayer::DarkVineTheme()
 {

@@ -15,8 +15,6 @@ namespace shade
 	Shared<ShaderStorageBuffer> Render::m_sDirectLightsBuffer;
 	Shared<ShaderStorageBuffer> Render::m_sPointLightsBuffer;
 	Shared<ShaderStorageBuffer> Render::m_sSpotLightsBuffer;
-	//Shared<ShaderStorageBuffer> Render::m_sShadowCascadesBuffer;
-	Shared<ShaderStorageBuffer> Render::m_sShadowSpotLightBuffer;
 	Shared<FrameBuffer>			Render::m_sTargetFrameBuffer;
 	Shared<FrameBuffer>			Render::m_sPreviousPassBuffer;
 	Shared<RenderPipeline>		Render::m_sPreviousPipeline;
@@ -49,11 +47,8 @@ void shade::Render::Init()
 		m_sDirectLightsBuffer = ShaderStorageBuffer::Create(0, 2);
 		m_sPointLightsBuffer = ShaderStorageBuffer::Create(0, 3);
 		m_sSpotLightsBuffer = ShaderStorageBuffer::Create(0, 4);
-		//m_sShadowCascadesBuffer = ShaderStorageBuffer::Create(0, 5);
-		m_sShadowSpotLightBuffer = ShaderStorageBuffer::Create(0, 6);
 
 		glm::fvec2 plane[4] = { glm::fvec2(-1.0,  1.0), glm::fvec2(-1.0, -1.0) ,glm::fvec2(1.0,   1.0), glm::fvec2(1.0,  -1.0) };
-
 
 		m_sSprites.VAO = VertexArray::Create();
 		m_sSprites.VBO = VertexBuffer::Create(plane, sizeof(glm::fvec2) * 4, VertexBuffer::BufferType::Static);
@@ -130,7 +125,7 @@ void shade::Render::Begin()
 			if (!drawable->second.Materials.size())
 			{
 				/* Has to be removed*/
-				//m_sInstancedGeometryBuffers.erase(drawable->first); // If drawable doesnrt have material need to remove from ppol draw data
+				//m_sInstancedGeometryBuffers.erase(drawable->first); // If drawable doesnt have material need to remove from ppol draw data
 				pipeline->second.Drawables.erase(drawable++);
 			}
 			else
@@ -148,6 +143,25 @@ void shade::Render::Begin()
 		{
 			++pipeline;
 		}
+	}
+
+	for (auto drawable = m_sInstancedGeometryBuffers.begin(); drawable != m_sInstancedGeometryBuffers.end();)
+	{
+		//auto s = std::find(m_sPipelines.Pipelines.begin(), m_sPipelines.Pipelines.end(), [&](Shared<Drawable>& value) { return value == drawable->first; });
+		bool hasFound = false;
+		for (auto& [pipeline, _drawable] : m_sPipelines.Pipelines)
+		{
+			if (_drawable.Drawables.find(drawable->first) != _drawable.Drawables.end())
+			{
+				hasFound = true;
+				break;
+			}
+		}
+
+		if (!hasFound)
+			m_sInstancedGeometryBuffers.erase(drawable++);
+		else
+			++drawable;
 	}
 }
 

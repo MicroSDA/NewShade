@@ -70,6 +70,14 @@ bool shade::Mesh::Serialize() const
                 shade::util::Binarizer::Write(file, shade::Index(index));
             }
 
+            /* AABB */
+            shade::util::Binarizer::Write(file, GetMinHalfExt());
+         /*   shade::util::Binarizer::Write(file, GetMinHalfExt().y);
+            shade::util::Binarizer::Write(file, GetMinHalfExt().z);*/
+
+            shade::util::Binarizer::Write(file, GetMaxHalfExt());
+          /*  shade::util::Binarizer::Write(file, GetMaxHalfExt().y);
+            shade::util::Binarizer::Write(file, GetMaxHalfExt().z);*/
             file.close();
         }
         else
@@ -137,10 +145,15 @@ bool shade::Mesh::Deserialize()
                         shade::util::Binarizer::Read(file, index);
                         GetIndices().push_back(index);
                     }
-                     
-                    file.close();
+                    
+                    /* AABB */
+                    glm::vec3 minHalf, maxHalf;
+                    shade::util::Binarizer::Read(file, minHalf[0], 3);
+                    shade::util::Binarizer::Read(file, maxHalf[0], 3);
+                    SetMinHalfExt(minHalf); SetMaxHalfExt(maxHalf);
+                   
 
-                    GenerateHalfExt();
+                    file.close();
                     return true;
                 }
                 else

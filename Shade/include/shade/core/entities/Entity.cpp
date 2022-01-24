@@ -12,8 +12,14 @@ shade::Entity::~Entity()
 
 bool shade::Entity::IsValid()
 {
-	if (m_pDocker != nullptr && m_EntityHandle != entt::null)
-		return m_pDocker->GetEntities().valid(m_EntityHandle);
+	if (m_pDocker != nullptr)
+	{
+		if (m_EntityHandle != entt::null)
+			return m_pDocker->GetEntities().valid(m_EntityHandle);
+		else
+			return false;
+	}
+		
 	else return false;
 }
 

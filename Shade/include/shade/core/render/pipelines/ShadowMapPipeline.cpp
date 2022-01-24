@@ -136,17 +136,18 @@ shade::Shared<shade::FrameBuffer> shade::ShadowMapPipeline::Process(const shade:
 	if (lights.PointLightSources.size() && m_IsPointShadowCast)
 	{
 		std::vector<PointLightCascade> pointLightCascades;
+		constexpr float fov = glm::radians(90.0f);
+		float _near  = 0.1f;
+		float aspect = 1.0f;
 		for (auto& light : lights.PointLightSources)
 		{
-			constexpr float fov = glm::radians(90.0f);
 			float distance = light.Distance + 1.0f;
-			float _near = 1.0f;
-			pointLightCascades.push_back(ComputePointLightCascade(fov, light.Position, glm::vec3( 1.0, 0.0, 0.0), glm::vec3(0.0, -1.0,  0.0), _near, distance));	// x
-			pointLightCascades.push_back(ComputePointLightCascade(fov, light.Position, glm::vec3(-1.0, 0.0, 0.0), glm::vec3(0.0, -1.0,  0.0), _near, distance));	//-x
-			pointLightCascades.push_back(ComputePointLightCascade(fov, light.Position, glm::vec3( 0.0, 1.0, 0.0), glm::vec3(0.0,  0.0,  1.0), _near, distance));	// y
-			pointLightCascades.push_back(ComputePointLightCascade(fov, light.Position, glm::vec3( 0.0,-1.0, 0.0), glm::vec3(0.0,  0.0, -1.0), _near, distance));	//-y
-			pointLightCascades.push_back(ComputePointLightCascade(fov, light.Position, glm::vec3( 0.0, 0.0, 1.0), glm::vec3(0.0, -1.0,  0.0), _near, distance));	// z
-			pointLightCascades.push_back(ComputePointLightCascade(fov, light.Position, glm::vec3( 0.0, 0.0,-1.0), glm::vec3(0.0, -1.0,  0.0), _near, distance));	//-z
+			pointLightCascades.push_back(ComputePointLightCascade(fov, aspect, light.Position, glm::vec3( 1.0, 0.0, 0.0), glm::vec3(0.0, -1.0,  0.0), _near, distance));	// x
+			pointLightCascades.push_back(ComputePointLightCascade(fov, aspect, light.Position, glm::vec3(-1.0, 0.0, 0.0), glm::vec3(0.0, -1.0,  0.0), _near, distance));	//-x
+			pointLightCascades.push_back(ComputePointLightCascade(fov, aspect, light.Position, glm::vec3( 0.0, 1.0, 0.0), glm::vec3(0.0,  0.0,  1.0), _near, distance));	// y
+			pointLightCascades.push_back(ComputePointLightCascade(fov, aspect, light.Position, glm::vec3( 0.0,-1.0, 0.0), glm::vec3(0.0,  0.0, -1.0), _near, distance));	//-y
+			pointLightCascades.push_back(ComputePointLightCascade(fov, aspect, light.Position, glm::vec3( 0.0, 0.0, 1.0), glm::vec3(0.0, -1.0,  0.0), _near, distance));	// z
+			pointLightCascades.push_back(ComputePointLightCascade(fov, aspect, light.Position, glm::vec3( 0.0, 0.0,-1.0), glm::vec3(0.0, -1.0,  0.0), _near, distance));	//-z
 		}
 
 		if (m_PointLightShadowFrameBuffer->GetLayout().Layers != lights.PointLightSources.size())
@@ -294,9 +295,9 @@ shade::ShadowMapPipeline::SpotLightCascade shade::ShadowMapPipeline::ComputeSpot
 	return SpotLightCascade{ lightProjection * lightView , farplane };
 }
 
-shade::ShadowMapPipeline::PointLightCascade shade::ShadowMapPipeline::ComputePointLightCascade(const float& fov, const glm::vec3& position, const glm::vec3& direction, const glm::vec3& up, const float& nearPlane, const float& farplane)
+shade::ShadowMapPipeline::PointLightCascade shade::ShadowMapPipeline::ComputePointLightCascade(const float& fov, const float& apsect, const glm::vec3& position, const glm::vec3& direction, const glm::vec3& up, const float& nearPlane, const float& farplane)
 {
-	glm::mat4 lightProjection = glm::perspective(fov, 1.0f, nearPlane, farplane);
+	glm::mat4 lightProjection = glm::perspective(fov, apsect, nearPlane, farplane);
 	glm::mat4 lightView = glm::lookAt(position, position + direction, up);
 
 	return PointLightCascade{ lightProjection * lightView, farplane };

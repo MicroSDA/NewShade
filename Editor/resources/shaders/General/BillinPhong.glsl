@@ -13,7 +13,7 @@ vec4 BilinPhongDirectLight(vec3 normal, DirectLight light, Material material, ve
 		vec3 lightReflection	= reflect(light.Direction, normal);
 		float specularShading	= dot(toCameraDirection, lightReflection);
 
-		if(specularShading > 0.0)
+		if(specularShading > 0.0)	
 		{
 			specularShading		= pow(specularShading, material.Shinines);
 			specularColor		= vec4((specularTexture.rgb * material.SpecularColor * light.SpecularColor * material.ShininesStrength * specularShading), specularTexture.a);
