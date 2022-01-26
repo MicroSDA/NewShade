@@ -14,7 +14,8 @@ shade::Shared<shade::FrameBuffer> shade::CameraFrustumPipeline::Process(const sh
 	{
 		for (auto& [material, transforms] : materials.Materials)
 		{
-			drawData[instance].TBO->Resize(sizeof(glm::mat4) * transforms.size());
+			if (drawData[instance].TBO->GetSize() != sizeof(glm::mat4) * transforms.size())
+				drawData[instance].TBO->Resize(sizeof(glm::mat4) * transforms.size());
 			drawData[instance].TBO->SetData(transforms.data(), sizeof(glm::mat4) * transforms.size(), 0);
 
 			Render::GetRenderApi()->DrawInstanced(Drawable::DrawMode::Lines, drawData[instance].VAO, drawData[instance].IBO, transforms.size());

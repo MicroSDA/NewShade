@@ -30,11 +30,16 @@ bool shade::Frustum::IsInFrustum(const glm::mat4& transform, const glm::vec3& mi
 	return _SSE_OBBTest(transform, minHalfExt, maxHalfExt);
 }
 
+bool shade::Frustum::IsInFrustum(const glm::vec3& position, const float& radius)
+{
+	return _SPHERE_TEST(position, radius);
+}
+
 void shade::Frustum::_CalculateFrustum(const glm::mat4& viewProjectionMatrix)
 {
 	m_VP_Matrix = viewProjectionMatrix;
-	//glm::mat4 matrix = glm::transpose(m_VP_Matrix);
-	glm::mat4 matrix = glm::inverse(m_VP_Matrix);
+	glm::mat4 matrix = glm::transpose(m_VP_Matrix);
+	//glm::mat4 matrix = glm::inverse(m_VP_Matrix);
 
 	m_Frustum.push_back(matrix[3] + matrix[0]); // Left
 	m_Frustum.push_back(matrix[3] - matrix[0]); // Right
@@ -172,4 +177,20 @@ bool shade::Frustum::_SSE_OBBTest(const glm::mat4& transform, const glm::vec3& m
 	//store result, if any of 3 axes is separating (i.e. outside != 0) - object outside frustum
 	//so, object inside frustum only if outside == 0 (there are no separating axes)
 	return ((_mm_movemask_ps(outside) & 0x7) == 0); //& 0x7 mask, because we interested only in 3 axes
+}
+
+bool shade::Frustum::_SPHERE_TEST(const glm::vec3& position, const float& radius)
+{
+	bool result = true;
+	// тестируем 6 плоскостей фрустума
+	for (int i = 0; i < 6; i++)
+	{
+		//считаем расстояние от центра сферы до плоскости
+		//если центр сферы находится за плоскостью и расстояние больше чем радиус сферы,
+		//то объект не попадает во фрустум
+		if (m_Frustum[i].x * position.x + m_Frustum[i].y * position.y + m_Frustum[i].z * position.z + m_Frustum[i].w <= -radius)
+			result = false;
+		//return false; //флаг работает быстрее
+	}
+	return result;
 }

@@ -3,9 +3,11 @@
 #include <shade/core/layer/ImGui/ImGuiLayer.h>
 #include <shade/core/render/pipelines/InstancedPipeline.h>
 #include <shade/core/render/pipelines/GridPipeline.h>
-#include <shade/core/render/pipelines/ShadowMapPipeline.h>
 #include <shade/core/render/pipelines/CameraFrustumPipeline.h>
 #include <shade/core/render/pipelines/AABBPipeline.h>
+#include <shade/core/render/pipelines/DirectLightShadowMapPipeline.h>
+#include <shade/core/render/pipelines/PointLightShadowMapPipeline.h>
+#include <shade/core/render/pipelines/SpotLightShadowMapPipeline.h>
 
 class EditorLayer : public shade::ImGuiLayer
 {
@@ -42,11 +44,13 @@ private:
 
 	shade::Shared<shade::Shader> m_SpriteShader;
 	
-	shade::Shared<shade::InstancedPipeline>			 m_InstancedPipeline;
-	shade::Shared<shade::ShadowMapPipeline>			 m_ShadowMapPipeline;
-	shade::Shared<shade::GridPipeline>				 m_GridPipeline;
-	shade::Shared<shade::CameraFrustumPipeline>      m_CameraFrustumPipeline;
-	shade::Shared<shade::AABBPipeline>				 m_AABBPipeline;
+	shade::Shared<shade::InstancedPipeline>				m_InstancedPipeline;
+	shade::Shared<shade::GridPipeline>					m_GridPipeline;
+	shade::Shared<shade::CameraFrustumPipeline>			m_CameraFrustumPipeline;
+	shade::Shared<shade::AABBPipeline>					m_AABBPipeline;
+	shade::Shared<shade::DirectLightShadowMapPipeline>	m_DirectLightShadowMapPipeline;
+	shade::Shared<shade::PointLightShadowMapPipeline>	m_PointLightShadowMapPipeline;
+	shade::Shared<shade::SpotLightShadowMapPipeline>	m_SpotLightShadowMapPipeline;
 
 	/* Post process */
 	shade::Shared<shade::PPBloom> m_PPBloom;
@@ -63,6 +67,8 @@ private:
 	bool m_IsShowAABB		= false;
 	/* Relocate to renderer */
 	unsigned int m_SubmitedMeshCount = 0;
+	unsigned int m_SubmitedPointLightSources = 0;
+	unsigned int m_MeshesInsidePointLight = 0;
 
 	shade::Shared<shade::Grid>   m_Grid;
 	shade::Shared<shade::Box>    m_Box;

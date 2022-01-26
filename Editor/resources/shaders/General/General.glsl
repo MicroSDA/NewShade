@@ -196,10 +196,18 @@ vec4 BillinPhong(vec3 toCameraDirection)
 	{
 		if(u_PointLight[i].Intensity > 0.0)
 		{
-			/* Calc shadows */
-			float Shadow = SM_PointLight(u_TPointLightShadowMap, i, a_Vertex, a_Normal, u_PointLight[i].Position, u_PointLight[i].Distance);
-			/* Calc point light */
-			Color 		+= BilinPhongPointLight(TBN_Normal, u_PointLight[i],   u_Material, a_Vertex, toCameraDirection, texture(u_TDiffuse, a_UV_Coordinates).rgba, texture(u_TSpecular, a_UV_Coordinates).rgba, Shadow);
+			if(distance(a_Vertex, u_PointLight[i].Position) <= u_PointLight[i].Distance)
+			{
+				/* Calc shadows */
+				float Shadow = SM_PointLight(u_TPointLightShadowMap, i, a_Vertex, a_Normal, u_PointLight[i].Position, u_PointLight[i].Distance);
+				/* Calc point light */
+				Color 		+= BilinPhongPointLight(TBN_Normal, u_PointLight[i],   u_Material, a_Vertex, toCameraDirection, texture(u_TDiffuse, a_UV_Coordinates).rgba, texture(u_TSpecular, a_UV_Coordinates).rgba, Shadow);
+			}
+			else
+			{
+				//discard;
+			}
+		
 		}
 	}	
 	for(int i = 0; i < u_SpotLight.length();  i++)

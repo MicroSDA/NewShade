@@ -1,7 +1,6 @@
 #include "shade_pch.h"
 #include "InstancedPipeline.h"
 #include "shade/core/render/Render.h"
-#include "shade/core/render/pipelines/ShadowMapPipeline.h"
 
 shade::InstancedPipeline::InstancedPipeline()
 {
@@ -40,7 +39,7 @@ shade::Shared<shade::FrameBuffer > shade::InstancedPipeline::Process(const shade
 					material->TextureNormals->Bind(2);
 
 				/* If shadows pas*/
-				auto* shadowMap = &previusPiepline->As<ShadowMapPipeline>();
+				/*auto* shadowMap = &previusPiepline->As<ShadowMapPipeline>();
 				if (shadowMap)
 				{
 					if (shadowMap->GetDriectLightFrameBuffer())
@@ -49,14 +48,15 @@ shade::Shared<shade::FrameBuffer > shade::InstancedPipeline::Process(const shade
 						shadowMap->GetSpotLightFrameBuffer()->BindDepthAsTexture(4);
 					if (shadowMap->GetPointLightFrameBuffer())
 						shadowMap->GetPointLightFrameBuffer()->BindDepthAsTexture(5);
-				}
+				}*/
 			}
 			else
 			{
 				//m_Shader->SelectSubrutine("u_sLighting", "FlatColor", shade::Shader::Type::Fragment);
 			}
 
-			drawData[instance].TBO->Resize(sizeof(glm::mat4) * transforms.size());
+			if (drawData[instance].TBO->GetSize() != sizeof(glm::mat4) * transforms.size())
+				drawData[instance].TBO->Resize(sizeof(glm::mat4) * transforms.size());
 			drawData[instance].TBO->SetData(transforms.data(), sizeof(glm::mat4) * transforms.size(), 0);
 
 			m_Shader->ExecuteSubrutines();

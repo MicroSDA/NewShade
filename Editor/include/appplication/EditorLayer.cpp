@@ -50,14 +50,21 @@ void EditorLayer::OnCreate()
 	m_PPColorCorrection->SetInOutTargets(m_FrameBuffer, m_FrameBuffer, m_ColorCorrectionShader);
 
 	m_InstancedPipeline		= shade::RenderPipeline::Create<shade::InstancedPipeline>();
-	m_ShadowMapPipeline		= shade::RenderPipeline::Create<shade::ShadowMapPipeline>();
 	m_GridPipeline			= shade::RenderPipeline::Create<shade::GridPipeline>();
 	m_CameraFrustumPipeline = shade::RenderPipeline::Create<shade::CameraFrustumPipeline>();
 	m_AABBPipeline			= shade::RenderPipeline::Create<shade::AABBPipeline>();
+	m_DirectLightShadowMapPipeline	= shade::RenderPipeline::Create<shade::DirectLightShadowMapPipeline>();
+	m_PointLightShadowMapPipeline = shade::RenderPipeline::Create<shade::PointLightShadowMapPipeline>();
+	m_SpotLightShadowMapPipeline = shade::RenderPipeline::Create<shade::SpotLightShadowMapPipeline>();
 }
 
 void EditorLayer::OnUpdate(const shade::Shared<shade::Scene>& scene, const shade::Timer& deltaTime)
 {
+
+	m_SubmitedPointLightSources = 0;
+	m_SubmitedMeshCount			= 0;
+	m_MeshesInsidePointLight    = 0;
+
 	/* Set curret camera */
 	if (scene->IsPlaying())
 	{
@@ -82,7 +89,30 @@ void EditorLayer::OnUpdate(const shade::Shared<shade::Scene>& scene, const shade
 			shade::Render::SubmitPipelineInstanced(m_CameraFrustumPipeline, m_Box, nullptr, glm::inverse(camera->GetViewProjection()));
 		});
 
-	m_SubmitedMeshCount = 0;
+
+	/* Light */
+	scene->GetEntities().view<shade::DirectLightComponent, shade::Transform3DComponent>().each([&](auto& entity, shade::DirectLightComponent& source, shade::Transform3DComponent& transform)
+		{
+			shade::Render::SubmitLight(source, scene->ComputePCTransform(entity));
+		});
+	scene->GetEntities().view<shade::PointLightComponent, shade::Transform3DComponent>().each([&](auto& entity, shade::PointLightComponent& source, shade::Transform3DComponent& transform)
+		{
+			auto cpcTransform  = scene->ComputePCTransform(entity);
+			glm::vec3 position = cpcTransform[3];
+			if (frustum.IsInFrustum(position, source->GetDistance()))
+			{
+				shade::Render::SubmitLight(source, cpcTransform);
+				shade::Render::SubmitPipelineInstanced(m_AABBPipeline, shade::Box::Create(glm::vec3(-source->GetDistance()), glm::vec3(source->GetDistance())), nullptr, cpcTransform);
+				m_SubmitedPointLightSources++;
+			}
+		});
+	scene->GetEntities().view<shade::SpotLightComponent, shade::Transform3DComponent>().each([&](auto& entity, shade::SpotLightComponent& source, shade::Transform3DComponent& transform)
+		{
+			shade::Render::SubmitLight(source, scene->ComputePCTransform(entity));
+			shade::Render::SubmitPipelineInstanced(m_CameraFrustumPipeline, m_Box, nullptr, (transform.GetModelMatrix()));
+		});
+
+
 
 	scene->GetEntities().view<shade::Model3DComponent, shade::Transform3DComponent>().each([&](auto& entity, shade::Model3DComponent& model, shade::Transform3DComponent& transform)
 		{
@@ -90,10 +120,23 @@ void EditorLayer::OnUpdate(const shade::Shared<shade::Scene>& scene, const shade
 			{
 				auto cpcTransform = scene->ComputePCTransform(entity);
 				/* Shadow pass outside of frustum*/
-				shade::Render::SubmitPipelineInstanced(m_ShadowMapPipeline, mesh, mesh->GetMaterial(), cpcTransform);
+				shade::Render::SubmitPipelineInstanced(m_DirectLightShadowMapPipeline, mesh, mesh->GetMaterial(), cpcTransform);
+				auto& points = shade::Render::GetSubmitedLight().PointLightSources;
+				for (auto& light : points)
+				{
+					if (shade::PointLight::IsInside(light.Position, light.Distance, cpcTransform, mesh->GetMinHalfExt(), mesh->GetMaxHalfExt()))
+					{
+						shade::Render::SubmitPipelineInstanced(m_PointLightShadowMapPipeline, mesh, mesh->GetMaterial(), cpcTransform);
+						m_MeshesInsidePointLight++;
+						break;
+					}
+				}
+			
+				//shade::Render::SubmitPipelineInstanced(m_SpotLightShadowMapPipeline, mesh, mesh->GetMaterial(), cpcTransform);
 
 				if (frustum.IsInFrustum(cpcTransform, mesh->GetMinHalfExt(), mesh->GetMaxHalfExt()))
 				{
+
 					shade::Render::SubmitPipelineInstanced(m_InstancedPipeline, mesh, mesh->GetMaterial(), cpcTransform);
 					if(m_IsShowAABB)
 						shade::Render::SubmitPipelineInstanced(m_AABBPipeline, shade::Box::Create(mesh->GetMinHalfExt(), mesh->GetMaxHalfExt()), nullptr, cpcTransform);
@@ -102,21 +145,7 @@ void EditorLayer::OnUpdate(const shade::Shared<shade::Scene>& scene, const shade
 			}
 		});
 
-	/* Light */
-	scene->GetEntities().view<shade::DirectLightComponent, shade::Transform3DComponent>().each([&](auto& entity, shade::DirectLightComponent& enviroment, shade::Transform3DComponent& transform)
-		{
-			shade::Render::SubmitLight(enviroment, scene->ComputePCTransform(entity));
-		});
-	scene->GetEntities().view<shade::PointLightComponent, shade::Transform3DComponent>().each([&](auto& entity, shade::PointLightComponent& enviroment, shade::Transform3DComponent& transform)
-		{
-			shade::Render::SubmitLight(enviroment, scene->ComputePCTransform(entity));
-			
-		});
-	scene->GetEntities().view<shade::SpotLightComponent, shade::Transform3DComponent>().each([&](auto& entity, shade::SpotLightComponent& enviroment, shade::Transform3DComponent& transform)
-		{
-			shade::Render::SubmitLight(enviroment, scene->ComputePCTransform(entity));
-			shade::Render::SubmitPipelineInstanced(m_CameraFrustumPipeline, m_Box, nullptr, (transform.GetModelMatrix()));
-		});
+	
 }
 
 void EditorLayer::OnRender(const shade::Shared<shade::Scene>& scene, const shade::Timer& deltaTime)
@@ -155,7 +184,10 @@ void EditorLayer::OnRender(const shade::Shared<shade::Scene>& scene, const shade
 		m_FrameBuffer->Clear(shade::AttacmentClearFlag::Color | shade::AttacmentClearFlag::Depth | shade::AttacmentClearFlag::Stensil);
 		shade::Render::Begin();
 			shade::Render::BeginScene(m_Camera, m_FrameBuffer);
-				shade::Render::ExecuteSubmitedPipeline(m_ShadowMapPipeline);
+				shade::Render::ExecuteSubmitedPipeline(m_DirectLightShadowMapPipeline);
+				shade::Render::ExecuteSubmitedPipeline(m_PointLightShadowMapPipeline);
+				shade::Render::ExecuteSubmitedPipeline(m_SpotLightShadowMapPipeline);
+
 				shade::Render::ExecuteSubmitedPipeline(m_InstancedPipeline);
 				shade::Render::ExecuteSubmitedPipeline(m_AABBPipeline);
 				//shade::Render::ExecuteSubmitedPipeline(m_CameraFrustumPipeline);
@@ -521,7 +553,9 @@ void EditorLayer::ScenePlayStop(const shade::Shared<shade::Scene>& scene)
 	ImGuiIO& io = ImGui::GetIO();
 	ImGui::SameLine(ImGui::GetContentRegionAvailWidth() - ImGui::CalcItemWidth() - 15);
 	ImGui::Text("Application average %.1f ms/frame (%.0f FPS)", 1000.0f / io.Framerate, io.Framerate);
-	ImGui::Text("Submited meshes [%d]", m_SubmitedMeshCount);
+	ImGui::Text("Submited meshes [%d]", m_SubmitedMeshCount); 
+	ImGui::SameLine(); ImGui::Text("Point lights [%d]", m_SubmitedPointLightSources);
+	ImGui::SameLine(); ImGui::Text("Meshes inside point light [%d]", m_MeshesInsidePointLight);
 }
 
 void EditorLayer::Scene(const shade::Shared<shade::Scene>& scene)
@@ -971,9 +1005,6 @@ void EditorLayer::Render()
 		ImGui::Checkbox("Spot shadows",   &sShadowsCast);
 		ImGui::Checkbox("Point shadows",  &pShadowsCast);
 
-		m_ShadowMapPipeline->SetDirectLightShadowCast(dShadowsCast);
-		m_ShadowMapPipeline->SetSpotLightShadowCast(sShadowsCast);
-		m_ShadowMapPipeline->SetPointLightShadowCast(pShadowsCast);
 		ImGui::TreePop();
 	}
 

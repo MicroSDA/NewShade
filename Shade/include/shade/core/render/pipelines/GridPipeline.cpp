@@ -16,7 +16,8 @@ shade::Shared<shade::FrameBuffer> shade::GridPipeline::Process(const shade::Shar
 	{
 		for (auto& [material, transforms] : materials.Materials)
 		{
-			drawData[instance].TBO->Resize(sizeof(glm::mat4) * transforms.size());
+			if (drawData[instance].TBO->GetSize() != sizeof(glm::mat4) * transforms.size())
+				drawData[instance].TBO->Resize(sizeof(glm::mat4) * transforms.size());
 			drawData[instance].TBO->SetData(transforms.data(), sizeof(glm::mat4) * transforms.size(), 0);
 
 			Render::GetRenderApi()->DrawInstanced(instance->GetDrawMode(), drawData[instance].VAO, drawData[instance].IBO, transforms.size());
