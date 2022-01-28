@@ -8,6 +8,7 @@
 #include <shade/core/render/pipelines/DirectLightShadowMapPipeline.h>
 #include <shade/core/render/pipelines/PointLightShadowMapPipeline.h>
 #include <shade/core/render/pipelines/SpotLightShadowMapPipeline.h>
+#include <shade/core/render/pipelines/SpherePipeline.h>
 
 class EditorLayer : public shade::ImGuiLayer
 {
@@ -51,6 +52,7 @@ private:
 	shade::Shared<shade::DirectLightShadowMapPipeline>	m_DirectLightShadowMapPipeline;
 	shade::Shared<shade::PointLightShadowMapPipeline>	m_PointLightShadowMapPipeline;
 	shade::Shared<shade::SpotLightShadowMapPipeline>	m_SpotLightShadowMapPipeline;
+	shade::Shared<shade::SpherePipeline>				m_SpherePipeline;
 
 	/* Post process */
 	shade::Shared<shade::PPBloom> m_PPBloom;

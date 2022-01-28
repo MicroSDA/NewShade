@@ -53,7 +53,7 @@ shade::Shared<shade::FrameBuffer> shade::PointLightShadowMapPipeline::Process(co
 			/* Render */
 			m_Shader->Bind();
 			m_ShadowFrameBuffer->Clear(AttacmentClearFlag::Depth);
-			Render::GetRenderApi()->Enable(0x864F); // DEPTH_CLAMP
+			//Render::GetRenderApi()->Enable(0x864F); // DEPTH_CLAMP
 			for (auto& [instance, materials] : drawables.Drawables)
 			{
 				for (auto& [material, transforms] : materials.Materials)
@@ -65,7 +65,7 @@ shade::Shared<shade::FrameBuffer> shade::PointLightShadowMapPipeline::Process(co
 					Render::GetRenderApi()->DrawInstanced(Drawable::DrawMode::Triangles, drawData[instance].VAO, drawData[instance].IBO, transforms.size());
 				}
 			}
-			Render::GetRenderApi()->Disable(0x864F); // DEPTH_CLAMP
+			//Render::GetRenderApi()->Disable(0x864F); // DEPTH_CLAMP
 
 			/* Bind shadow map as texture */
 			m_ShadowFrameBuffer->BindDepthAsTexture(5);
@@ -96,4 +96,13 @@ shade::PointLightShadowMapPipeline::PointLightCascade shade::PointLightShadowMap
 const shade::Shared<shade::FrameBuffer>& shade::PointLightShadowMapPipeline::GetResult() const
 {
 	return nullptr;
+}
+
+void shade::PointLightShadowMapPipeline::SetMultiplier(const float& multiplier)
+{
+	m_ShadowMapMultiplier = multiplier;
+	auto layout = m_ShadowFrameBuffer->GetLayout();
+	layout.Width  = 1024 * m_ShadowMapMultiplier;
+	layout.Height = 1024 * m_ShadowMapMultiplier;
+	m_ShadowFrameBuffer = shade::FrameBuffer::Create(layout);
 }

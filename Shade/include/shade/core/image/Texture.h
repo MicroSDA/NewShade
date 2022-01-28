@@ -16,6 +16,8 @@ namespace shade
 		virtual void Bind(std::uint32_t binding = 0) const = 0;
 		virtual std::uint32_t GetRenderID() = 0;
 		const ImageData& GetImageData() const;
+		virtual void SetLoadBias(const float& bias) = 0;
+		const float& GetLoadBias() const;
 		ImageData& GetImageData();
 		virtual bool Serialize(std::ostream& stream) const override;
 		virtual bool Deserialize(std::istream& stream) override;
@@ -23,6 +25,7 @@ namespace shade
 		virtual bool Deserialize() override;
 	protected:
 		ImageData m_ImageData;
+		float     m_LoadBias = 0.0f;
 	private:
 		// Asset loading behaviour
 		virtual void LoadDependentAssetsCallback(const shade::AssetData& data, const std::string& id) override;

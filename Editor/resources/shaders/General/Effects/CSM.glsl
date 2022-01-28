@@ -17,6 +17,13 @@ vec2 PoissonDisk[16] = vec2[](
 	vec2(0.19984126, 0.78641367),
 	vec2(0.14383161, -0.14100790)
 );
+ vec3 SampleOffsetDirections[20] = vec3[](
+      vec3( 1, 1, 1), vec3( 1, -1, 1), vec3(-1, -1, 1), vec3(-1, 1, 1),
+      vec3( 1, 1, -1), vec3( 1, -1, -1), vec3(-1, -1, -1), vec3(-1, 1, -1),
+      vec3( 1, 1, 0), vec3( 1, -1, 0), vec3(-1, -1, 0), vec3(-1, 1, 0),
+      vec3( 1, 0, 1), vec3(-1, 0, 1), vec3( 1, 0, -1), vec3(-1, 0, -1),
+      vec3( 0, 1, 1), vec3( 0, -1, 1), vec3( 0, -1, -1), vec3( 0, 1, -1) 
+);
 
 bool ShadowInRange(float value)
 {
@@ -72,13 +79,12 @@ float Variance_PointLight(samplerCubeArray ShadowMap, vec3 ProjectionCoords, flo
     const int   SamplesCount = 16;
     float       Value        = 0.0;
     vec2        TexelSize    = 1.0 / vec2(textureSize(ShadowMap, 0));
-    int         Poisson      = 0;
     for(int i = 0; i < SamplesCount; i++)
     {
-        float  _Depth = texture(ShadowMap,    vec4(vec3(ProjectionCoords.xy + vec2(PoissonDisk[i] * TexelSize * Depth), ProjectionCoords.z), CascadeLayer)).r * Distance;
+        float  _Depth = texture(ShadowMap,    vec4(vec3(ProjectionCoords + (SampleOffsetDirections[i] * vec3(TexelSize, 0.001) * Depth)), CascadeLayer)).r * Distance;
         Value += Depth - clamp(_Depth, 0.0, 1.0) >= _Depth ? 1.0 : 0.0;  
     }
-    Value /= SamplesCount;
+    Value /= float(SamplesCount);
     return 1.0 - Value;
 }
 
@@ -139,6 +145,8 @@ float SM_PointLight(samplerCubeArray ShadowMap, int CascadeLayer, vec3 FragPosWo
     float CurentDepth      = length(FragPosLightSpace);
     if(CurentDepth <= 0.0 || CurentDepth > Distance)
         return 0.0;
+    // float LightDistance = length(in_FragmentPosition - in_LightPosition);
+    // gl_FragDepth = LightDistance / in_Distance;
 
     return Variance_PointLight(ShadowMap, ProjectionCoords, CurentDepth, Distance, CascadeLayer);
 }

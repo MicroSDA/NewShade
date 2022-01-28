@@ -36,7 +36,8 @@ vec4 BilinPhongPointLight(vec3 normal, PointLight light, Material material, vec3
 	directLight.Intensity 		= light.Intensity;
   	//----------------------------------------------
 	float attenuation  = clamp(1.0 - (distanceBetween * distanceBetween) / (light.Distance * light.Distance), 0.0, 1.0);
-	attenuation       *= mix(attenuation, 1.0, light.Falloff);
+	attenuation       *= mix(attenuation, 1.0, light.Falloff );
+	//attenuation        = attenuation * light.Falloff;
 	
 	vec4   totalColor = BilinPhongDirectLight(normal, directLight, material, toCameraDirection, diffuseTexture, specularTexture, Shadow);
 	return totalColor * attenuation;

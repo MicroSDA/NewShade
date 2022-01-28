@@ -67,7 +67,7 @@ void shade::OpenGLTexture::_Init()
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 		/* Downscaling value = when higer then low resolution mipmap grows faster*/
-		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_LOD_BIAS,   0.0f); /* When mipmapin will start*/
+		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_LOD_BIAS,   m_LoadBias); /* When mipmapin will start*/
 
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
@@ -99,4 +99,11 @@ void shade::OpenGLTexture::_Init()
 		m_ImageData.Delete();
 		m_IsInit = true;
 	}
+}
+
+void shade::OpenGLTexture::SetLoadBias(const float& bias)
+{
+	m_LoadBias = bias;
+	glBindTexture(GL_TEXTURE_2D, m_RenderID);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_LOD_BIAS, m_LoadBias);
 }

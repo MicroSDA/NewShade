@@ -18,8 +18,9 @@ void main()
 #type fragment
 #version 460 core
 layout (location = 0) out vec4 FrameBuffer;
+
 void main()
 {
-	gl_FragDepth =0;
-	FrameBuffer = vec4(0.3, 0.7, 0.3, 1.0);
+	//gl_FragDepth = 0;
+	FrameBuffer = vec4(0.8, 0.6, 0.2, 0.8);
 }

@@ -8,3 +8,12 @@ shade::Vertex3D::Vertex3D() :
 	Tangent(glm::vec3(0, 0, 0))
 {
 }
+
+shade::Vertex3D::Vertex3D(const glm::vec3& position):
+	Position(position),
+	UV_Coordinates(glm::vec2(0, 0)),
+	Normal(glm::vec3(0, 0, 0)),
+	Tangent(glm::vec3(0, 0, 0))
+{
+
+}

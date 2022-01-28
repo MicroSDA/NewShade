@@ -41,6 +41,13 @@ namespace shade
 		template<typename T>
 		static void HoldPrefab(const std::string& id, PostLoadCallback callback, const Asset::Lifetime& lifeTime = Asset::Lifetime::Destroy);
 
+		template<typename T>
+		static Shared<T>& GetAsset(const std::string& id)
+		{
+			auto& instance = _Get();
+			return Receive<T>(std::get<1>(instance.m_AssetReferences[id].Reference));
+		}
+
 		// For casting asset
 		template<typename T>
 		static auto Receive(shade::Shared<shade::Asset>& asset)->auto;

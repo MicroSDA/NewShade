@@ -203,21 +203,19 @@ vec4 BillinPhong(vec3 toCameraDirection)
 				/* Calc point light */
 				Color 		+= BilinPhongPointLight(TBN_Normal, u_PointLight[i],   u_Material, a_Vertex, toCameraDirection, texture(u_TDiffuse, a_UV_Coordinates).rgba, texture(u_TSpecular, a_UV_Coordinates).rgba, Shadow);
 			}
-			else
-			{
-				//discard;
-			}
-		
 		}
 	}	
 	for(int i = 0; i < u_SpotLight.length();  i++)
 	{
 		if(u_SpotLight[i].Intensity > 0.0)
 		{
-			/* Calc shadows */
-			float Shadow  = SM_SpotLight(u_TSpotLightShadowMap, u_SpotLightCascade[i].ViewMatrix, i, u_Camera.View, a_Vertex,a_Normal, u_SpotLight[i].Direction);
-			/* Calc spot light */
-			Color 		 += BilinPhongSpotLight(TBN_Normal, u_SpotLight[i],  u_Material, a_Vertex, toCameraDirection, texture(u_TDiffuse, a_UV_Coordinates).rgba, texture(u_TSpecular, a_UV_Coordinates).rgba, Shadow);
+			if(distance(a_Vertex, u_SpotLight[i].Position) <= u_SpotLight[i].Distance)
+			{
+				/* Calc shadows */
+				float Shadow  = SM_SpotLight(u_TSpotLightShadowMap, u_SpotLightCascade[i].ViewMatrix, i, u_Camera.View, a_Vertex,a_Normal, u_SpotLight[i].Direction);
+				/* Calc spot light */
+				Color 		 += BilinPhongSpotLight(TBN_Normal, u_SpotLight[i],  u_Material, a_Vertex, toCameraDirection, texture(u_TDiffuse, a_UV_Coordinates).rgba, texture(u_TSpecular, a_UV_Coordinates).rgba, Shadow);
+			}
 		}
 	}
 	return Color;	

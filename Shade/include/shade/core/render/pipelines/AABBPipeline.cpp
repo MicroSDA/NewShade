@@ -22,7 +22,6 @@ shade::Shared<shade::FrameBuffer> shade::AABBPipeline::Process(const shade::Shar
 		}
 	}
 	return target;
-
 }
 
 const shade::Shared<shade::FrameBuffer>& shade::AABBPipeline::GetResult() const

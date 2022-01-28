@@ -56,6 +56,7 @@ void EditorLayer::OnCreate()
 	m_DirectLightShadowMapPipeline	= shade::RenderPipeline::Create<shade::DirectLightShadowMapPipeline>();
 	m_PointLightShadowMapPipeline = shade::RenderPipeline::Create<shade::PointLightShadowMapPipeline>();
 	m_SpotLightShadowMapPipeline = shade::RenderPipeline::Create<shade::SpotLightShadowMapPipeline>();
+	m_SpherePipeline = shade::RenderPipeline::Create<shade::SpherePipeline>();
 }
 
 void EditorLayer::OnUpdate(const shade::Shared<shade::Scene>& scene, const shade::Timer& deltaTime)
@@ -98,11 +99,11 @@ void EditorLayer::OnUpdate(const shade::Shared<shade::Scene>& scene, const shade
 	scene->GetEntities().view<shade::PointLightComponent, shade::Transform3DComponent>().each([&](auto& entity, shade::PointLightComponent& source, shade::Transform3DComponent& transform)
 		{
 			auto cpcTransform  = scene->ComputePCTransform(entity);
-			glm::vec3 position = cpcTransform[3];
+			glm::vec3 position(cpcTransform[3].x, cpcTransform[3].y, cpcTransform[3].z);
 			if (frustum.IsInFrustum(position, source->GetDistance()))
 			{
 				shade::Render::SubmitLight(source, cpcTransform);
-				shade::Render::SubmitPipelineInstanced(m_AABBPipeline, shade::Box::Create(glm::vec3(-source->GetDistance()), glm::vec3(source->GetDistance())), nullptr, cpcTransform);
+				shade::Render::SubmitPipelineInstanced(m_SpherePipeline, shade::Sphere::Create(source->GetDistance(), 100.0f, 10.0f), nullptr, cpcTransform);
 				m_SubmitedPointLightSources++;
 			}
 		});
@@ -121,6 +122,8 @@ void EditorLayer::OnUpdate(const shade::Shared<shade::Scene>& scene, const shade
 				auto cpcTransform = scene->ComputePCTransform(entity);
 				/* Shadow pass outside of frustum*/
 				shade::Render::SubmitPipelineInstanced(m_DirectLightShadowMapPipeline, mesh, mesh->GetMaterial(), cpcTransform);
+				shade::Render::SubmitPipelineInstanced(m_SpotLightShadowMapPipeline, mesh, mesh->GetMaterial(), cpcTransform);
+
 				auto& points = shade::Render::GetSubmitedLight().PointLightSources;
 				for (auto& light : points)
 				{
@@ -190,7 +193,7 @@ void EditorLayer::OnRender(const shade::Shared<shade::Scene>& scene, const shade
 
 				shade::Render::ExecuteSubmitedPipeline(m_InstancedPipeline);
 				shade::Render::ExecuteSubmitedPipeline(m_AABBPipeline);
-				//shade::Render::ExecuteSubmitedPipeline(m_CameraFrustumPipeline);
+				shade::Render::ExecuteSubmitedPipeline(m_SpherePipeline);
 
 				if (m_isBloomEnabled)
 					shade::Render::PProcess::Process(m_PPBloom);
@@ -976,6 +979,13 @@ void EditorLayer::Model3dComponent(shade::Entity& entity)
 
 void EditorLayer::Render()
 {
+
+	static float multiplier = 1.0f;
+	if (DrawFlaot("Bias", &multiplier))
+	{
+		m_PointLightShadowMapPipeline->SetMultiplier(multiplier);
+	}
+
 	if (ImGui::TreeNodeEx("Bloom", ImGuiTreeNodeFlags_Framed))
 	{
 

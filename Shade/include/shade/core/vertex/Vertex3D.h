@@ -10,6 +10,7 @@ namespace shade
 	{
 	public:
 		Vertex3D();
+		Vertex3D(const glm::vec3& position);
 		glm::vec3 Position;
 		glm::vec2 UV_Coordinates;
 		glm::vec3 Normal;

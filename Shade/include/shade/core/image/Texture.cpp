@@ -88,6 +88,11 @@ const shade::ImageData& shade::Texture::GetImageData() const
 	return m_ImageData;
 }
 
+const float& shade::Texture::GetLoadBias() const
+{
+	return m_LoadBias;
+}
+
 shade::ImageData& shade::Texture::GetImageData()
 {
 	return const_cast<ImageData&>(const_cast<const Texture*>(this)->GetImageData());

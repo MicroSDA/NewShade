@@ -51,7 +51,8 @@ out vec4 FragColor;
 
 void main()
 {
-    float depthValue = texture(u_TShadowMap, vec2(0.0,0.0)).r;
+	//gl_FragDepth = 1;
+   // float depthValue = texture(u_TShadowMap, vec2(0.0, 0.0)).r;
     //FragColor = vec4(vec3(LinearizeDepth(depthValue) / 1000), 1.0); // perspective
     // TODO: check alpha for shadow !
 }
