@@ -15,6 +15,7 @@ shade::AssetData::AssetData():
 shade::AssetData::AssetData(pugi::xml_node data):
     m_AssetData(data), m_IsValid(true)
 {
+
 }
 
 void shade::AssetData::Append(AssetData& data)
@@ -27,6 +28,11 @@ void shade::AssetData::Append(AssetData& data)
     data = m_AssetData.child("dependencies").append_copy(data._Raw());
 }
 
+void shade::AssetData::Remove(AssetData& data)
+{
+    _Raw().child("dependencies").remove_child(data._Raw());
+}
+
 const bool& shade::AssetData::IsValid() const
 {
     return m_IsValid;
@@ -34,14 +40,12 @@ const bool& shade::AssetData::IsValid() const
 
 shade::AssetData shade::AssetData::Parent()
 {
-    return AssetData();
+    return AssetData(_Raw().parent().parent());
 }
 
 std::vector<shade::AssetData> shade::AssetData::Dependencies() const
 {
     std::vector<AssetData> dependencies;
-    //dependencies.reserve(m_AssetData.child("dependencies").attribute("count").as_int());
-    // &dependency ?
     if (!m_AssetData.child("dependencies").empty())
     {
         for (auto dependency : m_AssetData.child("dependencies").children())
@@ -75,7 +79,8 @@ bool shade::AssetData::Deserialize(std::istream& stream)
 
 bool shade::AssetData::Serialize() const
 {
-    std::string path = Attribute("Path").as_string();
+    std::filesystem::path id   = Attribute("Id").as_string();
+    std::filesystem::path path = Attribute("Path").as_string();
 
     if (path.empty())
     {
@@ -83,8 +88,7 @@ bool shade::AssetData::Serialize() const
         return false;
     }
 
-    path = path + Attribute("Id").as_string();
-    path += ".xml";
+    path = path.remove_filename().string() + Attribute("Id").as_string() + ".xml";
     pugi::xml_document file;
     file.append_copy(_Raw());
     file.save_file(path.c_str());

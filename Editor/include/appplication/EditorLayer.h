@@ -67,10 +67,12 @@ private:
 	bool m_IsShowGrid		= true;
 	bool m_IsShowFrustum	= false;
 	bool m_IsShowAABB		= false;
+	bool m_IsImportModleModalOpend = false;
 	/* Relocate to renderer */
-	unsigned int m_SubmitedMeshCount = 0;
+	unsigned int m_SubmitedMeshCount		 = 0;
 	unsigned int m_SubmitedPointLightSources = 0;
-	unsigned int m_MeshesInsidePointLight = 0;
+	unsigned int m_MeshesInsidePointLight	 = 0;
+	unsigned int m_TrianglesInScene		     = 0;
 
 	shade::Shared<shade::Grid>   m_Grid;
 	shade::Shared<shade::Box>    m_Box;
@@ -84,7 +86,7 @@ private:
 
 
 	void MainMenu(const shade::Shared<shade::Scene>& scene);
-	void AssetsExplorer(shade::AssetManager::AssetsDataList& data);
+	void AssetsExplorer(shade::AssetManager::AssetsDataList& data, shade::AssetManager::AssetsDataList& prefabs);
 	void FileExplorer(const std::string& rootPath);
 	void Entities(shade::Scene* scene);
 	void EntitiesList(const char* search, shade::Scene* scene);
@@ -94,6 +96,8 @@ private:
 	void Scene(const shade::Shared<shade::Scene>& scene);
 	void TagComponent(shade::Entity& entity);
 	void Transform3DComponent(shade::Entity& entity);
+	void AssetEdit(shade::AssetData& asset);
+	void PrefabEdit(std::string& prefabId, shade::AssetData& asset);
 	//void EnvironmentComponent(shade::Entity& entity);
 
 	void DirectLightComponent(shade::Entity& entity);
@@ -102,10 +106,11 @@ private:
 	void CameraComponent(shade::Entity& entity);
 
 	void Model3dComponent(shade::Entity& entity);
-	void AssetDataExpader(shade::AssetData& data);
+	void AssetDataExpander(shade::AssetData& data);
 	void LogsExplorer();
 	void Render();
 	void ShadersLibrary();
+	void Materials(const shade::Shared<shade::Material3D>& mateial);
 	void Material(const shade::Shared<shade::Material3D>& mateial);
 	void Model3D(const shade::Shared<shade::Model3D>& model);
 	void Mesh(const shade::Shared<shade::Mesh>& mesh);

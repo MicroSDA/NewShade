@@ -48,7 +48,35 @@ namespace shade
 		bool RemoveComponent(Entity& entity, bool isOpen);
 		template<typename Callback, typename ...Args>
 		bool InputText(const char* title, char* buffer, std::size_t buffer_size, Callback callback, Args&& ...args);
-		bool InputText(const char* title, char* buffer, std::size_t buffer_size);
+		bool InputText(const char* title, char* buffer, std::size_t buffer_size, const float& size = 0.0f);
+		bool InputText(const char* title, const char* id, std::string& str, const float& size = 0.0f);
+		bool InputTextCol(const char* title, const char* id, std::string& str, const float& cw1 = 0.0f, const float& cw2 = 0.0);
+
+		template<typename Callback>
+		void DrawModal(const char* name, bool& isOpen, Callback callback)
+		{
+			if(isOpen)
+			{
+				ImGui::OpenPopup(name);
+				ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+				ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+				//ImGui::SetNextWindowSize({ 0, ImGui::GetWindowContentRegionMax().y / 2 });
+				if (ImGui::BeginPopupModal(name, NULL, ImGuiWindowFlags_MenuBar|ImGuiWindowFlags_AlwaysAutoResize))
+				{
+					std::invoke(callback);
+					
+
+					ImGui::SameLine();
+					if (ImGui::Button("Close"))
+					{
+						ImGui::CloseCurrentPopup();
+						isOpen = false;
+					}
+
+					ImGui::EndPopup();
+				}
+			}
+		}
 		void FpsOverlay(ImGuiViewport* viewport);
 		void DrawImage(const std::uint32_t& renderId, const float& width, const float& height, const bool& tooltip = false);
 		bool DrawVec3F(const char* title, float* data, const float& resetValue = 0.0f, const float& min = -FLT_MAX, const float& max = FLT_MAX, const float& colw1 = 80.0f);

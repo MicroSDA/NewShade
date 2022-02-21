@@ -1,0 +1,114 @@
+<?xml version="1.0"?>
+<assets>
+	<prefab Id="Cube" Description="Cube asset" Category="Primary" Type="Model3D" Path="resources/assets/Cube/Cube.xml">
+		<dependencies />
+	</prefab>
+	<prefab Id="Nanosuit" Description="" Category="Primary" Type="Model3D" path="resources/assets/nanosuit/nantosuit.xml">
+		<dependencies>
+			<prefab Id="Nanosuit.Body.Mesh" Asset="Nanosuit.Body.Mesh" Type="Mesh">
+				<dependencies>
+					<prefab Id="Nanosuit.Body.Material" Asset="Nanosuit.Body.Material" Type="Material">
+						<dependencies>
+							<asset Id="Nanosuit.Body.Diffuse" />
+							<asset Id="Nanosuit.Body.Specular" />
+							<asset Id="Nanosuit.Body.Normal" />
+						</dependencies>
+					</prefab>
+				</dependencies>
+			</prefab>
+			<prefab Id="Nanosuit.Arms.Mesh" Asset="Nanosuit.Arms.Mesh" Type="Mesh">
+				<dependencies>
+					<prefab Id="Nanosuit.Arms.Material" Asset="Nanosuit.Arms.Material" Type="Material">
+						<dependencies>
+							<asset Id="Nanosuit.Arms.Diffuse" />
+							<asset Id="Nanosuit.Arms.Specular" />
+							<asset Id="Nanosuit.Arms.Normal" />
+						</dependencies>
+					</prefab>
+				</dependencies>
+			</prefab>
+			<prefab Id="Nanosuit.Legs.Mesh" Asset="Nanosuit.Legs.Mesh" Type="Mesh">
+				<dependencies>
+					<prefab Id="Nanosuit.Legs.Material" Asset="Nanosuit.Legs.Material" Type="Material">
+						<dependencies>
+							<asset Id="Nanosuit.Legs.Diffuse" />
+							<asset Id="Nanosuit.Legs.Specular" />
+							<asset Id="Nanosuit.Legs.Normal" />
+						</dependencies>
+					</prefab>
+				</dependencies>
+			</prefab>
+			<prefab Id="Nanosuit.Helmet.Mesh" Asset="Nanosuit.Helmet.Mesh" Type="Mesh">
+				<dependencies>
+					<prefab Id="Nanosuit.Helmet.Material" Asset="Nanosuit.Helmet.Material" Type="Material">
+						<dependencies>
+							<asset Id="Nanosuit.Helmet.Diffuse" />
+							<asset Id="Nanosuit.Helmet.Specular" />
+							<asset Id="Nanosuit.Helmet.Normal" />
+						</dependencies>
+					</prefab>
+				</dependencies>
+			</prefab>
+			<prefab Id="Nanosuit.Hands.Mesh" Asset="Nanosuit.Hands.Mesh" Type="Mesh">
+				<dependencies>
+					<prefab Id="Nanosuit.Hands.Material" Asset="Nanosuit.Hands.Material" Type="Material">
+						<dependencies>
+							<asset Id="Nanosuit.Hands.Diffuse" />
+							<asset Id="Nanosuit.Hands.Specular" />
+							<asset Id="Nanosuit.Hands.Normal" />
+						</dependencies>
+					</prefab>
+				</dependencies>
+			</prefab>
+			<prefab Id="Nanosuit.Visor.Mesh" Asset="Nanosuit.Visor.Mesh" Type="Mesh">
+				<dependencies>
+					<prefab Id="Nanosuit.Visor.Material" Asset="Nanosuit.Visor.Material" Type="Material">
+						<dependencies>
+							<asset Id="Nanosuit.Visor.Diffuse" />
+							<asset Id="Nanosuit.Visor.Specular" />
+							<asset Id="Nanosuit.Visor.Normal" />
+						</dependencies>
+					</prefab>
+				</dependencies>
+			</prefab>
+		</dependencies>
+	</prefab>
+	<asset Id="Cube.Mesh" Category="Secondary" Type="Mesh" Path="resources/assets/Cube/Cube.Mesh.s_mesh" />
+	<asset Id="Cube.Material" Category="Secondary" Type="Material" Path="resources/assets/Cube/Cube.Materail.s_mat" />
+	<asset Id="Cube.Mesh.Diffuse" Category="Secondary" Type="Texture" TextureType="Diffuse" Path="resources/assets/Cube/Cube.Mesh.Diffuse.dds" />
+	<asset Id="Cube.Mesh.Specular" Category="Secondary" Type="Texture" TextureType="Specular" Path="resources/assets/Cube/Cube.Mesh.Specular.dds" />
+	<asset Id="Cube.Mesh.Normal" Category="Secondary" Type="Texture" TextureType="Normal" Path="resources/assets/Cube/Cube.Mesh.Normal.dds" />
+	<asset Id="Nanosuit.Body.Mesh" Category="Secondary" Type="Mesh" Path="resources/assets/nanosuit/Body.s_mesh" />
+	<asset Id="Nanosuit.Body.Material" Category="Secondary" Type="Material" Path="resources/assets/nanosuit/Nanosuit.Body.Material.s_mat" />
+	<asset Id="Nanosuit.Body.Diffuse" Category="Secondary" Type="Texture" TextureType="Diffuse" Path="resources/assets/nanosuit/body_dif.dds" />
+	<asset Id="Nanosuit.Body.Specular" Category="Secondary" Type="Texture" TextureType="Specular" Path="resources/assets/nanosuit/body_showroom_spec.dds" />
+	<asset Id="Nanosuit.Body.Normal" Category="Secondary" Type="Texture" TextureType="Normal" Path="resources/assets/nanosuit/body_showroom_ddn.dds" />
+	<asset Id="Nanosuit.Arms.Mesh" Category="Secondary" Type="Mesh" Path="resources/assets/nanosuit/Arms.s_mesh" />
+	<asset Id="Nanosuit.Arms.Material" Category="Secondary" Type="Material" Path="resources/assets/nanosuit/Nanosuit.Arms.Material.s_mat" />
+	<asset Id="Nanosuit.Arms.Diffuse" Category="Secondary" Type="Texture" TextureType="Diffuse" Path="resources/assets/nanosuit/arm_dif.dds" />
+	<asset Id="Nanosuit.Arms.Specular" Category="Secondary" Type="Texture" TextureType="Specular" Path="resources/assets/nanosuit/arm_showroom_spec.dds" />
+	<asset Id="Nanosuit.Arms.Normal" Category="Secondary" Type="Texture" TextureType="Normal" Path="resources/assets/nanosuit/arm_showroom_ddn.dds" />
+	<asset Id="Nanosuit.Legs.Mesh" Category="Secondary" Type="Mesh" Path="resources/assets/nanosuit/Legs.s_mesh" />
+	<asset Id="Nanosuit.Legs.Material" Category="Secondary" Type="Material" Path="resources/assets/nanosuit/Nanosuit.Legs.Material.s_mat" />
+	<asset Id="Nanosuit.Legs.Diffuse" Category="Secondary" Type="Texture" TextureType="Diffuse" Path="resources/assets/nanosuit/leg_dif.dds" />
+	<asset Id="Nanosuit.Legs.Specular" Category="Secondary" Type="Texture" TextureType="Specular" Path="resources/assets/nanosuit/leg_showroom_spec.dds" />
+	<asset Id="Nanosuit.Legs.Normal" Category="Secondary" Type="Texture" TextureType="Normal" Path="resources/assets/nanosuit/leg_showroom_ddn.dds" />
+	<asset Id="Nanosuit.Helmet.Mesh" Category="Secondary" Type="Mesh" Path="resources/assets/nanosuit/Helmet.s_mesh" />
+	<asset Id="Nanosuit.Helmet.Material" Category="Secondary" Type="Material" Path="resources/assets/nanosuit/Nanosuit.Helmet.Material.s_mat" />
+	<asset Id="Nanosuit.Helmet.Diffuse" Category="Secondary" Type="Texture" TextureType="Diffuse" Path="resources/assets/nanosuit/helmet_diff.dds" />
+	<asset Id="Nanosuit.Helmet.Specular" Category="Secondary" Type="Texture" TextureType="Specular" Path="resources/assets/nanosuit/helmet_showroom_spec.dds" />
+	<asset Id="Nanosuit.Helmet.Normal" Category="Secondary" Type="Texture" TextureType="Normal" Path="resources/assets/nanosuit/helmet_showroom_ddn.dds" />
+	<asset Id="Nanosuit.Hands.Mesh" Category="Secondary" Type="Mesh" Path="resources/assets/nanosuit/Hands.s_mesh" />
+	<asset Id="Nanosuit.Hands.Material" Category="Secondary" Type="Material" Path="resources/assets/nanosuit/Nanosuit.Hands.Material.s_mat" />
+	<asset Id="Nanosuit.Hands.Diffuse" Category="Secondary" Type="Texture" TextureType="Diffuse" Path="resources/assets/nanosuit/hand_dif.dds" />
+	<asset Id="Nanosuit.Hands.Specular" Category="Secondary" Type="Texture" TextureType="Specular" Path="resources/assets/nanosuit/hand_showroom_spec.dds" />
+	<asset Id="Nanosuit.Hands.Normal" Category="Secondary" Type="Texture" TextureType="Normal" Path="resources/assets/nanosuit/hand_showroom_ddn.dds" />
+	<asset Id="Nanosuit.Visor.Mesh" Category="Secondary" Type="Mesh" Path="resources/assets/nanosuit/Visor.s_mesh" />
+	<asset Id="Nanosuit.Visor.Material" Category="Secondary" Type="Material" Path="resources/assets/nanosuit/Nanosuit.Visor.Material.s_mat" />
+	<asset Id="Nanosuit.Visor.Diffuse" Category="Secondary" Type="Texture" TextureType="Diffuse" Path="resources/assets/nanosuit/glass_dif.dds" />
+	<asset Id="Nanosuit.Visor.Specular" Category="Secondary" Type="Texture" TextureType="Specular" Path="resources/assets/nanosuit/glass_spec.dds" />
+	<asset Id="Nanosuit.Visor.Normal" Category="Secondary" Type="Texture" TextureType="Normal" Path="resources/assets/nanosuit/glass_ddn.dds" />
+	<asset Id="Floor.Diffuse" Category="Secondary" Type="Texture" TextureType="Diffuse" Path="resources/assets/textures/FloorDiffuse.dds" />
+	<asset Id="Floor.Specular" Category="Secondary" Type="Texture" TextureType="Specular" Path="resources/assets/textures/FloorSpecular.dds" />
+	<asset Id="Floor.Normal" Category="Secondary" Type="Texture" TextureType="Normal" Path="resources/assets/textures/FloorNormal.dds" />
+</assets>

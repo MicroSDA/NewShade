@@ -9,8 +9,11 @@ shade::Asset::Asset()
 
 shade::Asset::~Asset()
 {
-    shade::AssetManager::_ImLast(m_AssetData.Attribute("Id").as_string(), m_IsPrefab);
-    SHADE_CORE_DEBUG("Asset '{0}' has been deleted.", m_AssetData.Attribute("Id").as_string())
+	if (m_AssetData.IsValid())
+	{
+		shade::AssetManager::_ImLast(m_AssetData.Attribute("Id").as_string(), m_IsPrefab);
+		SHADE_CORE_DEBUG("Asset '{0}' has been deleted.", m_AssetData.Attribute("Id").as_string())
+	}
 }
 
 void shade::Asset::_LoadFromAssetData(shade::AssetData& data)

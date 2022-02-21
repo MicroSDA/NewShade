@@ -21,7 +21,7 @@ public:
 private:
 	void ProcessModel3DNode(const char* filePath, const aiNode* node, const aiScene* scene);
 	void ProcessModel3DMesh(const char* filePath, aiMesh* mesh, const aiScene* scene);
-	void ProcessTexture(const shade::Shared<shade::Mesh>& mesh, const std::string& filePath, aiMaterial* material, const aiTextureType& type);
-	void ProcessMaterial(const shade::Shared<shade::Mesh>& mesh, aiMaterial* material);
+	void ProcessTexture(const shade::Shared<shade::Material3D>& material, const std::string& filePath, aiMaterial* aImaterial, const aiTextureType& type);
+	void ProcessMaterial(const shade::Shared<shade::Material3D>& material, const std::string& filePath, aiMaterial* aImaterial);
 };
 

@@ -158,6 +158,10 @@ GLuint shade::OpenGLShader::CreateProgram()
 	glGetProgramStageiv(program, GL_GEOMETRY_SHADER, GL_ACTIVE_SUBROUTINE_UNIFORMS, &gS_Count);
 	glGetProgramStageiv(program, GL_COMPUTE_SHADER,  GL_ACTIVE_SUBROUTINE_UNIFORMS, &cS_Count);
 
+	/* Tessellation */
+	/*GL_TESS_CONTROL_SHADER
+	GL_TESS_EVALUATION_SHADER*/
+
 	m_VertexSubrIndices.resize(vS_Count);
 	m_FragemntSubrIndices.resize(fS_Count);
 	m_GeometrySubrIndices.resize(gS_Count);

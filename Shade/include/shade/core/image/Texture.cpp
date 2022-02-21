@@ -36,7 +36,12 @@ bool shade::Texture::Deserialize(std::istream& stream)
 
 bool shade::Texture::Serialize() const
 {
-    return false;
+	std::string id     = GetAssetData().Attribute("Id").as_string();
+	std::string path   = GetAssetData().Attribute("Path").as_string();
+	path = path + id + ".dds";
+	GetAssetData().Attribute("Path").set_value(path.c_str());
+
+    return true;
 }
 
 bool shade::Texture::Deserialize()

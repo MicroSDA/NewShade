@@ -30,6 +30,14 @@ bool shade::Model3D::Deserialize(std::istream& stream)
 
 bool shade::Model3D::Serialize() const
 {
+    for (auto& mesh : m_Meshes)
+    {
+        mesh->GetAssetData().Attribute("Path").set_value(this->GetAssetData().Attribute("Path").as_string());
+        mesh->Serialize();
+    }
+    
+    /* FROM UP TO DOWN ASSET DATA MATHCHING */
+    GetAssetData().Serialize();
     return false;
 }
 

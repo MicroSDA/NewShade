@@ -16,7 +16,7 @@ bool shade::Material3D::Serialize() const
 {
 	// Asset data serialize !
 
-	std::string id   = GetAssetData().Attribute("Id").as_string();
+	std::string id = GetAssetData().Attribute("Id").as_string();
 	std::string path = GetAssetData().Attribute("Path").as_string();
 
 	if (path.empty())
@@ -25,6 +25,30 @@ bool shade::Material3D::Serialize() const
 		return false;
 	}
 
+	if (TextureDiffuse)
+	{
+		TextureDiffuse->GetAssetData().Attribute("Path").set_value(path.c_str());
+		TextureDiffuse->Serialize();
+	}
+	if (TextureSpecular)
+	{
+		TextureSpecular->GetAssetData().Attribute("Path").set_value(path.c_str());
+		TextureSpecular->Serialize();
+	}
+	if (TextureNormals)
+	{
+		TextureNormals->GetAssetData().Attribute("Path").set_value(path.c_str());
+		TextureNormals->Serialize();
+	}
+
+	std::filesystem::path _path(path);
+	if (!_path.has_filename())
+	{
+		path += id + ".s_mat";
+	}
+
+	GetAssetData().Attribute("Path").set_value(path.c_str());
+
 	std::ofstream file;
 	file.open(path, std::ios::binary);
 	if (file.is_open() && file.good())
@@ -32,20 +56,20 @@ bool shade::Material3D::Serialize() const
 		/* Header */
 		shade::util::Binarizer::Write(file, "@s_mat");
 		/* Base colors */
-		shade::util::Binarizer::Write(file, *glm::value_ptr(ColorAmbient),		3); // RGB;
-		shade::util::Binarizer::Write(file, *glm::value_ptr(ColorDiffuse),		3); // RGB;
-		shade::util::Binarizer::Write(file, *glm::value_ptr(ColorSpecular),		3); // RGB;
-		shade::util::Binarizer::Write(file, *glm::value_ptr(ColorTransparent),	3); // RGB;
+		shade::util::Binarizer::Write(file, *glm::value_ptr(ColorAmbient), 3); // RGB;
+		shade::util::Binarizer::Write(file, *glm::value_ptr(ColorDiffuse), 3); // RGB;
+		shade::util::Binarizer::Write(file, *glm::value_ptr(ColorSpecular), 3); // RGB;
+		shade::util::Binarizer::Write(file, *glm::value_ptr(ColorTransparent), 3); // RGB;
 
 		shade::util::Binarizer::Write(file, Blend); // Probably need cast to uint32 directly
-		shade::util::Binarizer::Write(file, WireFrame); 
+		shade::util::Binarizer::Write(file, WireFrame);
 		shade::util::Binarizer::Write(file, Emmisive);
-		shade::util::Binarizer::Write(file, Opacity); 
+		shade::util::Binarizer::Write(file, Opacity);
 		shade::util::Binarizer::Write(file, Shininess);
 		shade::util::Binarizer::Write(file, ShininessStrength);
 		shade::util::Binarizer::Write(file, Refracti);
 		shade::util::Binarizer::Write(file, Shading); // Probably need cast to uint32 directly
-		
+
 		file.close();
 		return true;
 	}
@@ -55,7 +79,7 @@ bool shade::Material3D::Serialize() const
 bool shade::Material3D::Deserialize()
 {
 	// Now only if it prsenet in asset data list
-	std::string id   = GetAssetData().Attribute("Id").as_string();
+	std::string id = GetAssetData().Attribute("Id").as_string();
 	std::string path = GetAssetData().Attribute("Path").as_string();
 
 	std::ifstream file;
@@ -67,10 +91,10 @@ bool shade::Material3D::Deserialize()
 		header.pop_back();
 		if (header == "@s_mat")
 		{
-			shade::util::Binarizer::Read(file, *glm::value_ptr(ColorAmbient),		3); // RGB;
-			shade::util::Binarizer::Read(file, *glm::value_ptr(ColorDiffuse),		3); // RGB;
-			shade::util::Binarizer::Read(file, *glm::value_ptr(ColorSpecular),		3); // RGB;
-			shade::util::Binarizer::Read(file, *glm::value_ptr(ColorTransparent),	3); // RGB;
+			shade::util::Binarizer::Read(file, *glm::value_ptr(ColorAmbient), 3); // RGB;
+			shade::util::Binarizer::Read(file, *glm::value_ptr(ColorDiffuse), 3); // RGB;
+			shade::util::Binarizer::Read(file, *glm::value_ptr(ColorSpecular), 3); // RGB;
+			shade::util::Binarizer::Read(file, *glm::value_ptr(ColorTransparent), 3); // RGB;
 
 			shade::util::Binarizer::Read(file, Blend); // Probably need cast to uint32 directly
 			shade::util::Binarizer::Read(file, WireFrame);

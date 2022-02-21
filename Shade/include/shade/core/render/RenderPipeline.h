@@ -6,7 +6,7 @@
 #include "shade/core/render/Shader.h"
 #include "shade/core/render/drawable/Drawable.h"
 #include "shade/core/render/DrawablePass.h"
-
+#include "shade/core/render/buffers/UniformBuffer.h"
 #include <glm/glm.hpp>
 
 namespace shade

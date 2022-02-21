@@ -6,7 +6,8 @@ shade::SpotLightShadowMapPipeline::SpotLightShadowMapPipeline()
 {
 	m_ShadowFrameBuffer = shade::FrameBuffer::Create(shade::FrameBuffer::Layout(1024 * m_ShadowMapMultiplier, 1024 * m_ShadowMapMultiplier, {
 		shade::FrameBuffer::Texture::Format::DEPTH24STENCIL8 }, 1, 0));
-	m_CascadeBuffer    = ShaderStorageBuffer::Create(0,   6);
+	m_CascadeBuffer    = ShaderStorageBuffer::Create(0,   7);
+	m_SettingsBuffer = UniformBuffer::Create(sizeof(Settings), 8);
 
 	m_Shader = ShadersLibrary::Create("SlShadowMapping","resources/shaders/General/Effects/ShadowMappingSpotLight.glsl");
 }
@@ -17,7 +18,9 @@ shade::SpotLightShadowMapPipeline::~SpotLightShadowMapPipeline()
 
 shade::Shared<shade::FrameBuffer> shade::SpotLightShadowMapPipeline::Process(const shade::Shared<FrameBuffer>& target, const shade::Shared<FrameBuffer>& previousPass, const Shared<RenderPipeline>& previusPipline, const DrawablePools& drawables, std::unordered_map<Shared<Drawable>, BufferDrawData>& drawData)
 {
-	if (m_IsShadowCast)
+	m_SettingsBuffer->SetData(&m_Settings, sizeof(Settings));
+
+	if (m_Settings.IsShadowCast)
 	{
 		auto& camera = Render::GetLastActiveCamera();
 		auto& lights = Render::GetSubmitedLight();
@@ -53,6 +56,12 @@ shade::Shared<shade::FrameBuffer> shade::SpotLightShadowMapPipeline::Process(con
 			{
 				for (auto& [material, transforms] : materials.Materials)
 				{
+					if (material)
+					{
+						/* To check alpha */
+						if (material->TextureDiffuse)
+							material->TextureDiffuse->Bind(0);
+					}
 					if (drawData[instance].TBO->GetSize() != sizeof(glm::mat4) * transforms.size())
 						drawData[instance].TBO->Resize(sizeof(glm::mat4) * transforms.size());
 					drawData[instance].TBO->SetData(transforms.data(), sizeof(glm::mat4) * transforms.size(), 0);
@@ -82,6 +91,16 @@ shade::Shared<shade::FrameBuffer> shade::SpotLightShadowMapPipeline::Process(con
 const shade::Shared<shade::FrameBuffer>& shade::SpotLightShadowMapPipeline::GetResult() const
 {
 	return nullptr;
+}
+
+void shade::SpotLightShadowMapPipeline::SetSettings(const SpotLightShadowMapPipeline::Settings& settings)
+{
+	m_Settings = settings;
+}
+
+const shade::SpotLightShadowMapPipeline::Settings& shade::SpotLightShadowMapPipeline::GetSettings() const
+{
+	return m_Settings;
 }
 
 shade::SpotLightShadowMapPipeline::SpotLightCascade shade::SpotLightShadowMapPipeline::ComputeSpotLightCascade(const float& fov, const glm::vec3& position, const glm::vec3& direction, const float& nearPlane, const float& farplane)

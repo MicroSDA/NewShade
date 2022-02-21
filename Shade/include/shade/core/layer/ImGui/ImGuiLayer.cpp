@@ -98,15 +98,49 @@ void shade::ImGuiLayer::OnImGuiEvent(shade::Event& event)
 
 }
 
-bool shade::ImGuiLayer::InputText(const char* title, char* buffer, std::size_t buffer_size)
+bool shade::ImGuiLayer::InputText(const char* title, char* buffer, std::size_t buffer_size, const float& size)
 {
 	ImGui::Text(title);
 	ImGui::SameLine();
-	ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth());
-	std::stringstream _title;
-	_title << "##" << title;
-	bool isInput = ImGui::InputText(_title.str().c_str(), buffer, buffer_size);
+	ImGui::PushItemWidth((size != 0.0f) ? size : ImGui::GetContentRegionAvailWidth());
+	//std::stringstream _id;
+	//_id << "##" << id;
+	bool isInput = ImGui::InputText(title, buffer, buffer_size);
 	ImGui::PopItemWidth();
+	return isInput;
+}
+
+bool shade::ImGuiLayer::InputText(const char* title, const char* id, std::string& str, const float& size)
+{
+	//ImGui::Text(title);
+	//ImGui::SameLine();
+	//ImGui::PushItemWidth((size != 0.0f) ? size : ImGui::GetContentRegionAvailWidth());
+	std::stringstream _id;
+	_id << "##" << id;
+	bool isInput = ImGui::InputText(_id.str().c_str(), str.data(), str.size() + 1, ImGuiInputTextFlags_CallbackAlways, []
+	(ImGuiInputTextCallbackData* data)
+		{
+			auto str = static_cast<std::string*>(data->UserData);
+			if (data->BufTextLen != str->size())
+				str->resize(data->BufTextLen);
+
+			data->Buf = str->data();
+			return 0;
+		}, &str);
+	//ImGui::PopItemWidth();
+	return isInput;
+}
+
+bool shade::ImGuiLayer::InputTextCol(const char* title, const char* id, std::string& str, const float& cw1, const float& cw2)
+{
+	ImGui::Columns(2);
+	ImGui::SetColumnWidth(0, cw1);
+	ImGui::Text(title);
+	ImGui::NextColumn();
+	if(cw2)
+		ImGui::SetColumnWidth(1, cw2);
+	bool isInput = InputText("", id, str);
+	ImGui::Columns(1);
 	return isInput;
 }
 

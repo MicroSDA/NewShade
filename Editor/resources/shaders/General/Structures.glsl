@@ -57,10 +57,25 @@ struct DirectLightCascade
 	float SplitDistance;
 };
 
+struct DLShadowSettings
+{
+	bool IsCast;
+};
+
 struct SpotLightCascade
 {
 	mat4  ViewMatrix;
 	float Distance;
+};
+
+struct SLShadowSettings
+{
+	bool IsCast;
+};
+
+struct PLShadowSettings
+{
+	bool IsCast;
 };
 
 struct PointLightCascade

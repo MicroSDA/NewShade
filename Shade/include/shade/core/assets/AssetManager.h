@@ -40,7 +40,7 @@ namespace shade
 		// All prefabs that were held with Asset::Lifetime::Destroy flag will be removed automatically !
 		template<typename T>
 		static void HoldPrefab(const std::string& id, PostLoadCallback callback, const Asset::Lifetime& lifeTime = Asset::Lifetime::Destroy);
-
+		/* Isnt complite */
 		template<typename T>
 		static Shared<T>& GetAsset(const std::string& id)
 		{
@@ -61,6 +61,12 @@ namespace shade
 		static AssetsDataList& GetPrefabsDataList();
 		/* Getting specific prefab by asset id*/
 		static AssetData GetPrefabsData(const std::string& id);
+		/* Save Asset data list on disk */
+		static void SaveAssetDataList();
+		/* Get current path of asset data which has been loaded */
+		static const std::string& GetCurrentPath();
+		/* Remove prefab from doc, loaded map and references */
+		static bool RemoveFromPrefabData(const std::string& id);
 	public:
 		~AssetManager();
 	private:
@@ -106,6 +112,7 @@ namespace shade
 		static void _Clear();
 	
 		pugi::xml_document								m_AssetsDoc;
+		std::string										m_CurrentPath;
 		shade::util::ThreadPool							m_TrheadPool;
 
 		bool											m_ImDestructing = false;

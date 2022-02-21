@@ -8,7 +8,7 @@ layout (location = 0) in vec3  a_Position;
 layout (location = 1) in vec2  a_UV_Coordinates;
 layout (location = 4) in mat4  a_Transform;
 
-layout (std430, binding = 6) restrict readonly buffer USpotLightCascade
+layout (std430, binding = 7) restrict readonly buffer USpotLightCascade
 {
 	SpotLightCascade u_SpotLightCascade[];
 };
@@ -27,7 +27,7 @@ void main()
 layout(triangles) in;
 layout(triangle_strip, max_vertices = 204) out; // Hardware limitation reached, can only emit 204 vertices of this size
 
-layout (std430, binding = 6) restrict readonly buffer USpotLightCascade
+layout (std430, binding = 7) restrict readonly buffer USpotLightCascade
 {
 	SpotLightCascade u_SpotLightCascade[];
 };

@@ -37,23 +37,23 @@ void EditorLayer::OnCreate()
 	m_LogoTexture->Deserialize();
 	m_LogoTexture->AssetInit();
 
-	m_BloomShader				= shade::ShadersLibrary::Get("Bloom");
-	m_ColorCorrectionShader		= shade::ShadersLibrary::Get("ColorCorrection");
-	m_SpriteShader				= shade::ShadersLibrary::Get("Sprite");
+	m_BloomShader = shade::ShadersLibrary::Get("Bloom");
+	m_ColorCorrectionShader = shade::ShadersLibrary::Get("ColorCorrection");
+	m_SpriteShader = shade::ShadersLibrary::Get("Sprite");
 
-	m_Grid	= shade::Grid::Create(0, 0, 0);
-	m_Box	= shade::Box::Create(glm::vec3(-1.f), glm::vec3(1.f));
+	m_Grid = shade::Grid::Create(0, 0, 0);
+	m_Box = shade::Box::Create(glm::vec3(-1.f), glm::vec3(1.f));
 
 	m_PPBloom = shade::PPBloom::Create();
 	m_PPBloom->SetInOutTargets(m_FrameBuffer, m_FrameBuffer, m_BloomShader);
 	m_PPColorCorrection = shade::PPColorCorrection::Create();
 	m_PPColorCorrection->SetInOutTargets(m_FrameBuffer, m_FrameBuffer, m_ColorCorrectionShader);
 
-	m_InstancedPipeline		= shade::RenderPipeline::Create<shade::InstancedPipeline>();
-	m_GridPipeline			= shade::RenderPipeline::Create<shade::GridPipeline>();
+	m_InstancedPipeline = shade::RenderPipeline::Create<shade::InstancedPipeline>();
+	m_GridPipeline = shade::RenderPipeline::Create<shade::GridPipeline>();
 	m_CameraFrustumPipeline = shade::RenderPipeline::Create<shade::CameraFrustumPipeline>();
-	m_AABBPipeline			= shade::RenderPipeline::Create<shade::AABBPipeline>();
-	m_DirectLightShadowMapPipeline	= shade::RenderPipeline::Create<shade::DirectLightShadowMapPipeline>();
+	m_AABBPipeline = shade::RenderPipeline::Create<shade::AABBPipeline>();
+	m_DirectLightShadowMapPipeline = shade::RenderPipeline::Create<shade::DirectLightShadowMapPipeline>();
 	m_PointLightShadowMapPipeline = shade::RenderPipeline::Create<shade::PointLightShadowMapPipeline>();
 	m_SpotLightShadowMapPipeline = shade::RenderPipeline::Create<shade::SpotLightShadowMapPipeline>();
 	m_SpherePipeline = shade::RenderPipeline::Create<shade::SpherePipeline>();
@@ -63,9 +63,9 @@ void EditorLayer::OnUpdate(const shade::Shared<shade::Scene>& scene, const shade
 {
 
 	m_SubmitedPointLightSources = 0;
-	m_SubmitedMeshCount			= 0;
-	m_MeshesInsidePointLight    = 0;
-
+	m_SubmitedMeshCount = 0;
+	m_MeshesInsidePointLight = 0;
+	m_TrianglesInScene = 0;
 	/* Set curret camera */
 	if (scene->IsPlaying())
 	{
@@ -89,8 +89,6 @@ void EditorLayer::OnUpdate(const shade::Shared<shade::Scene>& scene, const shade
 		{
 			shade::Render::SubmitPipelineInstanced(m_CameraFrustumPipeline, m_Box, nullptr, glm::inverse(camera->GetViewProjection()));
 		});
-
-
 	/* Light */
 	scene->GetEntities().view<shade::DirectLightComponent, shade::Transform3DComponent>().each([&](auto& entity, shade::DirectLightComponent& source, shade::Transform3DComponent& transform)
 		{
@@ -98,7 +96,7 @@ void EditorLayer::OnUpdate(const shade::Shared<shade::Scene>& scene, const shade
 		});
 	scene->GetEntities().view<shade::PointLightComponent, shade::Transform3DComponent>().each([&](auto& entity, shade::PointLightComponent& source, shade::Transform3DComponent& transform)
 		{
-			auto cpcTransform  = scene->ComputePCTransform(entity);
+			auto cpcTransform = scene->ComputePCTransform(entity);
 			glm::vec3 position(cpcTransform[3].x, cpcTransform[3].y, cpcTransform[3].z);
 			if (frustum.IsInFrustum(position, source->GetDistance()))
 			{
@@ -112,18 +110,20 @@ void EditorLayer::OnUpdate(const shade::Shared<shade::Scene>& scene, const shade
 			shade::Render::SubmitLight(source, scene->ComputePCTransform(entity));
 			shade::Render::SubmitPipelineInstanced(m_CameraFrustumPipeline, m_Box, nullptr, (transform.GetModelMatrix()));
 		});
-
-
-
 	scene->GetEntities().view<shade::Model3DComponent, shade::Transform3DComponent>().each([&](auto& entity, shade::Model3DComponent& model, shade::Transform3DComponent& transform)
 		{
 			for (auto& mesh : model->GetMeshes())
 			{
 				auto cpcTransform = scene->ComputePCTransform(entity);
-				/* Shadow pass outside of frustum*/
-				shade::Render::SubmitPipelineInstanced(m_DirectLightShadowMapPipeline, mesh, mesh->GetMaterial(), cpcTransform);
-				shade::Render::SubmitPipelineInstanced(m_SpotLightShadowMapPipeline, mesh, mesh->GetMaterial(), cpcTransform);
 
+				if (frustum.IsInFrustum(cpcTransform, mesh->GetMinHalfExt(), mesh->GetMaxHalfExt()))
+				{
+					shade::Render::SubmitPipelineInstanced(m_InstancedPipeline, mesh, mesh->GetMaterial(), cpcTransform);
+					m_TrianglesInScene += mesh->GetVertices().size() / 3;
+					if (m_IsShowAABB)
+						shade::Render::SubmitPipelineInstanced(m_AABBPipeline, shade::Box::Create(mesh->GetMinHalfExt(), mesh->GetMaxHalfExt()), nullptr, cpcTransform);
+					m_SubmitedMeshCount++;
+				}
 				auto& points = shade::Render::GetSubmitedLight().PointLightSources;
 				for (auto& light : points)
 				{
@@ -134,26 +134,16 @@ void EditorLayer::OnUpdate(const shade::Shared<shade::Scene>& scene, const shade
 						break;
 					}
 				}
-			
-				//shade::Render::SubmitPipelineInstanced(m_SpotLightShadowMapPipeline, mesh, mesh->GetMaterial(), cpcTransform);
-
-				if (frustum.IsInFrustum(cpcTransform, mesh->GetMinHalfExt(), mesh->GetMaxHalfExt()))
-				{
-
-					shade::Render::SubmitPipelineInstanced(m_InstancedPipeline, mesh, mesh->GetMaterial(), cpcTransform);
-					if(m_IsShowAABB)
-						shade::Render::SubmitPipelineInstanced(m_AABBPipeline, shade::Box::Create(mesh->GetMinHalfExt(), mesh->GetMaxHalfExt()), nullptr, cpcTransform);
-					m_SubmitedMeshCount++;
-				}
+				/* Shadow pass outside of frustum*/
+				shade::Render::SubmitPipelineInstanced(m_DirectLightShadowMapPipeline, mesh, mesh->GetMaterial(), cpcTransform);
+				shade::Render::SubmitPipelineInstanced(m_SpotLightShadowMapPipeline, mesh, mesh->GetMaterial(), cpcTransform);
 			}
 		});
-
-	
 }
 
 void EditorLayer::OnRender(const shade::Shared<shade::Scene>& scene, const shade::Timer& deltaTime)
 {
-	
+
 
 	if (ImGui::Begin("DockSpace", (bool*)(nullptr), m_WindowFlags))
 	{
@@ -171,38 +161,94 @@ void EditorLayer::OnRender(const shade::Shared<shade::Scene>& scene, const shade
 			ShowWindowBar("Entities", &EditorLayer::Entities, this, scene.get());
 			ShowWindowBar("Inspector", &EditorLayer::Inspector, this, m_SelectedEntity);
 			ShowWindowBar("File explorer", &EditorLayer::FileExplorer, this, "");
-			ShowWindowBar("Asset explorer", &EditorLayer::AssetsExplorer, this, shade::AssetManager::GetAssetsDataList());
+			ShowWindowBar("Asset explorer", &EditorLayer::AssetsExplorer, this, shade::AssetManager::GetAssetsDataList(), shade::AssetManager::GetPrefabsDataList());
 			ShowWindowBar("Logs", &EditorLayer::LogsExplorer, this);
 			ShowWindowBar("Render", &EditorLayer::Render, this);
 			ShowWindowBar("Model", &EditorLayer::Model3D, this, m_SelectedModel3D);
 			ShowWindowBar("Mesh", &EditorLayer::Mesh, this, m_SelectedMesh);
-			ShowWindowBar("Material", &EditorLayer::Material, this, m_SelectedMaterial3D);
+			ShowWindowBar("Material", &EditorLayer::Materials, this, m_SelectedMaterial3D);
 			ShowWindowBar("Shaders library", &EditorLayer::ShadersLibrary, this);
 		}
+		//ShowDemoWindow();
 		ShowWindowBar("Scene", &EditorLayer::Scene, this, scene);
-		
+		DrawModal("Import##ImportModel3D", m_IsImportModleModalOpend, [&]()
+			{
+				if (m_SelectedModel3D)
+				{
+				
+					//AssetsExplorer(m_SelectedModel3D->GetAssetData(), m_SelectedModel3D->GetAssetData())
+					static std::string s;
+					PrefabEdit(s, m_SelectedModel3D->GetAssetData());
+					if (ImGui::Button("Convert to native"))
+					{
+						auto path = shade::FileDialog::SelectFolder("");
+						if (!path.empty())
+						{
+							path.make_preferred();
+							path = path.relative_path();
+							m_SelectedModel3D->GetAssetData().Attribute("Path").set_value(path.string().c_str());
+							m_SelectedModel3D->Serialize();
+						}
+					}
+						
+					//ImGui::Dummy({ 500,500 });
+					/*float columntSize = 250.f;
+					std::vector<std::string> ids;
+					ids.push_back(m_SelectedModel3D->GetAssetData().Attribute("Id").value());
 
-	} ImGui::End(); // Begin("DockSpace")
+					if (InputText("Model3D Id", std::string("M3D" + std::to_string(0)).c_str(), ids[0], columntSize))
+					{
+						m_SelectedModel3D->GetAssetData().Attribute("Id").set_value(ids[0].c_str());
+					}
+
+					if (ImGui::TreeNodeEx("Meshes##MeshImport", ImGuiTreeNodeFlags_Framed))
+					{
+						for (auto i = 1; i < m_SelectedModel3D->GetMeshes().size(); i++)
+						{
+							auto& mesh = m_SelectedModel3D->GetMeshes()[i];
+							ids.push_back(mesh->GetAssetData().Attribute("Id").value());
+							if (InputText("Mesh Id", std::string("M" + std::to_string(i)).c_str(), ids[i], columntSize))
+								mesh->GetAssetData().Attribute("Id").set_value(ids[i].c_str());
+
+
+							if (ImGui::TreeNodeEx(std::string("Material##MaterialImport" + std::to_string(int(&mesh))).c_str(), ImGuiTreeNodeFlags_Framed))
+							{
+								auto& material = mesh->GetMaterial();
+								Material(material);
+								ImGui::TreePop();
+							}
+						}
+						ImGui::TreePop();
+					}
+
+					ImGui::Dummy(ImVec2(0.0f, ImGui::GetContentRegionMax().y / 2.f));
+					ImGui::Separator();
+					ImGui::Button("Convert to native");*/
+
+				}
+			});
+
+	} ImGui::End(); // !Begin("DockSpace")
 	{
 		m_FrameBuffer->Clear(shade::AttacmentClearFlag::Color | shade::AttacmentClearFlag::Depth | shade::AttacmentClearFlag::Stensil);
 		shade::Render::Begin();
-			shade::Render::BeginScene(m_Camera, m_FrameBuffer);
-				shade::Render::ExecuteSubmitedPipeline(m_DirectLightShadowMapPipeline);
-				shade::Render::ExecuteSubmitedPipeline(m_PointLightShadowMapPipeline);
-				shade::Render::ExecuteSubmitedPipeline(m_SpotLightShadowMapPipeline);
+		shade::Render::BeginScene(m_Camera, m_FrameBuffer);
+		shade::Render::ExecuteSubmitedPipeline(m_DirectLightShadowMapPipeline);
+		shade::Render::ExecuteSubmitedPipeline(m_PointLightShadowMapPipeline);
+		shade::Render::ExecuteSubmitedPipeline(m_SpotLightShadowMapPipeline);
 
-				shade::Render::ExecuteSubmitedPipeline(m_InstancedPipeline);
-				shade::Render::ExecuteSubmitedPipeline(m_AABBPipeline);
-				shade::Render::ExecuteSubmitedPipeline(m_SpherePipeline);
+		shade::Render::ExecuteSubmitedPipeline(m_InstancedPipeline);
+		shade::Render::ExecuteSubmitedPipeline(m_AABBPipeline);
+		shade::Render::ExecuteSubmitedPipeline(m_SpherePipeline);
 
-				if (m_isBloomEnabled)
-					shade::Render::PProcess::Process(m_PPBloom);
-				if (m_isColorCorrectionEnabled)
-					shade::Render::PProcess::Process(m_PPColorCorrection);
-				shade::Render::ExecuteSubmitedPipeline(m_GridPipeline);
+		if (m_isBloomEnabled)
+			shade::Render::PProcess::Process(m_PPBloom);
+		if (m_isColorCorrectionEnabled)
+			shade::Render::PProcess::Process(m_PPColorCorrection);
+		shade::Render::ExecuteSubmitedPipeline(m_GridPipeline);
 
-				//shade::Render::DrawSprite(m_SpriteShader, m_ShadowMapPipeline->GetResult()->GetDepthAttachment(), glm::mat4(1));
-			shade::Render::EndScene();
+		//shade::Render::DrawSprite(m_SpriteShader, m_ShadowMapPipeline->GetResult()->GetDepthAttachment(), glm::mat4(1));
+		shade::Render::EndScene();
 		shade::Render::End();
 		/*if (m_isBloomEnabled)
 			shade::Render::PProcess::Process(m_PPBloom);
@@ -222,7 +268,7 @@ void EditorLayer::OnRender(const shade::Shared<shade::Scene>& scene, const shade
 		transform.SetPostition(-0.9f, -0.9f);
 
 		shade::Render::DrawSprite(m_SpriteShader, m_LogoTexture, transform.GetModelMatrix(), glm::vec4{ 120, 199.0f, 574, 167 });
-		
+
 		shade::Render::EndScene();*/
 		shade::Render::End();
 	}
@@ -556,9 +602,10 @@ void EditorLayer::ScenePlayStop(const shade::Shared<shade::Scene>& scene)
 	ImGuiIO& io = ImGui::GetIO();
 	ImGui::SameLine(ImGui::GetContentRegionAvailWidth() - ImGui::CalcItemWidth() - 15);
 	ImGui::Text("Application average %.1f ms/frame (%.0f FPS)", 1000.0f / io.Framerate, io.Framerate);
-	ImGui::Text("Submited meshes [%d]", m_SubmitedMeshCount); 
+	ImGui::Text("Submited meshes [%d]", m_SubmitedMeshCount);
 	ImGui::SameLine(); ImGui::Text("Point lights [%d]", m_SubmitedPointLightSources);
 	ImGui::SameLine(); ImGui::Text("Meshes inside point light [%d]", m_MeshesInsidePointLight);
+	ImGui::SameLine(); ImGui::Text("Triangles [%d]", m_TrianglesInScene);
 }
 
 void EditorLayer::Scene(const shade::Shared<shade::Scene>& scene)
@@ -581,7 +628,7 @@ void EditorLayer::Scene(const shade::Shared<shade::Scene>& scene)
 		m_EditorCamera->SetAsPrimary(false);
 	}
 
-	
+
 
 	if (m_SceneViewPort.ViewPort.z != ImGui::GetContentRegionAvail().x || m_SceneViewPort.ViewPort.w != ImGui::GetContentRegionAvail().y)
 	{
@@ -591,7 +638,7 @@ void EditorLayer::Scene(const shade::Shared<shade::Scene>& scene)
 		m_FrameBuffer->Resize(m_SceneViewPort.ViewPort.z, m_SceneViewPort.ViewPort.w);
 		m_Camera->Resize((float)m_SceneViewPort.ViewPort.z / (float)m_SceneViewPort.ViewPort.w);
 	}
-	
+
 	m_SceneViewPort.ViewPort.x = ImGui::GetWindowPos().x + ImGui::GetCursorPos().x; // With tab size
 	m_SceneViewPort.ViewPort.y = ImGui::GetWindowPos().y + ImGui::GetCursorPos().y; // With tab size
 
@@ -601,7 +648,7 @@ void EditorLayer::Scene(const shade::Shared<shade::Scene>& scene)
 
 	ImGui::Image(reinterpret_cast<void*>(m_FrameBuffer->GetAttachment(0)), { m_SceneViewPort.ViewPort.z, m_SceneViewPort.ViewPort.w }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 }, ImVec4{ 1, 1, 1, 1 }, focusColor);
 
-	
+
 	//SHADE_CORE_TRACE("Selected x :{0}, y :{1}", m_SceneViewPort.MousePosition.x, m_SceneViewPort.MousePosition.y);
 
 	ImGui::SetNextWindowSize(ImVec2{ ImGui::GetWindowSize().x - 20.0f,0 }, ImGuiCond_Always);
@@ -609,8 +656,8 @@ void EditorLayer::Scene(const shade::Shared<shade::Scene>& scene)
 		{
 			ScenePlayStop(scene);
 		});
-	
-	
+
+
 
 	if (m_SelectedEntity.IsValid())
 	{
@@ -736,13 +783,19 @@ void EditorLayer::MainMenu(const shade::Shared<shade::Scene>& scene)
 					auto path = shade::FileDialog::OpenFile("Supported formats(*.obj, *.fbx, *.dae) \0*.obj;*.fbx;*.dae\0");
 					if (!path.empty())
 					{
-						auto model = IModel3D::Import(path.string());
-						if (model)
+						m_IsImportModleModalOpend = true;
+						m_SelectedModel3D = IModel3D::Import(path.string());
+						if (m_SelectedModel3D)
 						{
+
 							auto entity = scene->CreateEntity(path.filename().string());
 							entity.AddComponent<shade::Transform3DComponent>();
-							entity.AddComponent<shade::Model3DComponent>(model);
+							entity.AddComponent<shade::Model3DComponent>(m_SelectedModel3D);
 						}
+					}
+					else
+					{
+						m_IsImportModleModalOpend = false;
 					}
 				}
 
@@ -762,26 +815,171 @@ void EditorLayer::MainMenu(const shade::Shared<shade::Scene>& scene)
 
 }
 
-void EditorLayer::AssetsExplorer(shade::AssetManager::AssetsDataList& data)
+void EditorLayer::AssetsExplorer(shade::AssetManager::AssetsDataList& assets, shade::AssetManager::AssetsDataList& prefabs)
 {
-	for (auto& asset : data)
+
+	ImGui::Text("Asset data list: %s", shade::AssetManager::GetCurrentPath().c_str());
+	ImGui::SameLine();
+	if (ImGui::Button("Open"))
 	{
-		if (ImGui::BeginMenu(asset.second.Attribute("Type").as_string()))
+		auto path = shade::FileDialog::OpenFile("Xml(*.xml) \0*.xml\0");
+		if(!path.empty())
+			shade::AssetManager::LoadAssetDataListFromFile(path.string());
+	}
+	ImGui::SameLine(); 
+	if (ImGui::Button("Reload"))
+		shade::AssetManager::LoadAssetDataListFromFile(shade::AssetManager::GetCurrentPath());
+	ImGui::SameLine();
+	if (ImGui::Button("Override"))
+		shade::AssetManager::SaveAssetDataList();
+	
+
+	std::map<std::string, std::vector<shade::AssetData*>> types;
+
+	for (auto& prefab : prefabs)
+	{
+		types[prefab.second.Attribute("Type").as_string()].push_back(&prefab.second);
+	}
+	// Left
+	static std::string selectedType;
+	static std::string selectedId;
+	{
+		
+		ImGui::BeginChild("left pane", ImVec2(150, 0), true);
+		ImGui::Text("Types:");
+		ImGui::Separator();
+		for (auto& [type, prefabs] : types)
 		{
-			AssetDataExpader(asset.second);
-
-			ImGui::EndMenu();
+			if (ImGui::Selectable(type.c_str(), selectedType == type))
+			{
+				selectedType = type;
+			}
 		}
-
+		ImGui::EndChild();
+	}
+	ImGui::SameLine();
+	// Right
+	{
+		ImGui::BeginGroup();
+		ImGui::BeginChild("item view", ImVec2(200, 0), true); // Leave room for 1 line below us
+		ImGui::Text("Type: %s", selectedType.c_str());
+		ImGui::Separator();
+		for (auto& [type, prefabs] : types)
+		{
+			if (type == selectedType)
+			{
+				for (auto& prefab : prefabs)
+				{
+					std::string id = prefab->Attribute("Id").as_string();
+					if (ImGui::Selectable(id.c_str(), selectedId == id))
+					{
+						selectedId = id;
+					}
+					//AssetDataExpander(*prefab);
+				}
+			}
+		}
+		ImGui::EndChild();
+		ImGui::SameLine();
+		ImGui::BeginChild("id view", ImVec2(0, 0), true); // Leave room for 1 line below us
+		ImGui::Text("Edit:");
+		ImGui::Separator();
+		if(!selectedId.empty())
+			PrefabEdit(selectedId, shade::AssetManager::GetPrefabsData(selectedId));
+		//ImGui::Text("Id: %s", selectedId.c_str());
+		
+		
+		/*	if (ImGui::Button("Delete")) {}
+			ImGui::SameLine();
+			if (ImGui::Button("Save")) {}*/
+		ImGui::EndChild();
+		ImGui::EndGroup();
+	}
+	{
+		ImGui::Button("Create", { ImGui::GetContentRegionAvailWidth(),0});
 	}
 }
-/* Удвлить старый функционал с лайта*/
+/* Удвfлить старый функционал с лайта*/
 void EditorLayer::Transform3DComponent(shade::Entity& entity)
 {
 	auto& transform = entity.GetComponent<shade::Transform3DComponent>();
 	DrawVec3F("Position", glm::value_ptr(transform.GetPosition()));
 	DrawVec3F("Roatation", glm::value_ptr(transform.GetRotation()));
 	DrawVec3F("Scale", glm::value_ptr(transform.GetScale()), 1.0f);
+}
+
+void EditorLayer::AssetEdit(shade::AssetData& asset)
+{
+
+}
+
+void EditorLayer::PrefabEdit(std::string& prefabId, shade::AssetData& asset)
+{
+	static float width = 220.0f;
+	std::string id = asset.Attribute("Id").as_string();
+	std::string type = asset.Attribute("Type").as_string();
+	std::string assetId = asset.Attribute("Asset").as_string();
+
+	if (InputTextCol("Prefab id: ", "PrefabEditId", id, width))
+		asset.Attribute("Id").set_value(id.c_str());
+	if (InputTextCol("Prefab type: ", "PrefabEditType", type, width))
+		asset.Attribute("Type").set_value(type.c_str());
+	if (InputTextCol("Relative asset Id: ", "PrefabEditAsset", assetId, width))
+		asset.Attribute("Asset").set_value(assetId.c_str());
+	ImGui::Separator();
+
+
+	ImGui::Columns(2);
+	ImGui::SetColumnWidth(0, width);
+	ImGui::Text("Dependacies:");
+	ImGui::NextColumn();
+
+	ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4{ 0.000f, 0.698f, 0.008f, 0.709f });
+	if (ImGui::BeginMenu("Add"))
+	{
+		for (auto& dependancy : shade::AssetManager::GetPrefabsDataList())
+		{
+			/* If type  isnt same */
+			if (strcmp(dependancy.second.Attribute("Type").as_string(), type.c_str()) != 0)
+			{
+				if (ImGui::MenuItem(dependancy.second.Attribute("Id").as_string()))
+				{
+					asset.Append(dependancy.second);
+				}
+			}
+		}
+		ImGui::EndMenu();
+	}
+	ImGui::PopStyleColor();
+	ImGui::Columns(1);
+	ImGui::Separator();
+
+	if (asset.Dependencies().size())
+	{
+		for (auto dependancy : asset.Dependencies())
+		{
+			ImGui::PushStyleColor(ImGuiCol_Button, ImVec4{ 0.753f, 0.000f, 0.099f, 0.709f });
+			if (DrawButtonCol(dependancy.Attribute("Id").as_string(), "Remove", width))
+			{
+				asset.Remove(dependancy);
+			}
+			ImGui::PopStyleColor();
+		}
+	}
+	ImGui::Separator();
+	ImVec2 buttonSize = { 0, 20 };
+	const ImGuiStyle& style = ImGui::GetStyle();
+	ImGui::Dummy({ 0, ImGui::GetContentRegionAvail().y - buttonSize.y - style.ItemSpacing.y});
+	ImGui::PushStyleColor(ImGuiCol_Button, ImVec4{ 0.753f, 0.000f, 0.099f, 0.709f });
+
+	bool isRemove = ImGui::Button("Remove", buttonSize);
+	ImGui::PopStyleColor();
+
+	if (isRemove)
+	{
+		prefabId = "";
+		shade::AssetManager::RemoveFromPrefabData(id);
+	}
 }
 
 void EditorLayer::DirectLightComponent(shade::Entity& entity)
@@ -838,29 +1036,77 @@ void EditorLayer::CameraComponent(shade::Entity& entity)
 
 }
 
-void EditorLayer::AssetDataExpader(shade::AssetData& data)
+void EditorLayer::AssetDataExpander(shade::AssetData& data)
 {
-	if (data.Dependencies().size())
-	{
-		if (ImGui::BeginMenu(data.Attribute("Id").as_string()))
-		{
-			for (auto& asset : data.Dependencies())
-			{
-				AssetDataExpader(asset);
-			}
+	ImGui::Text("Text");
+	//static std::string selected;
+	//{
+	//	ImGui::BeginChild("left pane", ImVec2(150, 0), true);
+	//	ImGui::Text("Categories:");
+	//	ImGui::Separator();
+	//	for (auto& [type, prefabs] : types)
+	//	{
+	//		if (ImGui::Selectable(type.c_str(), selected == type))
+	//		{
+	//			selected = type;
+	//		}
+	//	}
+	//	ImGui::EndChild();
+	//}
+	//ImGui::SameLine();
 
-			ImGui::EndMenu();
-		}
-	}
-	else
-	{
-		if (ImGui::MenuItem(data.Attribute("Id").as_string()))
-		{
-			// Preveiw i guess
-			if (strcmp(data.Attribute("Type").as_string(), "Texture") == 0)
-				DrawImage(1, 100, 100, false);
-		}
-	}
+	//// Right
+	//{
+	//	ImGui::BeginGroup();
+	//	ImGui::BeginChild("item view", ImVec2(0, -ImGui::GetFrameHeightWithSpacing())); // Leave room for 1 line below us
+	//	ImGui::Text("Category: %s", selected.c_str());
+	//	ImGui::Separator();
+	//	for (auto& [type, prefabs] : types)
+	//	{
+	//		if (type == selected)
+	//		{
+	//			for (auto& prefab : prefabs)
+	//			{
+	//				AssetDataExpander(*prefab);
+	//			}
+	//		}
+	//	}
+	//}
+	//if (data.Dependencies().size())
+	//{
+	//	if (ImGui::TreeNodeEx(data.Attribute("Id").as_string(), ImGuiTreeNodeFlags_Framed))
+	//	{
+	//		for (auto& asset : data.Dependencies())
+	//		{
+	//			AssetDataExpander(asset);
+	//		}
+	//		ImGui::Button("Edit");
+	//		ImGui::TreePop();
+	//	}
+	//	/*if (ImGui::BeginMenu(data.Attribute("Id").as_string()))
+	//	{
+	//		for (auto& asset : data.Dependencies())
+	//		{
+	//			AssetDataExpander(asset);
+	//		}
+
+	//		ImGui::EndMenu();
+	//	}*/
+	//}
+	//else
+	//{
+	//	ImGui::Text("Edit");
+	//}
+
+	//else
+	//{
+	//	if (ImGui::MenuItem(data.Attribute("Id").as_string()))
+	//	{
+	//		// Preveiw i guess
+	//		if (strcmp(data.Attribute("Type").as_string(), "Texture") == 0)
+	//			DrawImage(1, 100, 100, false);
+	//	}
+	//}
 }
 
 void EditorLayer::LogsExplorer()
@@ -1007,21 +1253,24 @@ void EditorLayer::Render()
 	}
 	if (ImGui::TreeNodeEx("Shadows ", ImGuiTreeNodeFlags_Framed))
 	{
-		static bool dShadowsCast = true;
-		static bool sShadowsCast = true;
-		static bool pShadowsCast = true;
+		static shade::DirectLightShadowMapPipeline::Settings dShadowSettings;
+		static shade::PointLightShadowMapPipeline::Settings  pShadowSettings;
+		static shade::SpotLightShadowMapPipeline::Settings   sShadowSettings;
 
-		ImGui::Checkbox("Direct shadows", &dShadowsCast);
-		ImGui::Checkbox("Spot shadows",   &sShadowsCast);
-		ImGui::Checkbox("Point shadows",  &pShadowsCast);
+		ImGui::Checkbox("Direct shadows", &dShadowSettings.IsShadowCast);
+		ImGui::Checkbox("Spot shadows", &sShadowSettings.IsShadowCast);
+		ImGui::Checkbox("Point shadows", &pShadowSettings.IsShadowCast);
+
+		m_DirectLightShadowMapPipeline->SetSettings(dShadowSettings);
+		m_PointLightShadowMapPipeline->SetSettings(pShadowSettings);
+		m_SpotLightShadowMapPipeline->SetSettings(sShadowSettings);
 
 		ImGui::TreePop();
 	}
 
 	ImGui::Separator();
-	ImGui::Checkbox("Show grid",    &m_IsShowGrid);
-	ImGui::Checkbox("Show frustum", &m_IsShowFrustum);
-	ImGui::Checkbox("Show AABB",    &m_IsShowAABB);
+	ImGui::Checkbox("Show grid", &m_IsShowGrid);
+	ImGui::Checkbox("Show AABB", &m_IsShowAABB);
 	ImGui::Text("Submited meshes [%d]", m_SubmitedMeshCount);
 	ImGui::Text("Video memory in usage: %d(mbs)", shade::Render::GetVideoMemoryUsage());
 }
@@ -1037,7 +1286,7 @@ void EditorLayer::ShadersLibrary()
 	}
 }
 
-void EditorLayer::Material(const shade::Shared<shade::Material3D>& material)
+void EditorLayer::Materials(const shade::Shared<shade::Material3D>& material)
 {
 	ImGui::Columns(2);
 	ImGui::SetColumnWidth(0, 80.f);
@@ -1069,15 +1318,12 @@ void EditorLayer::Material(const shade::Shared<shade::Material3D>& material)
 	}
 
 	ImGui::Columns(1);
-	/*
-	for (auto& asset : shade::AssetManager::GetAssetsDataList())
-	{
-		if (strcmp(asset.second.Attribute("Type").as_string(), "Material3D") == 0)
-		{
 
-		}
-	}*/
+	Material(material);
+}
 
+void EditorLayer::Material(const shade::Shared<shade::Material3D>& material)
+{
 	if (material)
 	{
 		DrawColor3("Albedo", glm::value_ptr(material->ColorDiffuse));
@@ -1102,17 +1348,17 @@ void EditorLayer::Material(const shade::Shared<shade::Material3D>& material)
 		}
 		if (ImGui::TreeNodeEx("Map: Specular", ImGuiTreeNodeFlags_Framed))
 		{
-			if (material->TextureDiffuse)
+			if (material->TextureSpecular)
 				DrawImage(material->TextureSpecular->GetRenderID(), 100, 100, true);
 			ImGui::TreePop();
 		}
 		if (ImGui::TreeNodeEx("Map: Normal", ImGuiTreeNodeFlags_Framed))
 		{
-			if (material->TextureDiffuse)
+			if (material->TextureNormals)
 				DrawImage(material->TextureNormals->GetRenderID(), 100, 100, true);
 			ImGui::TreePop();
 		}
-		
+
 		ImGui::Separator();
 		if (DrawButtonImage("##Save", m_IconsTexture, { 20, 20 }, { 128, 128 }, { 306, 898 }, -1))
 		{
@@ -1189,20 +1435,26 @@ void EditorLayer::Mesh(const shade::Shared<shade::Mesh>& mesh)
 		if (ImGui::MenuItem("None"))
 			m_SelectedMesh = nullptr;
 
-		for (auto& asset : shade::AssetManager::GetAssetsDataList())
+		for (auto& prefab : shade::AssetManager::GetPrefabsDataList())
 		{
-			if (strcmp(asset.second.Attribute("Type").as_string(), "Mesh") == 0)
+			auto	prefabId = prefab.second.Attribute("Id").as_string();
+			auto    relativeAssetId = prefab.second.Attribute("Asset").as_string();
+			auto    relativeAsset = shade::AssetManager::GetAssetData(relativeAssetId);
+
+			if (relativeAsset.IsValid())
 			{
-				if (ImGui::MenuItem(asset.second.Attribute("Id").as_string()))
+				if (strcmp(relativeAsset.Attribute("Type").as_string(), "Mesh") == 0)
 				{
-					shade::AssetManager::HoldPrefab<shade::Mesh>(asset.second.Attribute("Id").as_string(),
-						[&](auto& asset) mutable
-						{
-							m_SelectedMesh = shade::AssetManager::Receive<shade::Mesh>(asset);
-						});
+					if (ImGui::MenuItem(relativeAsset.Attribute("Id").as_string()))
+					{
+						shade::AssetManager::HoldPrefab<shade::Mesh>(prefabId,
+							[&](auto& asset) mutable
+							{
+								m_SelectedMesh = shade::AssetManager::Receive<shade::Mesh>(asset);
+							});
+					}
 				}
 			}
-
 		}
 
 		ImGui::EndMenu();

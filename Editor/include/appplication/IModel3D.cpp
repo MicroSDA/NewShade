@@ -20,6 +20,7 @@ shade::Shared<shade::Model3D> IModel3D::Import(const std::string& filePath)
 	else
 	{
 		auto model = shade::CreateShared<IModel3D>();
+		model->GetAssetData().Attribute("Id").set_value(std::filesystem::path(filePath).stem().string().c_str());
 		model->ProcessModel3DNode(filePath.c_str(), pScene->mRootNode, pScene);
 		return model;
 
@@ -44,7 +45,11 @@ void IModel3D::ProcessModel3DNode(const char* filePath, const aiNode* node, cons
 void IModel3D::ProcessModel3DMesh(const char* filePath, aiMesh* mesh, const aiScene* scene)
 {
 	auto _mesh = shade::CreateShared<shade::Mesh>();
+	/* Create asset data */
 	_mesh->GetAssetData().Attribute("Id").set_value(mesh->mName.C_Str());
+	_mesh->GetAssetData().Attribute("Type").set_value("Mesh");
+	GetAssetData().Append(_mesh->GetAssetData());
+
 	_mesh->GetVertices().reserve(mesh->mNumVertices);
 	_mesh->GetIndices().reserve(mesh->mNumFaces); // Not sure that resevitaion in inidices case is working
 
@@ -98,76 +103,83 @@ void IModel3D::ProcessModel3DMesh(const char* filePath, aiMesh* mesh, const aiSc
 
 	if (mesh->mMaterialIndex >= 0)
 	{
-		aiMaterial*  assimpMaterial = scene->mMaterials[mesh->mMaterialIndex];
+		aiMaterial* assimpMaterial = scene->mMaterials[mesh->mMaterialIndex];
 		aiString     texturePath;
 
 		auto _material = shade::Material3D::Create<shade::Material3D>();
 		_mesh->SetMaterial(_material);
-		ProcessTexture(_mesh, filePath, assimpMaterial, aiTextureType_DIFFUSE);
-		ProcessTexture(_mesh, filePath, assimpMaterial, aiTextureType_SPECULAR);
-		ProcessTexture(_mesh, filePath, assimpMaterial, aiTextureType_HEIGHT);
-		ProcessMaterial(_mesh, assimpMaterial);
+		ProcessMaterial(_material, filePath, assimpMaterial);
+		_mesh->GetAssetData().Append(_material->GetAssetData());
+
+		ProcessTexture(_material,  filePath, assimpMaterial, aiTextureType_DIFFUSE);
+		ProcessTexture(_material,  filePath, assimpMaterial, aiTextureType_SPECULAR);
+		ProcessTexture(_material,  filePath, assimpMaterial, aiTextureType_HEIGHT);
+		
 	}
 
 	_mesh->GenerateHalfExt();
 	m_Meshes.push_back(_mesh);
 }
 
-void IModel3D::ProcessTexture(const shade::Shared<shade::Mesh>& mesh, const std::string& filePath, aiMaterial* material, const aiTextureType& type)
+void IModel3D::ProcessTexture(const shade::Shared<shade::Material3D>& material, const std::string& filePath, aiMaterial* aImaterial, const aiTextureType& type)
 {
-	//mesh->SetMaterial()
-
-	for (auto i = 0; i < material->GetTextureCount(type); i++)
+	for (auto i = 0; i < aImaterial->GetTextureCount(type); i++)
 	{
-		aiString path;
-		std::string _path;
-		material->GetTexture(type, i, &path);
-		_path = std::filesystem::path(filePath).parent_path().string() + "\\" + path.C_Str();
-		
-		/*if (std::filesystem::exists(_path))
-		{*/
-			auto texture = shade::Texture::Create<shade::Texture>();
-			texture->GetAssetData().Attribute("Id").set_value(std::filesystem::path(_path).stem().string().c_str());
-			texture->GetAssetData().Attribute("Path").set_value(_path.c_str());
-			texture->GetAssetData().Attribute("Category").set_value("Secondary");
-			texture->GetAssetData().Attribute("Type").set_value("Texture");
-			texture->GetAssetData()._Raw().append_attribute("TextureType");
-			switch (type)
-			{
-			case aiTextureType::aiTextureType_DIFFUSE:
-				texture->GetAssetData().Attribute("TextureType").set_value("Diffuse");
-				mesh->GetMaterial()->TextureDiffuse = texture;
-				break;
-			case aiTextureType::aiTextureType_SPECULAR:
-				texture->GetAssetData().Attribute("TextureType").set_value("Specular");
-				mesh->GetMaterial()->TextureSpecular = texture;
-				break;
-			case aiTextureType::aiTextureType_HEIGHT:
-				texture->GetAssetData().Attribute("TextureType").set_value("Normal");
-				mesh->GetMaterial()->TextureNormals = texture;
-				break;
-			}
-			
-			if (!texture->Deserialize())
-				SHADE_WARNING("Falied to import image :{0}", _path);
+		aiString path;  aImaterial->GetTexture(type, i, &path);
+		std::filesystem::path _path = std::filesystem::path(filePath).parent_path().string() + "\\" + path.C_Str();
+		auto texture = shade::Texture::Create<shade::Texture>();
+		auto& assetData = texture->GetAssetData();
 
-			texture->AssetInit();	
+		assetData.Attribute("Id").set_value(_path.stem().string().c_str());
+		assetData.Attribute("Path").set_value(_path.string().c_str());
+		assetData.Attribute("Category").set_value("Secondary");
+		assetData.Attribute("Type").set_value("Texture");
+		assetData._Raw().append_attribute("TextureType");
+
+		switch (type)
+		{
+		case aiTextureType::aiTextureType_DIFFUSE:
+			assetData.Attribute("TextureType").set_value("Diffuse");
+			material->TextureDiffuse = texture;
+			break;
+		case aiTextureType::aiTextureType_SPECULAR:
+			assetData.Attribute("TextureType").set_value("Specular");
+			material->TextureSpecular = texture;
+			break;
+		case aiTextureType::aiTextureType_HEIGHT:
+			assetData.Attribute("TextureType").set_value("Normal");
+			material->TextureNormals = texture;
+			break;
+		}
+
+		if (!texture->Deserialize())
+			SHADE_WARNING("Falied to import image :{0}", _path);
+
+		texture->AssetInit();
+
+		material->GetAssetData().Append(texture->GetAssetData());
 	}
 }
 
-void IModel3D::ProcessMaterial(const shade::Shared<shade::Mesh>& mesh, aiMaterial* material)
+void IModel3D::ProcessMaterial(const shade::Shared<shade::Material3D>& material, const std::string& filePath, aiMaterial* aImaterial)
 {
 	aiColor3D color;
 	//material->Get(AI_MATKEY_COLOR_AMBIENT, color); // Ka
 	//mesh->GetMaterial()->ColorAmbient = glm::vec3(color.r, color.g, color.b);
-	material->Get(AI_MATKEY_COLOR_DIFFUSE, color);// Kd
-	mesh->GetMaterial()->ColorDiffuse = glm::vec3(color.r, color.g, color.b);
-	material->Get(AI_MATKEY_COLOR_SPECULAR, color);// Ks
-	mesh->GetMaterial()->ColorSpecular = glm::vec3(color.r, color.g, color.b);
-	material->Get(AI_MATKEY_COLOR_TRANSPARENT, color);// Tf
-	mesh->GetMaterial()->ColorTransparent = glm::vec3(color.r, color.g, color.b);
+	aImaterial->Get(AI_MATKEY_COLOR_DIFFUSE, color);// Kd
+	material->ColorDiffuse = glm::vec3(color.r, color.g, color.b);
+	aImaterial->Get(AI_MATKEY_COLOR_SPECULAR, color);// Ks
+	material->ColorSpecular = glm::vec3(color.r, color.g, color.b);
+	aImaterial->Get(AI_MATKEY_COLOR_TRANSPARENT, color);// Tf
+	material->ColorTransparent = glm::vec3(color.r, color.g, color.b);
 
 	float value;
-	material->Get(AI_MATKEY_SHININESS, value); // Ns
-	mesh->GetMaterial()->Shininess = value;
+	aImaterial->Get(AI_MATKEY_SHININESS, value); // Ns
+	material->Shininess = value;
+
+	auto& assetData = material->GetAssetData();
+	assetData.Attribute("Id").set_value(aImaterial->GetName().C_Str());
+	assetData.Attribute("Type").set_value("Material");
+	//assetData._Raw().append_attribute("Asset");
+	//assetData.Attribute("Asset").set_value(aImaterial->GetName().C_Str());
 }

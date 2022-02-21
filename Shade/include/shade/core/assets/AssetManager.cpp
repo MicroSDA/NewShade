@@ -23,12 +23,15 @@ bool shade::AssetManager::LoadAssetDataListFromFile(const std::string& filePath)
 	{
 		auto& instance = _Get();
 		instance.m_AssetsDoc.load_file(filePath.c_str());
+		instance.m_CurrentPath = filePath;
 		if (instance.m_AssetsDoc.child("assets").empty())
 		{
 			SHADE_CORE_ERROR("Assets were not been found in '{0}'", filePath);
 			return false;
 		}
+		instance.m_AssetsDataList.clear();
 		instance._ReadAssetDataList(instance.m_AssetsDoc.child("assets"));
+		instance.m_PrefabDataList.clear();
 		instance._RecursiveReadingPrefabsDataList(instance.m_AssetsDoc.child("assets"));
 		return true;
 	}
@@ -80,10 +83,12 @@ shade::AssetData shade::AssetManager::GetAssetData(const std::string& id)
 	else
 	{
 		assetData = instance.m_PrefabDataList.find(id);
-		if(assetData == instance.m_PrefabDataList.end())
-			SHADE_CORE_WARNING("Couldn't find specified asset data by asset id : {0}", id)
-		else
+		if (assetData == instance.m_PrefabDataList.end())
+		{
 			return AssetData();
+		}	
+		else
+			return AssetData(assetData->second); /* Return prefab*/
 	}
 }
 
@@ -103,6 +108,41 @@ shade::AssetData shade::AssetManager::GetPrefabsData(const std::string& id)
 	{
 		SHADE_CORE_WARNING("Couldn't find specified prefab data by asset id :{0}", id);
 		return AssetData();
+	}
+}
+
+void shade::AssetManager::SaveAssetDataList()
+{
+	auto& instance = _Get();
+	instance.m_AssetsDoc.save_file(instance.m_CurrentPath.c_str());
+}
+
+const std::string& shade::AssetManager::GetCurrentPath()
+{
+	return _Get().m_CurrentPath;
+}
+
+bool shade::AssetManager::RemoveFromPrefabData(const std::string& id)
+{
+	auto& instance = _Get();
+	auto& prefab = instance.m_PrefabDataList.find(id);
+	if (prefab != instance.m_PrefabDataList.end())
+	{
+		/* Remove from doc */
+		prefab->second.Parent().Remove(prefab->second);
+		/* Remvoe from loaded map */
+		instance.m_PrefabDataList.erase(prefab);
+
+		/* Remove from loaded references */
+		auto& loaded = instance.m_PrefabReferences.find(id);
+		if (loaded != instance.m_PrefabReferences.end())
+			instance.m_PrefabReferences.erase(loaded);
+
+		return true;
+	}
+	else
+	{
+		return false;
 	}
 }
 

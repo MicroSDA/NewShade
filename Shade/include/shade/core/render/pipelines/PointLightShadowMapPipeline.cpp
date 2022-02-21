@@ -6,18 +6,22 @@ shade::PointLightShadowMapPipeline::PointLightShadowMapPipeline()
 {
 	m_ShadowFrameBuffer = shade::FrameBuffer::Create(shade::FrameBuffer::Layout(1024 * m_ShadowMapMultiplier, 1024 * m_ShadowMapMultiplier, {
 	shade::FrameBuffer::Texture::Format::DEPTH24STENCIL8_CUBE_MAP }, 1, 1));
-	m_CascadeBuffer = ShaderStorageBuffer::Create(0, 7);
+	m_CascadeBuffer  = ShaderStorageBuffer::Create(0, 9);
+	m_SettingsBuffer = UniformBuffer::Create(sizeof(Settings), 10);
 
 	m_Shader = ShadersLibrary::Create("PlShadowMapping", "resources/shaders/General/Effects/ShadowMappingPointLight.glsl");
 }
 
 shade::PointLightShadowMapPipeline::~PointLightShadowMapPipeline()
 {
+
 }
 
 shade::Shared<shade::FrameBuffer> shade::PointLightShadowMapPipeline::Process(const shade::Shared<shade::FrameBuffer>& target, const shade::Shared<shade::FrameBuffer>& previousPass, const shade::Shared<shade::RenderPipeline>& previusPipline, const shade::DrawablePools& drawables, std::unordered_map<shade::Shared<shade::Drawable>, shade::BufferDrawData, std::hash<shade::Shared<shade::Drawable>>, std::equal_to<shade::Shared<shade::Drawable>>, std::allocator<std::pair<const shade::Shared<shade::Drawable>, shade::BufferDrawData>>>& drawData)
 {
-	if (m_IsShadowCast)
+	m_SettingsBuffer->SetData(&m_Settings, sizeof(Settings));
+
+	if (m_Settings.IsShadowCast)
 	{
 		auto& camera = Render::GetLastActiveCamera();
 		auto& lights = Render::GetSubmitedLight();
@@ -96,6 +100,16 @@ shade::PointLightShadowMapPipeline::PointLightCascade shade::PointLightShadowMap
 const shade::Shared<shade::FrameBuffer>& shade::PointLightShadowMapPipeline::GetResult() const
 {
 	return nullptr;
+}
+
+void shade::PointLightShadowMapPipeline::SetSettings(const PointLightShadowMapPipeline::Settings& settings)
+{
+	m_Settings = settings;
+}
+
+const shade::PointLightShadowMapPipeline::Settings& shade::PointLightShadowMapPipeline::GetSettings() const
+{
+	return m_Settings;
 }
 
 void shade::PointLightShadowMapPipeline::SetMultiplier(const float& multiplier)

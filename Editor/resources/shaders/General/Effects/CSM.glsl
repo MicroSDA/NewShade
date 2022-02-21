@@ -84,7 +84,7 @@ float Variance_PointLight(samplerCubeArray ShadowMap, vec3 ProjectionCoords, flo
         float  _Depth = texture(ShadowMap,    vec4(vec3(ProjectionCoords + (SampleOffsetDirections[i] * vec3(TexelSize, 0.001) * Depth)), CascadeLayer)).r * Distance;
         Value += Depth - clamp(_Depth, 0.0, 1.0) >= _Depth ? 1.0 : 0.0;  
     }
-    Value /= float(SamplesCount);
+    Value /= float(SamplesCount + 1);
     return 1.0 - Value;
 }
 

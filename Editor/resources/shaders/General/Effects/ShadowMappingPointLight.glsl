@@ -8,11 +8,6 @@ layout (location = 0) in vec3  a_Position;
 layout (location = 1) in vec2  a_UV_Coordinates;
 layout (location = 4) in mat4  a_Transform;
 
-layout (std430, binding = 7) restrict readonly buffer UPointLightCascade
-{
-	PointLightCascade u_PointLightCascade[];
-};
-
 void main()
 {
     /* Set position without veiw matrix */
@@ -36,7 +31,7 @@ layout (std430, binding = 3) restrict readonly buffer UPointLight
 	PointLight u_PointLight[];
 };
 
-layout (std430, binding = 7) restrict readonly buffer UPointLightCascade
+layout (std430, binding = 9) restrict readonly buffer UPointLightCascade
 {
 	PointLightCascade u_PointLightCascade[];
 };

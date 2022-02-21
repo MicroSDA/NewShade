@@ -89,14 +89,29 @@ layout (std430, binding = 5) restrict readonly buffer UDirectLightCascade
 	DirectLightCascade u_DirectLightCascade[];
 };
 
-layout (std430, binding = 6) restrict readonly buffer USpotLightCascade
+layout (std140, binding = 6) uniform UDirectLightShadowSettings
+{
+	DLShadowSettings u_DLShadowSettings;
+};
+
+layout (std430, binding = 7) restrict readonly buffer USpotLightCascade
 {
 	SpotLightCascade u_SpotLightCascade[];
 };
 
-layout (std430, binding = 7) restrict readonly buffer UPointLightCascade
+layout (std140, binding = 8) uniform USpotLightShadowSettings
+{
+	SLShadowSettings u_SLShadowSettings;
+};
+
+layout (std430, binding = 9) restrict readonly buffer UPointLightCascade
 {
 	PointLightCascade u_PointLightCascade[];
+};
+
+layout (std140, binding = 10) uniform UPointLightShadowSettings
+{
+	PLShadowSettings u_PLShadowSettings;
 };
 // Need to pack in SSBO material as well !!
 uniform int               u_HasMaterial;
@@ -172,15 +187,19 @@ vec4 BillinPhong(vec3 toCameraDirection)
 				float   Depth               = abs(FragPosVeiwSpace.z);
 				int     CascadeLayer        = 0;
 
-				for(int i = 0; i < u_DirectLightCascade.length(); i++)
+				float ShadowFactor = 1.0;
+				if(u_DLShadowSettings.IsCast)
 				{
-					if(Depth <= u_DirectLightCascade[i].SplitDistance)
-					{	CascadeLayer = i;	break;	}
+					for(int i = 0; i < u_DirectLightCascade.length(); i++)	
+					{
+						if(Depth <= u_DirectLightCascade[i].SplitDistance)
+						{	CascadeLayer = i;	break;	}
+					}
+					/* Calc shadows */
+					ShadowFactor  = CSM_DirectLight(u_TDirectLightShadowMap, u_DirectLightCascade[CascadeLayer].ViewMatrix, CascadeLayer, u_DirectLightCascade.length(), u_DirectLightCascade[i].SplitDistance, u_Camera.View, a_Vertex, a_Normal, u_DirectLight[i].Direction);	
 				}
-				/* Calc shadows */
-				float Shadow  = CSM_DirectLight(u_TDirectLightShadowMap, u_DirectLightCascade[CascadeLayer].ViewMatrix, CascadeLayer, u_DirectLightCascade.length(), u_DirectLightCascade[i].SplitDistance, u_Camera.View, a_Vertex, a_Normal, u_DirectLight[i].Direction);	
 				/* Calc direct light*/
-				Color 		 += BilinPhongDirectLight(TBN_Normal, u_DirectLight[i], u_Material, toCameraDirection, texture(u_TDiffuse, a_UV_Coordinates).rgba, texture(u_TSpecular, a_UV_Coordinates).rgba, Shadow); 
+				Color 		 += BilinPhongDirectLight(a_Normal, u_DirectLight[i], u_Material, toCameraDirection, texture(u_TDiffuse, a_UV_Coordinates).rgba, texture(u_TSpecular, a_UV_Coordinates).rgba, ShadowFactor); 
 				/* Cascades visualizing */
 				/*if(CascadeLayer == 0)		
 					Color += vec4(0.2, 0.2, 0, 0);
@@ -198,10 +217,14 @@ vec4 BillinPhong(vec3 toCameraDirection)
 		{
 			if(distance(a_Vertex, u_PointLight[i].Position) <= u_PointLight[i].Distance)
 			{
-				/* Calc shadows */
-				float Shadow = SM_PointLight(u_TPointLightShadowMap, i, a_Vertex, a_Normal, u_PointLight[i].Position, u_PointLight[i].Distance);
+				float ShadowFactor = 1.0;
+				if(u_PLShadowSettings.IsCast)
+				{
+					/* Calc shadows */
+					ShadowFactor = SM_PointLight(u_TPointLightShadowMap, i, a_Vertex, a_Normal, u_PointLight[i].Position, u_PointLight[i].Distance);
+				}
 				/* Calc point light */
-				Color 		+= BilinPhongPointLight(TBN_Normal, u_PointLight[i],   u_Material, a_Vertex, toCameraDirection, texture(u_TDiffuse, a_UV_Coordinates).rgba, texture(u_TSpecular, a_UV_Coordinates).rgba, Shadow);
+				Color 		+= BilinPhongPointLight(a_Normal, u_PointLight[i],   u_Material, a_Vertex, toCameraDirection, texture(u_TDiffuse, a_UV_Coordinates).rgba, texture(u_TSpecular, a_UV_Coordinates).rgba, ShadowFactor);
 			}
 		}
 	}	
@@ -211,10 +234,14 @@ vec4 BillinPhong(vec3 toCameraDirection)
 		{
 			if(distance(a_Vertex, u_SpotLight[i].Position) <= u_SpotLight[i].Distance)
 			{
-				/* Calc shadows */
-				float Shadow  = SM_SpotLight(u_TSpotLightShadowMap, u_SpotLightCascade[i].ViewMatrix, i, u_Camera.View, a_Vertex,a_Normal, u_SpotLight[i].Direction);
+				float ShadowFactor = 1.0;
+				if(u_SLShadowSettings.IsCast)
+				{
+					/* Calc shadows */
+					ShadowFactor  = SM_SpotLight(u_TSpotLightShadowMap, u_SpotLightCascade[i].ViewMatrix, i, u_Camera.View, a_Vertex,a_Normal, u_SpotLight[i].Direction);
+				}
 				/* Calc spot light */
-				Color 		 += BilinPhongSpotLight(TBN_Normal, u_SpotLight[i],  u_Material, a_Vertex, toCameraDirection, texture(u_TDiffuse, a_UV_Coordinates).rgba, texture(u_TSpecular, a_UV_Coordinates).rgba, Shadow);
+				Color 		 += BilinPhongSpotLight(TBN_Normal, u_SpotLight[i],  u_Material, a_Vertex, toCameraDirection, texture(u_TDiffuse, a_UV_Coordinates).rgba, texture(u_TSpecular, a_UV_Coordinates).rgba, ShadowFactor);
 			}
 		}
 	}
@@ -228,7 +255,7 @@ void main()
 {
 	vec3 ToCameraDirection 		= normalize(u_Camera.Position - a_Vertex);
 	// Do lighting calculation;
-	vec4 Color 					= u_sLighting(ToCameraDirection);      
+	vec4 Color 					= u_sLighting(ToCameraDirection);
 	FrameBufferAttachment 		= vec4(Color.rgb  + (u_Material.DiffuseColor * u_Material.Emissive), 1.0);
 }
 // !End of fragment shader

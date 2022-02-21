@@ -8,190 +8,200 @@ shade::Mesh::~Mesh()
 
 void shade::Mesh::AssetInit()
 {
-    // Empty there
+	// Empty there
 }
 
 bool shade::Mesh::Serialize(std::ostream& stream) const
 {
-    return false;
+	return false;
 }
 
 bool shade::Mesh::Deserialize(std::istream& stream)
 {
-    return false;
+	return false;
 }
 
 bool shade::Mesh::Serialize() const
 {
-    if (!GetAssetData().Serialize())
-        return false;
-    else
-    {
-        std::string id		= GetAssetData().Attribute("Id").as_string();
-        std::string path	= GetAssetData().Attribute("Path").as_string();
+	std::string id = GetAssetData().Attribute("Id").as_string();
+	std::string path = GetAssetData().Attribute("Path").as_string();
+	
+	if (path.empty())
+	{
+		SHADE_CORE_WARNING("Failded to create directories for asset '{0}', file path is empty.", id);
+		return false;
+	}
 
-        if (path.empty())
-        {
-            SHADE_CORE_WARNING("Failded to create directories for asset '{0}', file path is empty.", id);
-            return false;
-        }
+	GetMaterial()->GetAssetData().Attribute("Path").set_value(path.c_str());
 
-        // Need to create one varible to save total size of file and place it in header to evade corupted file when reading
-        std::ofstream file;
-        file.open(path, std::ios::binary);
-        if (file.is_open() && file.good())
-        {
-            shade::util::Binarizer::Write(file, "@s_mesh");
-            //shade::util::Binarizer::Write(file, id); // Maby will crash
-            shade::util::Binarizer::Write(file, std::uint32_t(GetVertices().size()));
-            shade::util::Binarizer::Write(file, std::uint32_t(GetIndices().size()));
+	std::filesystem::path _path(path);
+	if (!_path.has_filename())
+	{
+		path += id + ".s_mesh";
+	}
 
-            for (auto& vertex : GetVertices())
-            {
-                shade::util::Binarizer::Write(file, vertex.Position.x);
-                shade::util::Binarizer::Write(file, vertex.Position.y);
-                shade::util::Binarizer::Write(file, vertex.Position.z);
+	GetAssetData().Attribute("Path").set_value(path.c_str());
 
-                shade::util::Binarizer::Write(file, vertex.UV_Coordinates.x);
-                shade::util::Binarizer::Write(file, vertex.UV_Coordinates.y);
+	// Need to create one varible to save total size of file and place it in header to evade corupted file when reading
+	std::ofstream file;
+	file.open(path, std::ios::binary);
+	if (file.is_open() && file.good())
+	{
+		shade::util::Binarizer::Write(file, "@s_mesh");
+		//shade::util::Binarizer::Write(file, id); // Maby will crash
+		shade::util::Binarizer::Write(file, std::uint32_t(GetVertices().size()));
+		shade::util::Binarizer::Write(file, std::uint32_t(GetIndices().size()));
 
-                shade::util::Binarizer::Write(file, vertex.Normal.x);
-                shade::util::Binarizer::Write(file, vertex.Normal.y);
-                shade::util::Binarizer::Write(file, vertex.Normal.z);
+		for (auto& vertex : GetVertices())
+		{
+			shade::util::Binarizer::Write(file, vertex.Position.x);
+			shade::util::Binarizer::Write(file, vertex.Position.y);
+			shade::util::Binarizer::Write(file, vertex.Position.z);
 
-                shade::util::Binarizer::Write(file, vertex.Tangent.x);
-                shade::util::Binarizer::Write(file, vertex.Tangent.y);
-                shade::util::Binarizer::Write(file, vertex.Tangent.z);
+			shade::util::Binarizer::Write(file, vertex.UV_Coordinates.x);
+			shade::util::Binarizer::Write(file, vertex.UV_Coordinates.y);
 
-                //Tangenst later if needed 
-            }
-            for (auto& index : GetIndices())
-            {
-                shade::util::Binarizer::Write(file, shade::Index(index));
-            }
+			shade::util::Binarizer::Write(file, vertex.Normal.x);
+			shade::util::Binarizer::Write(file, vertex.Normal.y);
+			shade::util::Binarizer::Write(file, vertex.Normal.z);
 
-            /* AABB */
-            shade::util::Binarizer::Write(file, GetMinHalfExt());
-         /*   shade::util::Binarizer::Write(file, GetMinHalfExt().y);
-            shade::util::Binarizer::Write(file, GetMinHalfExt().z);*/
+			shade::util::Binarizer::Write(file, vertex.Tangent.x);
+			shade::util::Binarizer::Write(file, vertex.Tangent.y);
+			shade::util::Binarizer::Write(file, vertex.Tangent.z);
 
-            shade::util::Binarizer::Write(file, GetMaxHalfExt());
-          /*  shade::util::Binarizer::Write(file, GetMaxHalfExt().y);
-            shade::util::Binarizer::Write(file, GetMaxHalfExt().z);*/
-            file.close();
-        }
-        else
-        {
-            SHADE_CORE_WARNING("Failed to open file '{0}'.", path + id + ".s_mesh")
-                return false;
-        }
+			//Tangenst later if needed 
+		}
+		for (auto& index : GetIndices())
+		{
+			shade::util::Binarizer::Write(file, shade::Index(index));
+		}
 
-        return true;
-    }
+		/* AABB */
+		shade::util::Binarizer::Write(file, GetMinHalfExt());
+		/*   shade::util::Binarizer::Write(file, GetMinHalfExt().y);
+		   shade::util::Binarizer::Write(file, GetMinHalfExt().z);*/
+
+		shade::util::Binarizer::Write(file, GetMaxHalfExt());
+		/*  shade::util::Binarizer::Write(file, GetMaxHalfExt().y);
+		  shade::util::Binarizer::Write(file, GetMaxHalfExt().z);*/
+		file.close();
+	}
+	else
+	{
+		SHADE_CORE_WARNING("Failed to open file '{0}'.", path + id + ".s_mesh")
+			return false;
+	}
+
+	GetMaterial()->Serialize();
+
+	if (!GetAssetData().Serialize())
+		return false;
+	else
+		return true;
 }
 
 bool shade::Mesh::Deserialize()
 {
-    // Now only if it prsenet in asset data list
-    std::string id		= GetAssetData().Attribute("Id").as_string();
-    std::string path	= GetAssetData().Attribute("Path").as_string();
+	// Now only if it prsenet in asset data list
+	std::string id = GetAssetData().Attribute("Id").as_string();
+	std::string path = GetAssetData().Attribute("Path").as_string();
 
-    std::ifstream file;
-    file.open(path, std::ios::binary);
+	std::ifstream file;
+	file.open(path, std::ios::binary);
 
-    if (file.is_open() && file.good())
-    {
-        std::string header;
-        shade::util::Binarizer::Read(file, header);
-        header.pop_back();
-        if (header == "@s_mesh")
-        {
-            std::uint32_t verticesCount = 0;
-            shade::util::Binarizer::Read(file, verticesCount);
-            if (verticesCount <= 50000) // limit !
-            {
-                GetVertices().reserve(verticesCount);
+	if (file.is_open() && file.good())
+	{
+		std::string header;
+		shade::util::Binarizer::Read(file, header);
+		header.pop_back();
+		if (header == "@s_mesh")
+		{
+			std::uint32_t verticesCount = 0;
+			shade::util::Binarizer::Read(file, verticesCount);
+			if (verticesCount <= 50000) // limit !
+			{
+				GetVertices().reserve(verticesCount);
 
-                std::uint32_t indicesCount = 0;
-                shade::util::Binarizer::Read(file, indicesCount);
-                if (indicesCount <= 50000) // limit !
-                {
-                    GetIndices().reserve(indicesCount);
+				std::uint32_t indicesCount = 0;
+				shade::util::Binarizer::Read(file, indicesCount);
+				if (indicesCount <= 50000) // limit !
+				{
+					GetIndices().reserve(indicesCount);
 
-                    for (auto v = 0; v < verticesCount; v++)
-                    {
-                        shade::Vertex3D vertex;
-                        shade::util::Binarizer::Read(file, vertex.Position.x);
-                        shade::util::Binarizer::Read(file, vertex.Position.y);
-                        shade::util::Binarizer::Read(file, vertex.Position.z);
+					for (auto v = 0; v < verticesCount; v++)
+					{
+						shade::Vertex3D vertex;
+						shade::util::Binarizer::Read(file, vertex.Position.x);
+						shade::util::Binarizer::Read(file, vertex.Position.y);
+						shade::util::Binarizer::Read(file, vertex.Position.z);
 
-                        shade::util::Binarizer::Read(file, vertex.UV_Coordinates.x);
-                        shade::util::Binarizer::Read(file, vertex.UV_Coordinates.y);
+						shade::util::Binarizer::Read(file, vertex.UV_Coordinates.x);
+						shade::util::Binarizer::Read(file, vertex.UV_Coordinates.y);
 
-                        shade::util::Binarizer::Read(file, vertex.Normal.x);
-                        shade::util::Binarizer::Read(file, vertex.Normal.y);
-                        shade::util::Binarizer::Read(file, vertex.Normal.z);
+						shade::util::Binarizer::Read(file, vertex.Normal.x);
+						shade::util::Binarizer::Read(file, vertex.Normal.y);
+						shade::util::Binarizer::Read(file, vertex.Normal.z);
 
-                        shade::util::Binarizer::Read(file, vertex.Tangent.x);
-                        shade::util::Binarizer::Read(file, vertex.Tangent.y);
-                        shade::util::Binarizer::Read(file, vertex.Tangent.z);
+						shade::util::Binarizer::Read(file, vertex.Tangent.x);
+						shade::util::Binarizer::Read(file, vertex.Tangent.y);
+						shade::util::Binarizer::Read(file, vertex.Tangent.z);
 
-                        GetVertices().push_back(vertex);
-                    }
-                    for (auto i = 0; i < indicesCount; i++)
-                    {
+						GetVertices().push_back(vertex);
+					}
+					for (auto i = 0; i < indicesCount; i++)
+					{
 
-                        Index index;
-                        shade::util::Binarizer::Read(file, index);
-                        GetIndices().push_back(index);
-                    }
-                    
-                    /* AABB */
-                    glm::vec3 minHalf, maxHalf;
-                    shade::util::Binarizer::Read(file, minHalf[0], 3);
-                    shade::util::Binarizer::Read(file, maxHalf[0], 3);
-                    SetMinHalfExt(minHalf); SetMaxHalfExt(maxHalf);
-                   
+						Index index;
+						shade::util::Binarizer::Read(file, index);
+						GetIndices().push_back(index);
+					}
 
-                    file.close();
-                    return true;
-                }
-                else
-                {
-                    SHADE_CORE_WARNING("Indices limit exceeded in '{0}'.", path + id + ".s_mesh");
-                    return false;
-                }
-            }
-            else
-            {
-                SHADE_CORE_WARNING("Vertices limit exceeded in '{0}'.", path + id + ".s_mesh");
-                return false;
-            }
-        }
-        else
-        {
-            SHADE_CORE_WARNING("Wrong header in '{0}'.", path + id + ".s_mesh");
-            return false;
-        }
+					/* AABB */
+					glm::vec3 minHalf, maxHalf;
+					shade::util::Binarizer::Read(file, minHalf[0], 3);
+					shade::util::Binarizer::Read(file, maxHalf[0], 3);
+					SetMinHalfExt(minHalf); SetMaxHalfExt(maxHalf);
 
-    }
-    else
-    {
-        SHADE_CORE_WARNING("Failed to open file '{0}'.", path + id + ".s_mesh")
-            return false;
-    }
+
+					file.close();
+					return true;
+				}
+				else
+				{
+					SHADE_CORE_WARNING("Indices limit exceeded in '{0}'.", path + id + ".s_mesh");
+					return false;
+				}
+			}
+			else
+			{
+				SHADE_CORE_WARNING("Vertices limit exceeded in '{0}'.", path + id + ".s_mesh");
+				return false;
+			}
+		}
+		else
+		{
+			SHADE_CORE_WARNING("Wrong header in '{0}'.", path + id + ".s_mesh");
+			return false;
+		}
+
+	}
+	else
+	{
+		SHADE_CORE_WARNING("Failed to open file '{0}'.", path + id + ".s_mesh")
+			return false;
+	}
 }
 
 void shade::Mesh::LoadDependentAssetsCallback(const shade::AssetData& data, const std::string& id)
 {
-    if (strcmp(data.Attribute("Type").as_string(), "Material") == 0)
-    {
-        AssetManager::HoldPrefab<Material3D>(id,
-            [this](auto& material) mutable
-            {
-                SetMaterial(AssetManager::Receive<Material3D>(material));
+	if (strcmp(data.Attribute("Type").as_string(), "Material") == 0)
+	{
+		AssetManager::HoldPrefab<Material3D>(id,
+			[this](auto& material) mutable
+			{
+				SetMaterial(AssetManager::Receive<Material3D>(material));
 
-            }, shade::Asset::Lifetime::Destroy);
-    }
+			}, shade::Asset::Lifetime::Destroy);
+	}
 }
 

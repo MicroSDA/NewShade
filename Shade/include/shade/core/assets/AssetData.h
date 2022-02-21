@@ -34,6 +34,7 @@ namespace shade
 		}
 	public:
 		void					Append(AssetData& data);
+		void					Remove(AssetData& data);
 		const bool&				IsValid() const;
 		AssetData				Parent();
 		std::vector<AssetData>	Dependencies() const;

@@ -9,6 +9,7 @@ shade::DirectLightShadowMapPipeline::DirectLightShadowMapPipeline()
 
 	m_Shader = ShadersLibrary::Create("DlShadowMapping", "resources/shaders/General/Effects/ShadowMappingDirectLight.glsl");
 	m_CascadeBuffer = ShaderStorageBuffer::Create(sizeof(DirectLightCascade) * 4, 5);
+	m_SettingsBuffer = UniformBuffer::Create(sizeof(Settings), 6);
 }
 
 shade::DirectLightShadowMapPipeline::~DirectLightShadowMapPipeline()
@@ -17,7 +18,9 @@ shade::DirectLightShadowMapPipeline::~DirectLightShadowMapPipeline()
 
 shade::Shared<shade::FrameBuffer> shade::DirectLightShadowMapPipeline::Process(const shade::Shared<FrameBuffer>& target, const shade::Shared<FrameBuffer>& previousPass, const Shared<RenderPipeline>& previusPipline, const DrawablePools& drawables, std::unordered_map<Shared<Drawable>, BufferDrawData>& drawData)
 {
-	if (m_IsShadowCast)
+	m_SettingsBuffer->SetData(&m_Settings, sizeof(Settings));
+
+	if (m_Settings.IsShadowCast)
 	{
 		auto& camera = Render::GetLastActiveCamera();
 		auto& lights = Render::GetSubmitedLight();
@@ -79,6 +82,12 @@ shade::Shared<shade::FrameBuffer> shade::DirectLightShadowMapPipeline::Process(c
 			{
 				for (auto& [material, transforms] : materials.Materials)
 				{
+					if (material)
+					{
+						/* To check alpha */
+						if (material->TextureDiffuse)
+							material->TextureDiffuse->Bind(0);
+					}
 					if (drawData[instance].TBO->GetSize() != sizeof(glm::mat4) * transforms.size())
 						drawData[instance].TBO->Resize(sizeof(glm::mat4) * transforms.size());
 					drawData[instance].TBO->SetData(transforms.data(), sizeof(glm::mat4) * transforms.size(), 0);
@@ -108,6 +117,16 @@ shade::Shared<shade::FrameBuffer> shade::DirectLightShadowMapPipeline::Process(c
 const shade::Shared<shade::FrameBuffer>& shade::DirectLightShadowMapPipeline::GetResult() const
 {
 	return nullptr;
+}
+
+void shade::DirectLightShadowMapPipeline::SetSettings(const DirectLightShadowMapPipeline::Settings& settings)
+{
+	m_Settings = settings;
+}
+
+const shade::DirectLightShadowMapPipeline::Settings& shade::DirectLightShadowMapPipeline::GetSettings() const
+{
+	return m_Settings;
 }
 
 shade::DirectLightShadowMapPipeline::DirectLightCascade  shade::DirectLightShadowMapPipeline::ComputeDirectLightCascade(const shade::Shared<Camera>& camera, const glm::vec3& direction, const float& nearPlane, const float& farplane, const float& split)

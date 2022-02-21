@@ -14,40 +14,46 @@ struct Settings
 uniform Settings u_Settings;
 
 // Tone mapping
-vec3 ACES(vec3 x)
+vec3 ACES(vec3 color)
 {
-  const float a = 2.51;
-  const float b = 0.03;
-  const float c = 2.43;
-  const float d = 0.59;
-  const float e = 0.14;
-  return clamp((x * (a * x + b)) / (x * (c * x + d) + e), 0.0, 1.0);
+	//Exposure
+	color.rgb *= u_Settings.Exposure;
+	// Gamma
+	color.rgb  = pow(color.rgb, vec3(1.0 / u_Settings.Gamma));
+	const float a = 2.51;
+	const float b = 0.03;
+	const float c = 2.43;
+	const float d = 0.59;
+	const float e = 0.14;
+	return clamp((color * (a * color + b)) / (color * (c * color + d) + e), 0.0, 1.0);
 };
-
 vec3 FilmicToneMapping(vec3 color)
 {
+	//Exposure
+	color.rgb *= u_Settings.Exposure;
+	// Gamma
+	color.rgb  = pow(color.rgb, vec3(1.0 / u_Settings.Gamma));
 	color = max(vec3(0.), color - vec3(0.004));
 	color = (color * (6.2 * color + .5)) / (color * (6.2 * color + 1.7) + 0.06);
 	return color;
 };
-
 vec3 linearToneMapping(vec3 color)
 {
-	float exposure = 1.;
+	float exposure = u_Settings.Exposure;
 	color = clamp(exposure * color, 0., 1.);
-	color = pow(color, vec3(1. / u_Settings.Gamma));
+	color = pow(color, vec3(1.0 / u_Settings.Gamma));
 	return color;
 };
-
 vec3 simpleReinhardToneMapping(vec3 color)
 {
-	float exposure = 1.5;
+	float exposure = u_Settings.Exposure;
 	color *= exposure/(1. + color / u_Settings.Exposure);
-	color = pow(color, vec3(1. / u_Settings.Gamma));
+	color = pow(color, vec3(1.0 / u_Settings.Gamma));
 	return color;
 };
 vec3 lumaBasedReinhardToneMapping(vec3 color)
 {
+	color.rgb *= u_Settings.Exposure;
 	float luma = dot(color, vec3(0.2126, 0.7152, 0.0722));
 	float toneMappedLuma = luma / (1. + luma);
 	color *= toneMappedLuma / luma;
@@ -56,11 +62,11 @@ vec3 lumaBasedReinhardToneMapping(vec3 color)
 };
 vec3 RomBinDaHouseToneMapping(vec3 color)
 {
+	color.rgb *= u_Settings.Exposure;
     color = exp( -1.0 / ( 2.72*color + 0.15 ) );
 	color = pow(color, vec3(1. / u_Settings.Gamma));
 	return color;
 };
-
 vec3 Uncharted2ToneMapping(vec3 color)
 {
 	float A = 0.15;
@@ -70,7 +76,7 @@ vec3 Uncharted2ToneMapping(vec3 color)
 	float E = 0.02;
 	float F = 0.30;
 	float W = 11.2;
-	float exposure = 2.;
+	float exposure = u_Settings.Exposure;
 	color *= exposure;
 	color = ((color * (A * color + C * B) + D * E) / (color * (A * color + B) + D * F)) - E / F;
 	float white = ((W * (A * W + C * B) + D * E) / (W * (A * W + B) + D * F)) - E / F;
@@ -79,16 +85,9 @@ vec3 Uncharted2ToneMapping(vec3 color)
 	return color;
 };
 
-
-
 void main()
 {
 	ivec2 possition = ivec2(gl_GlobalInvocationID.xy);
 	vec4  color = imageLoad(u_InputColor, possition);
-	//Exposure
-	color.rgb *= u_Settings.Exposure;
-	// Gamma
-	color.rgb  = pow(color.rgb, vec3(1.0 / u_Settings.Gamma));
-	
 	imageStore(u_OutputColor, possition, vec4(ACES(color.rgb), color.a));
 }
