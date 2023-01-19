@@ -24,6 +24,7 @@ namespace shade
 		virtual const Shared<FrameBuffer>& GetResult() const override;
 		void SetSettings(const SpotLightShadowMapPipeline::Settings& settings);
 		const SpotLightShadowMapPipeline::Settings& GetSettings() const;
+		void SetMultiplier(const float& multiplier);
 	private:
 		Shared<FrameBuffer>         m_ShadowFrameBuffer;
 		Shared<ShaderStorageBuffer>	m_CascadeBuffer;

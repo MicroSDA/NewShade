@@ -14,11 +14,12 @@
 #include "shade/core/render/drawable/primitives/Grid.h"
 #include "shade/core/render/drawable/primitives/Box.h"
 #include "shade/core/render/drawable/primitives/Sphere.h"
+#include "shade/core/render/drawable/primitives/Plane.h"
 #include "shade/core/render/buffers/UniformBuffer.h"
 #include "shade/core/render/buffers/ShaderStorageBuffer.h"
 #include "shade/core/render/postprocess/PPBloom.h"
 #include "shade/core/render/postprocess/PPColorCorrection.h"
-#include "shade/core/render/drawable/primitives/Plane.h"
+
 #include "shade/core/vertex/Vertex2D.h"
 #include "shade/core/render/DrawablePass.h"
 #include "shade/core/render/RenderPipeline.h"

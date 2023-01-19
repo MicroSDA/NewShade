@@ -24,6 +24,7 @@ namespace shade
 		virtual const shade::Shared<shade::FrameBuffer>& GetResult() const override;
 		void SetSettings(const DirectLightShadowMapPipeline::Settings& settings);
 		const DirectLightShadowMapPipeline::Settings& GetSettings() const;
+		void SetMultiplier(const float& multiplier);
 	private:
 		Shared<FrameBuffer>         m_ShadowFrameBuffer;
 		Shared<ShaderStorageBuffer>	m_CascadeBuffer;

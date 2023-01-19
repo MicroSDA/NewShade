@@ -163,13 +163,14 @@ vec4 FlatColor(vec3 toCameraDirection)
 			Color 		 += BilinPhongSpotLight(a_Normal, u_SpotLight[i],  u_Material, a_Vertex, toCameraDirection, vec4(1, 1, 1, 1), vec4(1, 1, 1, 1), Shadow);
 		}
 	}
+	
 	return Color;
-	/*for(int i = 0;i < u_DirectLight.length(); i++)
-		Color += BilinPhongDirectLight(a_Normal, u_DirectLight[i], u_Material,           toCameraDirection, vec4(1.0, 1.0, 1.0, 1.0), vec4(1.0, 1.0, 1.0, 1.0), 1.0); 
-	for(int i = 0;i < u_PointLight.length();  i++)
-		Color += BilinPhongPointLight(a_Normal, u_PointLight[i],   u_Material, a_Vertex, toCameraDirection, vec4(1.0, 1.0, 1.0, 1.0), vec4(1.0, 1.0, 1.0, 1.0)); 
-	for(int i = 0;i < u_SpotLight.length();  i++)
-		Color += BilinPhongSpotLight(a_Normal, u_SpotLight[i],     u_Material, a_Vertex, toCameraDirection, vec4(1.0, 1.0, 1.0, 1.0), vec4(1.0, 1.0, 1.0, 1.0)); */
+	// for(int i = 0;i < u_DirectLight.length(); i++)
+	// 	Color += BilinPhongDirectLight(a_Normal, u_DirectLight[i], u_Material,           toCameraDirection, vec4(1.0, 1.0, 1.0, 1.0), vec4(1.0, 1.0, 1.0, 1.0), 1.0); 
+	// for(int i = 0;i < u_PointLight.length();  i++)
+	// 	Color += BilinPhongPointLight(a_Normal, u_PointLight[i],   u_Material, a_Vertex, toCameraDirection, vec4(1.0, 1.0, 1.0, 1.0), vec4(1.0, 1.0, 1.0, 1.0)); 
+	// for(int i = 0;i < u_SpotLight.length();  i++)
+	// 	Color += BilinPhongSpotLight(a_Normal, u_SpotLight[i],     u_Material, a_Vertex, toCameraDirection, vec4(1.0, 1.0, 1.0, 1.0), vec4(1.0, 1.0, 1.0, 1.0)); 
 
 	 
 };
@@ -201,14 +202,14 @@ vec4 BillinPhong(vec3 toCameraDirection)
 				/* Calc direct light*/
 				Color 		 += BilinPhongDirectLight(a_Normal, u_DirectLight[i], u_Material, toCameraDirection, texture(u_TDiffuse, a_UV_Coordinates).rgba, texture(u_TSpecular, a_UV_Coordinates).rgba, ShadowFactor); 
 				/* Cascades visualizing */
-				/*if(CascadeLayer == 0)		
-					Color += vec4(0.2, 0.2, 0, 0);
-				if(CascadeLayer == 1)
-					Color += vec4(0.0, 0.2, 0, 0);
-				if(CascadeLayer == 2)
-					Color += vec4(0.0, 0.0, 0.2, 0);
-				if(CascadeLayer == 3)
-					Color += vec4(0.2, 0.0, 0.0, 0);*/
+				//  if(CascadeLayer == 0)		
+				//  	Color += vec4(0.0, 0.2, 0, 0);
+				//  if(CascadeLayer == 1)
+				//  	Color += vec4(0.0, 0.2, 0.2, 0);
+				//  if(CascadeLayer == 2)
+				//  	Color += vec4(0.2, 0.2, 0.0, 0);
+				//  if(CascadeLayer == 3)
+				//  	Color += vec4(0.2, 0.0, 0.0, 0);
 			}
 		}
 	for(int i = 0; i < u_PointLight.length();  i++)
@@ -241,7 +242,7 @@ vec4 BillinPhong(vec3 toCameraDirection)
 					ShadowFactor  = SM_SpotLight(u_TSpotLightShadowMap, u_SpotLightCascade[i].ViewMatrix, i, u_Camera.View, a_Vertex,a_Normal, u_SpotLight[i].Direction);
 				}
 				/* Calc spot light */
-				Color 		 += BilinPhongSpotLight(TBN_Normal, u_SpotLight[i],  u_Material, a_Vertex, toCameraDirection, texture(u_TDiffuse, a_UV_Coordinates).rgba, texture(u_TSpecular, a_UV_Coordinates).rgba, ShadowFactor);
+				Color 		 += BilinPhongSpotLight(a_Normal, u_SpotLight[i],  u_Material, a_Vertex, toCameraDirection, texture(u_TDiffuse, a_UV_Coordinates).rgba, texture(u_TSpecular, a_UV_Coordinates).rgba, ShadowFactor);
 			}
 		}
 	}

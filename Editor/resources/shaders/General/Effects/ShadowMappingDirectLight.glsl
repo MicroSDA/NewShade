@@ -36,12 +36,11 @@ layout (std430, binding = 5) restrict readonly buffer UDirectlightCascade
 
 void main()
 {   
-
     for (int i = 0; i < 3; ++i)
 	{
 		gl_Position = u_DirectLightCascade[gl_InvocationID].ViewMatrix * gl_in[i].gl_Position;
 		gl_Layer = gl_InvocationID;
-		//out_UV_Coordinates = a_UV_Coordinates[i];
+		out_UV_Coordinates = a_UV_Coordinates[i];
 		EmitVertex();
 	}
 	EndPrimitive();
@@ -64,9 +63,9 @@ out vec4 FragColor;
 
 void main()
 {
-	// float Alpha = texture(u_TDiffuse, a_UV_Coordinates).a;
-	// if(Alpha == 0.0)
-	// 	gl_FragDepth = 1.0;
-	// else 
-	// 	gl_FragDepth =gl_FragCoord.z;
+	float Alpha = texture(u_TDiffuse, a_UV_Coordinates).a;
+	if(Alpha == 0.0)
+		gl_FragDepth = 1.0;
+	 else 
+		gl_FragDepth =gl_FragCoord.z;
 }

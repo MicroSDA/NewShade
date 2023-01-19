@@ -13,7 +13,7 @@ void Editor::OnCreate()
 
 	shade::ShadersLibrary::Create("Bloom",		        "resources/shaders/PostProcess/Bloom/Bloom.glsl");
 	shade::ShadersLibrary::Create("ColorCorrection",    "resources/shaders/PostProcess/ColorCorrection/ColorCorrection.glsl");
-	shade::ShadersLibrary::Create("Sprite",				"resources/shaders/2D/Sprite.glsl");
+	shade::ShadersLibrary::Create("Sprite",				"resources/shaders/2D/Sprite.glsl"); 
 	
 
 	// Load assets data list

@@ -10,7 +10,7 @@ shade::SceneRenderer::SceneRenderer()
 	m_GridPassShader          = ShadersLibrary::Get("Grid");
 
 	m_DirectLightShadowFrameBuffer = shade::FrameBuffer::Create(shade::FrameBuffer::Layout(4096, 4096, {
-		shade::FrameBuffer::Texture::Format::DEPTH24STENCIL8_ARRAY_4 }));
+		shade::FrameBuffer::Texture::Format::DEPTH24STENCIL8}));
 }
 
 shade::Shared<shade::SceneRenderer> shade::SceneRenderer::Create()

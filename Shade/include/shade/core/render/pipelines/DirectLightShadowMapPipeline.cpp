@@ -82,12 +82,11 @@ shade::Shared<shade::FrameBuffer> shade::DirectLightShadowMapPipeline::Process(c
 			{
 				for (auto& [material, transforms] : materials.Materials)
 				{
+					/* To check alpha */
 					if (material)
-					{
-						/* To check alpha */
 						if (material->TextureDiffuse)
 							material->TextureDiffuse->Bind(0);
-					}
+
 					if (drawData[instance].TBO->GetSize() != sizeof(glm::mat4) * transforms.size())
 						drawData[instance].TBO->Resize(sizeof(glm::mat4) * transforms.size());
 					drawData[instance].TBO->SetData(transforms.data(), sizeof(glm::mat4) * transforms.size(), 0);
@@ -127,6 +126,15 @@ void shade::DirectLightShadowMapPipeline::SetSettings(const DirectLightShadowMap
 const shade::DirectLightShadowMapPipeline::Settings& shade::DirectLightShadowMapPipeline::GetSettings() const
 {
 	return m_Settings;
+}
+
+void shade::DirectLightShadowMapPipeline::SetMultiplier(const float& multiplier)
+{
+	m_ShadowMapMultiplier = multiplier;
+	auto layout = m_ShadowFrameBuffer->GetLayout();
+	layout.Width = 1024 * m_ShadowMapMultiplier;
+	layout.Height = 1024 * m_ShadowMapMultiplier;
+	m_ShadowFrameBuffer = shade::FrameBuffer::Create(layout);
 }
 
 shade::DirectLightShadowMapPipeline::DirectLightCascade  shade::DirectLightShadowMapPipeline::ComputeDirectLightCascade(const shade::Shared<Camera>& camera, const glm::vec3& direction, const float& nearPlane, const float& farplane, const float& split)

@@ -30,6 +30,7 @@ namespace shade
 		float& GetDistance();
 		const float& GetFalloff() const;
 		float& GetFalloff();
+		// Check if box inside the light 
 		static bool IsInside(const glm::vec3& position, const float& radius, const glm::mat4& transform, const glm::vec3& minHalfExt, const glm::vec3& maxHalfExt);
 		RenderData GetRenderData(const glm::vec3& position);
 	protected:

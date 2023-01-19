@@ -3,6 +3,11 @@
 #include <shade/core/utils/Log.h>
 #include "EditorLayer.h"
 //#include <shade/core/application/Application.h>
+// Forse use discret grpahics, need to fand another good place for it
+extern "C"
+{
+	_declspec(dllexport) DWORD NvOptimusEnablement = 0x00000001;
+}
 
 class Editor : public shade::Application
 {

@@ -62,6 +62,11 @@ shade::Shared<shade::FrameBuffer> shade::PointLightShadowMapPipeline::Process(co
 			{
 				for (auto& [material, transforms] : materials.Materials)
 				{
+					/* To check alpha */
+					if (material)
+						if (material->TextureDiffuse)
+							material->TextureDiffuse->Bind(0);
+
 					if (drawData[instance].TBO->GetSize() != sizeof(glm::mat4) * transforms.size())
 						drawData[instance].TBO->Resize(sizeof(glm::mat4) * transforms.size());
 					drawData[instance].TBO->SetData(transforms.data(), sizeof(glm::mat4) * transforms.size(), 0);

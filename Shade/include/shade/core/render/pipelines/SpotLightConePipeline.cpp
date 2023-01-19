@@ -1,13 +1,13 @@
 #include "shade_pch.h"
-#include "CameraFrustumPipeline.h"
+#include "SpotLightConePipeline.h"
 #include "shade/core/render/Render.h"
 
-shade::CameraFrustumPipeline::CameraFrustumPipeline()
+shade::SpotLightConePipeline::SpotLightConePipeline()
 {
-	m_Shader = ShadersLibrary::Create("Frustum", "resources/shaders/Util/CameraFrustum.glsl");
+	m_Shader = ShadersLibrary::Create("SpotLightCone", "resources/shaders/Util/SpotLightCone.glsl");
 }
 
-shade::Shared<shade::FrameBuffer> shade::CameraFrustumPipeline::Process(const shade::Shared<FrameBuffer>& target, const shade::Shared<FrameBuffer>& previousPass, const Shared<RenderPipeline>& previusPipline, const DrawablePools& drawables, std::unordered_map<Shared<Drawable>, BufferDrawData>& drawData)
+shade::Shared<shade::FrameBuffer> shade::SpotLightConePipeline::Process(const shade::Shared<FrameBuffer>& target, const shade::Shared<FrameBuffer>& previousPass, const Shared<RenderPipeline>& previusPipline, const DrawablePools& drawables, std::unordered_map<Shared<Drawable>, BufferDrawData>& drawData)
 {
 	m_Shader->Bind();
 	for (auto& [instance, materials] : drawables.Drawables)
@@ -24,7 +24,7 @@ shade::Shared<shade::FrameBuffer> shade::CameraFrustumPipeline::Process(const sh
 	return target;
 }
 
-const shade::Shared<shade::FrameBuffer>& shade::CameraFrustumPipeline::GetResult() const
+const shade::Shared<shade::FrameBuffer>& shade::SpotLightConePipeline::GetResult() const
 {
 	return nullptr;
 }

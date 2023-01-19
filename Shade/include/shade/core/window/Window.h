@@ -1,6 +1,7 @@
 #pragma once
 #include "shade/core/events/Event.h"
 #include "shade/core/utils/Log.h"
+
 namespace shade
 {
 	struct WindowConfig

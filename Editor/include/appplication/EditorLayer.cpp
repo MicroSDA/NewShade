@@ -57,6 +57,7 @@ void EditorLayer::OnCreate()
 	m_PointLightShadowMapPipeline = shade::RenderPipeline::Create<shade::PointLightShadowMapPipeline>();
 	m_SpotLightShadowMapPipeline = shade::RenderPipeline::Create<shade::SpotLightShadowMapPipeline>();
 	m_SpherePipeline = shade::RenderPipeline::Create<shade::SpherePipeline>();
+	m_SpotLightConePipeline = shade::RenderPipeline::Create<shade::SpotLightConePipeline>();
 }
 
 void EditorLayer::OnUpdate(const shade::Shared<shade::Scene>& scene, const shade::Timer& deltaTime)
@@ -94,6 +95,7 @@ void EditorLayer::OnUpdate(const shade::Shared<shade::Scene>& scene, const shade
 		{
 			shade::Render::SubmitLight(source, scene->ComputePCTransform(entity));
 		});
+	// If point light inside the camera frustum, so light is visible and we need to submit it
 	scene->GetEntities().view<shade::PointLightComponent, shade::Transform3DComponent>().each([&](auto& entity, shade::PointLightComponent& source, shade::Transform3DComponent& transform)
 		{
 			auto cpcTransform = scene->ComputePCTransform(entity);
@@ -101,14 +103,18 @@ void EditorLayer::OnUpdate(const shade::Shared<shade::Scene>& scene, const shade
 			if (frustum.IsInFrustum(position, source->GetDistance()))
 			{
 				shade::Render::SubmitLight(source, cpcTransform);
+				// Debug visualizing of points lights
 				shade::Render::SubmitPipelineInstanced(m_SpherePipeline, shade::Sphere::Create(source->GetDistance(), 100.0f, 10.0f), nullptr, cpcTransform);
 				m_SubmitedPointLightSources++;
 			}
 		});
+	// TODO ! Create is in frustum for spot light !!
 	scene->GetEntities().view<shade::SpotLightComponent, shade::Transform3DComponent>().each([&](auto& entity, shade::SpotLightComponent& source, shade::Transform3DComponent& transform)
 		{
+			auto cpcTransform = scene->ComputePCTransform(entity);
 			shade::Render::SubmitLight(source, scene->ComputePCTransform(entity));
-			shade::Render::SubmitPipelineInstanced(m_CameraFrustumPipeline, m_Box, nullptr, (transform.GetModelMatrix()));
+			shade::Render::SubmitPipelineInstanced(m_SpotLightConePipeline, m_Box, nullptr, glm::mat4(1));
+			//shade::Render::Sub
 		});
 	scene->GetEntities().view<shade::Model3DComponent, shade::Transform3DComponent>().each([&](auto& entity, shade::Model3DComponent& model, shade::Transform3DComponent& transform)
 		{
@@ -124,6 +130,7 @@ void EditorLayer::OnUpdate(const shade::Shared<shade::Scene>& scene, const shade
 						shade::Render::SubmitPipelineInstanced(m_AABBPipeline, shade::Box::Create(mesh->GetMinHalfExt(), mesh->GetMaxHalfExt()), nullptr, cpcTransform);
 					m_SubmitedMeshCount++;
 				}
+				// Can be optimazed, need change position in code for points lights
 				auto& points = shade::Render::GetSubmitedLight().PointLightSources;
 				for (auto& light : points)
 				{
@@ -171,7 +178,7 @@ void EditorLayer::OnRender(const shade::Shared<shade::Scene>& scene, const shade
 		}
 		//ShowDemoWindow();
 		ShowWindowBar("Scene", &EditorLayer::Scene, this, scene);
-		DrawModal("Import##ImportModel3D", m_IsImportModleModalOpend, [&]()
+		/*DrawModal("Import##ImportModel3D", m_IsImportModleModalOpend, [&]()
 			{
 				if (m_SelectedModel3D)
 				{
@@ -223,31 +230,37 @@ void EditorLayer::OnRender(const shade::Shared<shade::Scene>& scene, const shade
 
 					ImGui::Dummy(ImVec2(0.0f, ImGui::GetContentRegionMax().y / 2.f));
 					ImGui::Separator();
-					ImGui::Button("Convert to native");*/
+					ImGui::Button("Convert to native");
 
 				}
-			});
+			});*/
 
 	} ImGui::End(); // !Begin("DockSpace")
 	{
 		m_FrameBuffer->Clear(shade::AttacmentClearFlag::Color | shade::AttacmentClearFlag::Depth | shade::AttacmentClearFlag::Stensil);
 		shade::Render::Begin();
 		shade::Render::BeginScene(m_Camera, m_FrameBuffer);
+
+		
 		shade::Render::ExecuteSubmitedPipeline(m_DirectLightShadowMapPipeline);
 		shade::Render::ExecuteSubmitedPipeline(m_PointLightShadowMapPipeline);
 		shade::Render::ExecuteSubmitedPipeline(m_SpotLightShadowMapPipeline);
 
 		shade::Render::ExecuteSubmitedPipeline(m_InstancedPipeline);
-		shade::Render::ExecuteSubmitedPipeline(m_AABBPipeline);
-		shade::Render::ExecuteSubmitedPipeline(m_SpherePipeline);
 
 		if (m_isBloomEnabled)
 			shade::Render::PProcess::Process(m_PPBloom);
+		shade::Render::ExecuteSubmitedPipeline(m_AABBPipeline);
+		shade::Render::ExecuteSubmitedPipeline(m_SpherePipeline);
+		shade::Render::ExecuteSubmitedPipeline(m_CameraFrustumPipeline);
+		shade::Render::ExecuteSubmitedPipeline(m_SpotLightConePipeline);
+
+		
 		if (m_isColorCorrectionEnabled)
 			shade::Render::PProcess::Process(m_PPColorCorrection);
 		shade::Render::ExecuteSubmitedPipeline(m_GridPipeline);
 
-		//shade::Render::DrawSprite(m_SpriteShader, m_ShadowMapPipeline->GetResult()->GetDepthAttachment(), glm::mat4(1));
+		//shade::Render::DrawSprite(m_SpriteShader, m_SpotLightShadowMapPipeline->GetResult()->GetDepthAttachment(), glm::mat4(1));
 		shade::Render::EndScene();
 		shade::Render::End();
 		/*if (m_isBloomEnabled)
@@ -270,7 +283,7 @@ void EditorLayer::OnRender(const shade::Shared<shade::Scene>& scene, const shade
 		shade::Render::DrawSprite(m_SpriteShader, m_LogoTexture, transform.GetModelMatrix(), glm::vec4{ 120, 199.0f, 574, 167 });
 
 		shade::Render::EndScene();*/
-		shade::Render::End();
+		//shade::Render::End();
 	}
 }
 
@@ -1225,13 +1238,6 @@ void EditorLayer::Model3dComponent(shade::Entity& entity)
 
 void EditorLayer::Render()
 {
-
-	static float multiplier = 1.0f;
-	if (DrawFlaot("Bias", &multiplier))
-	{
-		m_PointLightShadowMapPipeline->SetMultiplier(multiplier);
-	}
-
 	if (ImGui::TreeNodeEx("Bloom", ImGuiTreeNodeFlags_Framed))
 	{
 
@@ -1257,9 +1263,23 @@ void EditorLayer::Render()
 		static shade::PointLightShadowMapPipeline::Settings  pShadowSettings;
 		static shade::SpotLightShadowMapPipeline::Settings   sShadowSettings;
 
+		static float dSMultiplier = 1.0f;
+		static float sSMultiplier = 1.0f;
+		static float pSMultiplier = 1.0f;
+
 		ImGui::Checkbox("Direct shadows", &dShadowSettings.IsShadowCast);
+		if (DrawFlaot("Direct shadows multiplier", &dSMultiplier))
+			m_DirectLightShadowMapPipeline->SetMultiplier(dSMultiplier);
+
 		ImGui::Checkbox("Spot shadows", &sShadowSettings.IsShadowCast);
+		if (DrawFlaot("Spot shadows multiplier", &sSMultiplier))
+			m_SpotLightShadowMapPipeline->SetMultiplier(sSMultiplier);
+
 		ImGui::Checkbox("Point shadows", &pShadowSettings.IsShadowCast);
+		if (DrawFlaot("Point shadows multiplier", &pSMultiplier))
+			m_PointLightShadowMapPipeline->SetMultiplier(pSMultiplier);
+		
+
 
 		m_DirectLightShadowMapPipeline->SetSettings(dShadowSettings);
 		m_PointLightShadowMapPipeline->SetSettings(pShadowSettings);

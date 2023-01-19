@@ -3,6 +3,7 @@
 #include "shade/core/Types.h"
 #include "shade/core/utils/Log.h"
 
+
 namespace shade
 {
 	class SHADE_API RenderContext

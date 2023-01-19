@@ -186,7 +186,8 @@ void shade::Render::End()
 void shade::Render::BeginScene(const Shared<Camera>& camera, const Shared<FrameBuffer>& framebuffer, const glm::vec4& clipping)
 {
 	m_sCamera = camera;
-	m_sTargetFrameBuffer = framebuffer;
+	m_sTargetFrameBuffer  = framebuffer;
+	m_sPreviousPassBuffer = framebuffer;
 	/* Set data to uniforsm buffetrs */
 	m_sCameraUniformBuffer->SetData(&camera->GetRenderData(), sizeof(Camera::RenderData), 0);
 	m_sClippingUniformBuffer->SetData(glm::value_ptr(clipping), sizeof(glm::vec4), 0);

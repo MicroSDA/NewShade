@@ -90,7 +90,7 @@ shade::Shared<shade::FrameBuffer> shade::SpotLightShadowMapPipeline::Process(con
 
 const shade::Shared<shade::FrameBuffer>& shade::SpotLightShadowMapPipeline::GetResult() const
 {
-	return nullptr;
+	return m_ShadowFrameBuffer;
 }
 
 void shade::SpotLightShadowMapPipeline::SetSettings(const SpotLightShadowMapPipeline::Settings& settings)
@@ -101,6 +101,15 @@ void shade::SpotLightShadowMapPipeline::SetSettings(const SpotLightShadowMapPipe
 const shade::SpotLightShadowMapPipeline::Settings& shade::SpotLightShadowMapPipeline::GetSettings() const
 {
 	return m_Settings;
+}
+
+void shade::SpotLightShadowMapPipeline::SetMultiplier(const float& multiplier)
+{
+	m_ShadowMapMultiplier = multiplier;
+	auto layout = m_ShadowFrameBuffer->GetLayout();
+	layout.Width = 1024 * m_ShadowMapMultiplier;
+	layout.Height = 1024 * m_ShadowMapMultiplier;
+	m_ShadowFrameBuffer = shade::FrameBuffer::Create(layout);
 }
 
 shade::SpotLightShadowMapPipeline::SpotLightCascade shade::SpotLightShadowMapPipeline::ComputeSpotLightCascade(const float& fov, const glm::vec3& position, const glm::vec3& direction, const float& nearPlane, const float& farplane)

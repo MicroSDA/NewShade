@@ -52,7 +52,7 @@ shade::Shared<shade::FrameBuffer > shade::InstancedPipeline::Process(const shade
 			}
 			else
 			{
-				//m_Shader->SelectSubrutine("u_sLighting", "FlatColor", shade::Shader::Type::Fragment);
+				m_Shader->SelectSubrutine("u_sLighting", "FlatColor", shade::Shader::Type::Fragment);
 			}
 
 			if (drawData[instance].TBO->GetSize() != sizeof(glm::mat4) * transforms.size())
