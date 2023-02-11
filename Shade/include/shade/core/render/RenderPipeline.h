@@ -12,7 +12,7 @@
 namespace shade
 {
 	class SHADE_API RenderPipeline
-	{
+		{
 	public:
 		template<typename T>
 		static Shared<T> Create();
